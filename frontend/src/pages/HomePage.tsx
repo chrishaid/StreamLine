@@ -1,7 +1,44 @@
 import { Plus, Upload, Clock, Star, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
+import { useAppStore } from '../store/useAppStore';
 
 export function HomePage() {
+  const navigate = useNavigate();
+  const { setCurrentBpmnXml, setCurrentProcess, clearChat } = useAppStore();
+
+  const handleCreateNewProcess = () => {
+    // Clear any existing process data
+    setCurrentBpmnXml(null);
+    setCurrentProcess(null);
+    clearChat();
+
+    // Navigate to editor
+    navigate('/editor');
+  };
+
+  const handleUploadFile = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.bpmn,.bpmn20.xml,.xml';
+    input.onchange = async (e: any) => {
+      const file = e.target?.files?.[0];
+      if (file) {
+        try {
+          const text = await file.text();
+          setCurrentBpmnXml(text);
+          setCurrentProcess(null);
+          clearChat();
+          navigate('/editor');
+        } catch (error) {
+          console.error('Failed to load file:', error);
+          alert('Failed to load BPMN file. Please check the file format.');
+        }
+      }
+    };
+    input.click();
+  };
+
   return (
     <MainLayout>
       <div className="flex-1 overflow-y-auto p-8">
@@ -16,7 +53,10 @@ export function HomePage() {
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-            <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8 hover:border-primary transition-colors cursor-pointer group">
+            <button
+              onClick={handleCreateNewProcess}
+              className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8 hover:border-primary transition-colors cursor-pointer group text-left w-full"
+            >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center group-hover:bg-primary-200 transition-colors">
                   <Plus className="w-6 h-6 text-primary" />
@@ -30,9 +70,12 @@ export function HomePage() {
                   </p>
                 </div>
               </div>
-            </div>
+            </button>
 
-            <div className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8 hover:border-primary transition-colors cursor-pointer group">
+            <button
+              onClick={handleUploadFile}
+              className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-8 hover:border-primary transition-colors cursor-pointer group text-left w-full"
+            >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center group-hover:bg-primary-200 transition-colors">
                   <Upload className="w-6 h-6 text-primary" />
@@ -46,7 +89,7 @@ export function HomePage() {
                   </p>
                 </div>
               </div>
-            </div>
+            </button>
           </div>
 
           {/* Recent Processes */}

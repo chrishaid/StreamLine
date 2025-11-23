@@ -82,6 +82,8 @@ export function BPMNModeler() {
   };
 
   const loadDiagram = async (xml: string) => {
+    if (!modelerRef.current) return;
+
     try {
       setError(null);
       await modelerRef.current.importXML(xml);
@@ -90,7 +92,18 @@ export function BPMNModeler() {
       const canvas = modelerRef.current.get('canvas');
       canvas.zoom('fit-viewport');
 
-      setCurrentBpmnXml(xml);
+      // Reset undo/redo state after loading
+      const commandStack = modelerRef.current.get('commandStack');
+      if (commandStack) {
+        commandStack.clear();
+        setCanUndo(false);
+        setCanRedo(false);
+      }
+
+      // Only update store if loading from external source
+      if (xml !== currentBpmnXml) {
+        setCurrentBpmnXml(xml);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to load BPMN diagram');
       console.error('Error loading BPMN:', err);
@@ -98,15 +111,18 @@ export function BPMNModeler() {
   };
 
   const handleSave = async () => {
+    if (!modelerRef.current) return;
+
     try {
       const { xml } = await modelerRef.current.saveXML({ format: true });
       setCurrentBpmnXml(xml);
       updateLastSaved();
 
-      // TODO: Save to backend API
-      console.log('Saved BPMN:', xml);
+      console.log('BPMN saved to store');
+      // TODO: Save to backend API when process management is implemented
     } catch (err) {
       console.error('Failed to save:', err);
+      setError('Failed to save diagram');
     }
   };
 

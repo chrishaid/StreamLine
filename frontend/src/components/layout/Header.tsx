@@ -1,12 +1,18 @@
 import { Search, User, Settings } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export function Header() {
+  const navigate = useNavigate();
+
   return (
     <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6">
-      <div className="flex items-center gap-4">
+      <button
+        onClick={() => navigate('/')}
+        className="flex items-center gap-4 hover:opacity-80 transition-opacity"
+      >
         <h1 className="text-2xl font-bold text-primary">StreamLine</h1>
         <span className="text-sm text-gray-500">BPMN Process Hub</span>
-      </div>
+      </button>
 
       <div className="flex-1 max-w-2xl mx-8">
         <div className="relative">
