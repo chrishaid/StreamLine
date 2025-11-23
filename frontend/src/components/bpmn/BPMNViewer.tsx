@@ -52,6 +52,8 @@ export function BPMNViewer() {
   }, [currentBpmnXml]);
 
   const loadDiagram = async (xml: string) => {
+    if (!viewerRef.current) return;
+
     try {
       setError(null);
       await viewerRef.current.importXML(xml);
@@ -60,7 +62,10 @@ export function BPMNViewer() {
       const canvas = viewerRef.current.get('canvas');
       canvas.zoom('fit-viewport');
 
-      setCurrentBpmnXml(xml);
+      // Only update store if loading from external source (not from store itself)
+      if (xml !== currentBpmnXml) {
+        setCurrentBpmnXml(xml);
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to load BPMN diagram');
       console.error('Error loading BPMN:', err);
