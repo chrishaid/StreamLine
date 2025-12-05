@@ -85,7 +85,9 @@ export class ClaudeService {
       // Clean up old sessions (simple cleanup strategy)
       if (this.sessions.size > 100) {
         const firstKey = this.sessions.keys().next().value;
-        this.sessions.delete(firstKey);
+        if (firstKey) {
+          this.sessions.delete(firstKey);
+        }
       }
 
       return {
@@ -259,7 +261,9 @@ export class ClaudeService {
           // Clean up old sessions
           if (this.sessions.size > 100) {
             const firstKey = this.sessions.keys().next().value;
-            this.sessions.delete(firstKey);
+            if (firstKey) {
+              this.sessions.delete(firstKey);
+            }
           }
 
           yield {

@@ -1,7 +1,16 @@
 import { create } from 'zustand';
-import { Process, Category, ChatMessage, UIState, BPMNEditorState } from '../types';
+import type { Process, Category, ChatMessage, UIState, BPMNEditorState } from '../types';
+import type { AuthUser } from '../services/authApi';
 
 interface AppState {
+  // Authentication State
+  user: AuthUser | null;
+  isAuthenticated: boolean;
+  isAuthLoading: boolean;
+  setUser: (user: AuthUser | null) => void;
+  setAuthLoading: (loading: boolean) => void;
+  logout: () => void;
+
   // UI State
   ui: UIState;
   setActiveView: (view: UIState['activeView']) => void;
@@ -37,12 +46,7 @@ interface AppState {
 
   // BPMN XML
   currentBpmnXml: string | null;
-  setCurrentBpmnXml: (xml: string) => void;
-  saveBpmnToDatabase: () => Promise<void>;
-
-  // BPMN Diagram Export
-  getDiagramSvg: (() => Promise<string>) | null;
-  setGetDiagramSvg: (fn: (() => Promise<string>) | null) => void;
+  setCurrentBpmnXml: (xml: string | null) => void;
 
   // Chat State
   chatMessages: ChatMessage[];
@@ -59,6 +63,14 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
+  // Authentication State
+  user: null,
+  isAuthenticated: false,
+  isAuthLoading: true,
+  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  setAuthLoading: (loading) => set({ isAuthLoading: loading }),
+  logout: () => set({ user: null, isAuthenticated: false }),
+
   // Initial UI State
   ui: {
     sidebarCollapsed: false,
@@ -142,42 +154,6 @@ export const useAppStore = create<AppState>((set) => ({
   // BPMN XML
   currentBpmnXml: null,
   setCurrentBpmnXml: (xml) => set({ currentBpmnXml: xml }),
-  saveBpmnToDatabase: async () => {
-    const state = useAppStore.getState();
-    const { currentBpmnXml, currentProcess, updateLastSaved, setCurrentProcess } = state;
-
-    if (!currentBpmnXml) {
-      console.warn('No BPMN XML to save');
-      return;
-    }
-
-    try {
-      // Import API dynamically to avoid circular dependencies
-      const { processApi } = await import('../services/api');
-
-      const result = await processApi.save({
-        id: currentProcess?.id,
-        name: currentProcess?.name || 'Untitled Process',
-        bpmnXml: currentBpmnXml,
-        description: currentProcess?.description,
-      });
-
-      // Update store with saved process info
-      if (result.process) {
-        setCurrentProcess(result.process);
-      }
-
-      updateLastSaved();
-      console.log('✅ Saved to database:', result.process.id);
-    } catch (err: any) {
-      console.error('❌ Failed to save:', err);
-      throw err;
-    }
-  },
-
-  // BPMN Diagram Export
-  getDiagramSvg: null,
-  setGetDiagramSvg: (fn) => set({ getDiagramSvg: fn }),
 
   // Chat State
   chatMessages: [],

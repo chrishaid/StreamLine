@@ -40,13 +40,12 @@ export function BPMNModeler() {
     editor,
     markDirty,
     updateLastSaved,
-    setGetDiagramSvg,
   } = useAppStore();
   const [error, setError] = useState<string | null>(null);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -66,21 +65,8 @@ export function BPMNModeler() {
     const eventBus = modelerRef.current.get('eventBus');
     eventBus.on('commandStack.changed', handleCommandStackChanged);
 
-    // Register SVG export function
-    setGetDiagramSvg(() => async () => {
-      if (!modelerRef.current) return '';
-      try {
-        const { svg } = await modelerRef.current.saveSVG();
-        return svg;
-      } catch (err) {
-        console.error('Failed to export SVG:', err);
-        return '';
-      }
-    });
-
     return () => {
       modelerRef.current?.destroy();
-      setGetDiagramSvg(null);
     };
   }, []);
 
@@ -121,20 +107,20 @@ export function BPMNModeler() {
 
       // Save to database
       const { processApi } = await import('../../services/api');
-      const result = await processApi.save({
-        id: latestProcess?.id,
-        name: latestProcess?.name || 'Untitled Process',
-        bpmnXml: xml,
-        description: latestProcess?.description,
-      });
 
-      // Update store with saved process info
-      if (result.process && result.process.id !== latestProcess?.id) {
-        useAppStore.setState({ currentProcess: result.process });
+      // Auto-save is disabled if there's no process loaded
+      // The EditorPage handles saving new and existing processes
+      if (latestProcess?.id) {
+        // Only update existing processes via versioning
+        await processApi.createVersion(latestProcess.id, {
+          bpmnXml: xml,
+          changeSummary: 'Auto-saved changes',
+          changeType: 'patch',
+        });
+
+        updateLastSaved();
+        console.log('✅ Auto-saved to database:', latestProcess.id);
       }
-
-      updateLastSaved();
-      console.log('✅ Auto-saved to database:', result.process.id);
     } catch (err: any) {
       console.error('❌ Failed to auto-save:', err);
       setError(err.message || 'Failed to save');
@@ -183,31 +169,17 @@ export function BPMNModeler() {
   const handleSave = async () => {
     if (!modelerRef.current) return;
 
-    // Read latest state from store
-    const latestProcess = useAppStore.getState().currentProcess;
-
     try {
       const { xml } = await modelerRef.current.saveXML({ format: true });
       setCurrentBpmnXml(xml);
 
-      // Save to database
-      const { processApi } = await import('../../services/api');
-      const result = await processApi.save({
-        id: latestProcess?.id,
-        name: latestProcess?.name || 'Untitled Process',
-        bpmnXml: xml,
-        description: latestProcess?.description,
-      });
-
-      // Update store with saved process info
-      if (result.process && result.process.id !== latestProcess?.id) {
-        useAppStore.setState({ currentProcess: result.process });
-      }
-
+      // Note: The actual save is handled by EditorPage
+      // This just updates the BPMN XML in the store
+      // The EditorPage Save button will persist to the database
       updateLastSaved();
-      console.log('✅ Saved to database:', result.process.id);
+      console.log('✅ BPMN XML updated in store');
     } catch (err: any) {
-      console.error('❌ Failed to save:', err);
+      console.error('❌ Failed to save XML:', err);
       setError(err.message || 'Failed to save diagram');
     }
   };

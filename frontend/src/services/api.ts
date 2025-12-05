@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { ChatMessageRequest, ChatMessageResponse, Process, CreateProcessRequest, UpdateProcessRequest } from '../types';
+import type { ChatMessageRequest, ChatMessageResponse, Process, CreateProcessRequest, UpdateProcessRequest } from '../types';
+import { getToken } from './authApi';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -8,63 +9,41 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 120000, // 2 minutes for Claude API responses (streaming handles longer responses)
+  timeout: 30000, // 30 seconds for Claude API responses
 });
+
+// Add auth token to all requests
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Handle auth errors
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Token expired or invalid
+      // Redirect to login (the app will handle this)
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Chat API
 export const chatApi = {
   sendMessage: async (request: ChatMessageRequest): Promise<ChatMessageResponse> => {
     const response = await apiClient.post<ChatMessageResponse>('/api/chat/message', request);
     return response.data;
-  },
-
-  sendMessageStream: async function* (request: ChatMessageRequest) {
-    const response = await fetch(`${API_BASE_URL}/api/chat/message/stream`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('No response body');
-    }
-
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data.trim()) {
-              try {
-                const parsed = JSON.parse(data);
-                yield parsed;
-              } catch (e) {
-                console.error('Failed to parse SSE data:', data);
-              }
-            }
-          }
-        }
-      }
-    } finally {
-      reader.releaseLock();
-    }
   },
 
   getSuggestions: async (bpmnXml: string): Promise<string[]> => {
@@ -81,38 +60,57 @@ export const processApi = {
     status?: string;
     categoryId?: string;
     search?: string;
+    ownerId?: string;
+    tags?: string;
     limit?: number;
     offset?: number;
-  }): Promise<{ processes: Process[]; total: number }> => {
+  }): Promise<{ processes: Process[]; total: number; limit: number; offset: number }> => {
     const response = await apiClient.get('/api/processes', { params });
     return response.data;
   },
 
-  getById: async (id: string): Promise<{ process: Process }> => {
-    const response = await apiClient.get(`/api/processes/${id}`);
+  getById: async (id: string): Promise<Process> => {
+    const response = await apiClient.get<Process>(`/api/processes/${id}`);
     return response.data;
   },
 
-  create: async (data: { name: string; bpmnXml: string; description?: string }): Promise<{ process: Process }> => {
+  create: async (data: CreateProcessRequest & { bpmnXml?: string }): Promise<{ process: Process; version: any }> => {
     const response = await apiClient.post('/api/processes', data);
     return response.data;
   },
 
-  update: async (id: string, data: { name: string; bpmnXml: string; description?: string }): Promise<{ process: Process }> => {
-    const response = await apiClient.put(`/api/processes/${id}`, data);
+  update: async (id: string, data: UpdateProcessRequest): Promise<Process> => {
+    const response = await apiClient.put<Process>(`/api/processes/${id}`, data);
     return response.data;
-  },
-
-  save: async (data: { id?: string; name: string; bpmnXml: string; description?: string }): Promise<{ process: Process }> => {
-    if (data.id) {
-      return processApi.update(data.id, data);
-    } else {
-      return processApi.create(data);
-    }
   },
 
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/processes/${id}`);
+  },
+
+  duplicate: async (id: string, name: string): Promise<{ process: Process; version: any }> => {
+    const response = await apiClient.post(`/api/processes/${id}/duplicate`, { name });
+    return response.data;
+  },
+
+  // Version management
+  getVersions: async (id: string): Promise<any[]> => {
+    const response = await apiClient.get(`/api/processes/${id}/versions`);
+    return response.data.versions;
+  },
+
+  getCurrentVersion: async (id: string): Promise<any> => {
+    const response = await apiClient.get(`/api/processes/${id}/versions/current`);
+    return response.data;
+  },
+
+  createVersion: async (id: string, data: {
+    bpmnXml: string;
+    changeSummary: string;
+    changeType: 'major' | 'minor' | 'patch';
+  }): Promise<any> => {
+    const response = await apiClient.post(`/api/processes/${id}/versions`, data);
+    return response.data;
   },
 };
 

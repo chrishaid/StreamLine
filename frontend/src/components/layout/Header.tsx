@@ -1,94 +1,35 @@
-import { Search, User, Settings, Plus, FileText } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Search, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
-import { processApi } from '../../services/api';
-
-const EMPTY_BPMN = `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
-                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-                  targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_1" isExecutable="false">
-    <bpmn:startEvent id="StartEvent_1"/>
-  </bpmn:process>
-  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
-      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_1" bpmnElement="StartEvent_1">
-        <dc:Bounds x="179" y="159" width="36" height="36"/>
-      </bpmndi:BPMNShape>
-    </bpmndi:BPMNPlane>
-  </bpmndi:BPMNDiagram>
-</bpmn:definitions>`;
+import { authApi, clearToken } from '../../services/authApi';
 
 export function Header() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { currentProcess, setCurrentProcess, setCurrentBpmnXml, addProcess, setEditorMode } = useAppStore();
+  const { user, logout } = useAppStore();
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const isEditorPage = location.pathname === '/editor';
-
-  const handleNewProcess = async () => {
+  const handleLogout = async () => {
     try {
-      // Create new process in database
-      const { process } = await processApi.create({
-        name: 'Untitled Process',
-        bpmnXml: EMPTY_BPMN,
-        description: 'New process',
-      });
-
-      // Set as current process
-      setCurrentProcess(process);
-      setCurrentBpmnXml(EMPTY_BPMN);
-
-      // Add to process list
-      addProcess(process);
-
-      // Set to edit mode
-      setEditorMode('edit');
-
-      // If not on editor page, navigate there
-      if (!isEditorPage) {
-        navigate('/editor');
-      }
+      await authApi.logout();
     } catch (error) {
-      console.error('Failed to create new process:', error);
+      console.error('Logout error:', error);
+    } finally {
+      clearToken();
+      logout();
+      navigate('/login');
     }
   };
 
   return (
     <header className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6">
-      <div className="flex items-center gap-6">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center gap-4 hover:opacity-80 transition-opacity"
-        >
-          <h1 className="text-2xl font-bold text-primary">StreamLine</h1>
-          <span className="text-sm text-gray-500">BPMN Process Hub</span>
-        </button>
-
-        {isEditorPage && (
-          <div className="flex items-center gap-3 pl-6 border-l border-gray-200">
-            {currentProcess ? (
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">
-                  {currentProcess.name}
-                </span>
-              </div>
-            ) : (
-              <span className="text-sm text-gray-500 italic">Untitled Process</span>
-            )}
-            <button
-              onClick={handleNewProcess}
-              className="ml-2 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center gap-1.5"
-              title="New Process"
-            >
-              <Plus className="w-4 h-4" />
-              New
-            </button>
-          </div>
-        )}
-      </div>
+      <button
+        onClick={() => navigate('/')}
+        className="flex items-center gap-4 hover:opacity-80 transition-opacity"
+      >
+        <h1 className="text-2xl font-bold text-primary">StreamLine</h1>
+        <span className="text-sm text-gray-500">BPMN Process Hub</span>
+      </button>
 
       <div className="flex-1 max-w-2xl mx-8">
         <div className="relative">
@@ -105,9 +46,54 @@ export function Header() {
         <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
           <Settings className="w-5 h-5 text-gray-600" />
         </button>
-        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-          <User className="w-5 h-5 text-gray-600" />
-        </button>
+
+        {/* User Menu */}
+        <div className="relative">
+          <button
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.name}
+                className="w-8 h-8 rounded-full"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white font-semibold">
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+            )}
+            <ChevronDown className="w-4 h-4 text-gray-600" />
+          </button>
+
+          {showUserMenu && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowUserMenu(false)}
+              />
+              {/* Menu */}
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-20">
+                <div className="px-4 py-3 border-b border-gray-200">
+                  <p className="font-semibold text-gray-900">{user?.name}</p>
+                  <p className="text-sm text-gray-600">{user?.email}</p>
+                  <span className="inline-block mt-1 text-xs px-2 py-1 bg-primary-100 text-primary-700 rounded">
+                    {user?.role}
+                  </span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors flex items-center gap-2 text-red-600"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );

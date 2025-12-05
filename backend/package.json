@@ -18,15 +18,26 @@
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.70.1",
+    "@azure/msal-node": "^3.8.4",
     "@prisma/client": "^5.22.0",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "jsonwebtoken": "^9.0.3",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
   },
   "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
+    "@types/express-session": "^1.18.2",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.10.1",
+    "@types/passport": "^1.0.17",
+    "@types/passport-google-oauth20": "^2.0.17",
     "prisma": "^5.22.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
