@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-
-// TODO: Replace with actual database service
-const processes: any[] = [];
+import { processService } from '../services/processService';
 
 export async function createProcess(
   req: Request,
@@ -9,30 +7,23 @@ export async function createProcess(
   next: NextFunction
 ) {
   try {
-    const { name, description, bpmnXml, primaryCategoryId, tags } = req.body;
+    const { name, description, bpmnXml } = req.body;
 
-    if (!name) {
+    if (!name || !bpmnXml) {
       return res.status(400).json({
-        error: { code: 'MISSING_NAME', message: 'Process name is required' },
+        error: { code: 'INVALID_REQUEST', message: 'Name and BPMN XML are required' },
       });
     }
 
-    const newProcess = {
-      id: crypto.randomUUID(),
+    const process = await processService.saveProcess({
       name,
-      description: description || '',
-      status: 'draft',
-      bpmnXml: bpmnXml || null,
-      primaryCategoryId: primaryCategoryId || null,
-      tags: tags || [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+      bpmnXml,
+      description,
+    });
 
-    processes.push(newProcess);
-
-    res.status(201).json(newProcess);
+    res.status(201).json({ process });
   } catch (error) {
+    console.error('Error creating process:', error);
     next(error);
   }
 }
@@ -43,40 +34,14 @@ export async function getProcesses(
   next: NextFunction
 ) {
   try {
-    const { status, categoryId, search, limit = 50, offset = 0 } = req.query;
-
-    let filtered = [...processes];
-
-    if (status) {
-      filtered = filtered.filter((p) => p.status === status);
-    }
-
-    if (categoryId) {
-      filtered = filtered.filter((p) => p.primaryCategoryId === categoryId);
-    }
-
-    if (search) {
-      const searchLower = (search as string).toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(searchLower) ||
-          p.description.toLowerCase().includes(searchLower)
-      );
-    }
-
-    const total = filtered.length;
-    const paginated = filtered.slice(
-      Number(offset),
-      Number(offset) + Number(limit)
-    );
+    const processes = await processService.getAllProcesses();
 
     res.json({
-      processes: paginated,
-      total,
-      limit: Number(limit),
-      offset: Number(offset),
+      processes,
+      total: processes.length,
     });
   } catch (error) {
+    console.error('Error getting processes:', error);
     next(error);
   }
 }
@@ -89,7 +54,7 @@ export async function getProcessById(
   try {
     const { id } = req.params;
 
-    const process = processes.find((p) => p.id === id);
+    const process = await processService.getProcess(id);
 
     if (!process) {
       return res.status(404).json({
@@ -97,8 +62,9 @@ export async function getProcessById(
       });
     }
 
-    res.json(process);
+    res.json({ process });
   } catch (error) {
+    console.error('Error getting process:', error);
     next(error);
   }
 }
@@ -110,25 +76,24 @@ export async function updateProcess(
 ) {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const { name, description, bpmnXml } = req.body;
 
-    const index = processes.findIndex((p) => p.id === id);
-
-    if (index === -1) {
-      return res.status(404).json({
-        error: { code: 'NOT_FOUND', message: 'Process not found' },
+    if (!name || !bpmnXml) {
+      return res.status(400).json({
+        error: { code: 'INVALID_REQUEST', message: 'Name and BPMN XML are required' },
       });
     }
 
-    processes[index] = {
-      ...processes[index],
-      ...updates,
-      id, // Prevent ID from being updated
-      updatedAt: new Date(),
-    };
+    const process = await processService.saveProcess({
+      id,
+      name,
+      bpmnXml,
+      description,
+    });
 
-    res.json(processes[index]);
+    res.json({ process });
   } catch (error) {
+    console.error('Error updating process:', error);
     next(error);
   }
 }
@@ -141,18 +106,11 @@ export async function deleteProcess(
   try {
     const { id } = req.params;
 
-    const index = processes.findIndex((p) => p.id === id);
-
-    if (index === -1) {
-      return res.status(404).json({
-        error: { code: 'NOT_FOUND', message: 'Process not found' },
-      });
-    }
-
-    processes.splice(index, 1);
+    await processService.deleteProcess(id);
 
     res.status(204).send();
   } catch (error) {
+    console.error('Error deleting process:', error);
     next(error);
   }
 }

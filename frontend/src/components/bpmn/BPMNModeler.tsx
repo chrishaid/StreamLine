@@ -15,6 +15,8 @@ const EMPTY_BPMN = `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
                   xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
                   xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
+                  id="Definitions_1"
                   targetNamespace="http://bpmn.io/schema/bpmn">
   <bpmn:process id="Process_1" isExecutable="false">
     <bpmn:startEvent id="StartEvent_1"/>
@@ -38,10 +40,13 @@ export function BPMNModeler() {
     editor,
     markDirty,
     updateLastSaved,
+    setGetDiagramSvg,
   } = useAppStore();
   const [error, setError] = useState<string | null>(null);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -61,8 +66,21 @@ export function BPMNModeler() {
     const eventBus = modelerRef.current.get('eventBus');
     eventBus.on('commandStack.changed', handleCommandStackChanged);
 
+    // Register SVG export function
+    setGetDiagramSvg(() => async () => {
+      if (!modelerRef.current) return '';
+      try {
+        const { svg } = await modelerRef.current.saveSVG();
+        return svg;
+      } catch (err) {
+        console.error('Failed to export SVG:', err);
+        return '';
+      }
+    });
+
     return () => {
       modelerRef.current?.destroy();
+      setGetDiagramSvg(null);
     };
   }, []);
 
@@ -78,15 +96,62 @@ export function BPMNModeler() {
       setCanUndo(commandStack.canUndo());
       setCanRedo(commandStack.canRedo());
       markDirty();
+
+      // Trigger auto-save after 5 seconds of inactivity
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+      autoSaveTimeoutRef.current = setTimeout(() => {
+        handleAutoSave();
+      }, 5000);
     }
   };
 
-  const loadDiagram = async (xml: string) => {
+  const handleAutoSave = async () => {
+    // Read latest state from store to avoid stale closure values
+    const currentEditor = useAppStore.getState().editor;
+    const latestProcess = useAppStore.getState().currentProcess;
+
+    if (!modelerRef.current || !currentEditor.isDirty) return;
+
+    setIsAutoSaving(true);
+    try {
+      const { xml } = await modelerRef.current.saveXML({ format: true });
+      setCurrentBpmnXml(xml);
+
+      // Save to database
+      const { processApi } = await import('../../services/api');
+      const result = await processApi.save({
+        id: latestProcess?.id,
+        name: latestProcess?.name || 'Untitled Process',
+        bpmnXml: xml,
+        description: latestProcess?.description,
+      });
+
+      // Update store with saved process info
+      if (result.process && result.process.id !== latestProcess?.id) {
+        useAppStore.setState({ currentProcess: result.process });
+      }
+
+      updateLastSaved();
+      console.log('✅ Auto-saved to database:', result.process.id);
+    } catch (err: any) {
+      console.error('❌ Failed to auto-save:', err);
+      setError(err.message || 'Failed to save');
+    } finally {
+      setIsAutoSaving(false);
+    }
+  };
+
+  const loadDiagram = async (xml: string | undefined | null) => {
     if (!modelerRef.current) return;
+
+    // Use EMPTY_BPMN if xml is undefined, null, or empty
+    const xmlToLoad = xml && xml.trim() ? xml : EMPTY_BPMN;
 
     try {
       setError(null);
-      await modelerRef.current.importXML(xml);
+      await modelerRef.current.importXML(xmlToLoad);
 
       // Fit diagram to viewport
       const canvas = modelerRef.current.get('canvas');
@@ -100,29 +165,50 @@ export function BPMNModeler() {
         setCanRedo(false);
       }
 
-      // Only update store if loading from external source
-      if (xml !== currentBpmnXml) {
+      // Only update store if loading from external source and it's valid XML
+      if (xml && xml.trim() && xml !== currentBpmnXml) {
         setCurrentBpmnXml(xml);
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load BPMN diagram');
       console.error('Error loading BPMN:', err);
+      // Try loading empty diagram as fallback
+      if (xmlToLoad !== EMPTY_BPMN) {
+        console.log('Loading empty diagram as fallback');
+        await loadDiagram(EMPTY_BPMN);
+      }
     }
   };
 
   const handleSave = async () => {
     if (!modelerRef.current) return;
 
+    // Read latest state from store
+    const latestProcess = useAppStore.getState().currentProcess;
+
     try {
       const { xml } = await modelerRef.current.saveXML({ format: true });
       setCurrentBpmnXml(xml);
-      updateLastSaved();
 
-      console.log('BPMN saved to store');
-      // TODO: Save to backend API when process management is implemented
-    } catch (err) {
-      console.error('Failed to save:', err);
-      setError('Failed to save diagram');
+      // Save to database
+      const { processApi } = await import('../../services/api');
+      const result = await processApi.save({
+        id: latestProcess?.id,
+        name: latestProcess?.name || 'Untitled Process',
+        bpmnXml: xml,
+        description: latestProcess?.description,
+      });
+
+      // Update store with saved process info
+      if (result.process && result.process.id !== latestProcess?.id) {
+        useAppStore.setState({ currentProcess: result.process });
+      }
+
+      updateLastSaved();
+      console.log('✅ Saved to database:', result.process.id);
+    } catch (err: any) {
+      console.error('❌ Failed to save:', err);
+      setError(err.message || 'Failed to save diagram');
     }
   };
 
@@ -195,9 +281,11 @@ export function BPMNModeler() {
             <Save className="w-4 h-4" />
             Save
           </button>
-          {editor.isDirty && (
+          {isAutoSaving ? (
+            <span className="text-xs text-blue-600 font-medium">• Auto-saving...</span>
+          ) : editor.isDirty ? (
             <span className="text-xs text-amber-600 font-medium">• Unsaved changes</span>
-          )}
+          ) : null}
           <div className="w-px h-6 bg-gray-300 mx-2" />
           <button
             onClick={handleUndo}

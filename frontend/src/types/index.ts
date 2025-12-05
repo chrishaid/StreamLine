@@ -127,6 +127,8 @@ export interface ChatMessageRequest {
   processId?: string;
   message: string;
   includeContext?: boolean;
+  bpmnXml?: string;
+  diagramImage?: string; // Base64 encoded SVG
 }
 
 export interface ChatMessageResponse {

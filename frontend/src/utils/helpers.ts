@@ -34,18 +34,43 @@ export function extractBpmnXmlFromText(text: string): string | null {
 
 export function validateBpmnXml(xml: string): boolean {
   try {
+    // Basic structure checks
+    if (!xml || xml.trim().length === 0) {
+      return false;
+    }
+
+    // Must have XML declaration or start with bpmn tag
+    const trimmed = xml.trim();
+    if (!trimmed.startsWith('<?xml') && !trimmed.startsWith('<bpmn')) {
+      return false;
+    }
+
+    // Must have closing definitions tag for complete XML
+    if (!trimmed.includes('</bpmn:definitions>') && !trimmed.includes('</definitions>')) {
+      console.warn('⚠️ BPMN XML missing closing definitions tag - incomplete');
+      return false;
+    }
+
+    // Parse XML to check for syntax errors
     const parser = new DOMParser();
     const doc = parser.parseFromString(xml, 'application/xml');
 
     // Check for parsing errors
     const parserError = doc.querySelector('parsererror');
     if (parserError) {
+      console.error('❌ XML parsing error:', parserError.textContent);
       return false;
     }
 
     // Check if it contains BPMN elements
-    return xml.includes('bpmn') || xml.includes('BPMN');
-  } catch {
+    const hasBpmn = xml.includes('bpmn') || xml.includes('BPMN');
+    if (!hasBpmn) {
+      console.warn('⚠️ XML does not contain BPMN elements');
+    }
+
+    return hasBpmn;
+  } catch (error) {
+    console.error('❌ Error validating BPMN XML:', error);
     return false;
   }
 }

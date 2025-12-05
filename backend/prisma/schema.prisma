@@ -1,0 +1,157 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  avatarUrl     String?
+  role          String   @default("editor") // viewer, editor, admin
+  departmentId  String?
+  preferences   String?  // Store as JSON string
+  createdAt     DateTime @default(now())
+  lastLoginAt   DateTime @default(now())
+
+  // Relations
+  processesOwned   Process[]       @relation("ProcessOwner")
+  processesCreated Process[]       @relation("ProcessCreator")
+  processesUpdated Process[]       @relation("ProcessUpdater")
+  versionsCreated  ProcessVersion[]
+  chatSessions     ChatSession[]
+  chatMessages     ChatMessage[]
+}
+
+model Department {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  parentId    String?
+  path        String   @unique
+  level       Int      @default(0)
+  order       Int      @default(0)
+  icon        String?
+  color       String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  parent         Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children       Category[] @relation("CategoryHierarchy")
+  primaryProcesses   Process[] @relation("PrimaryCategory")
+}
+
+model Process {
+  id                  String   @id @default(cuid())
+  name                String
+  description         String?
+  status              String   @default("draft") // draft, active, archived
+  ownerId             String
+  departmentId        String?
+  primaryCategoryId   String
+  secondaryCategoryIds String?  // JSON array of category IDs
+  tags                String?  // JSON array of tags
+  currentVersionId    String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  createdBy           String
+  updatedBy           String
+  viewCount           Int      @default(0)
+  editCount           Int      @default(0)
+  isFavorite          Boolean  @default(false)
+  relatedProcessIds   String?  // JSON array of process IDs
+  metadata            String?  // Additional metadata as JSON string
+
+  // Relations
+  owner           User             @relation("ProcessOwner", fields: [ownerId], references: [id])
+  creator         User             @relation("ProcessCreator", fields: [createdBy], references: [id])
+  updater         User             @relation("ProcessUpdater", fields: [updatedBy], references: [id])
+  primaryCategory Category         @relation("PrimaryCategory", fields: [primaryCategoryId], references: [id])
+  currentVersion  ProcessVersion?  @relation("CurrentVersion", fields: [currentVersionId], references: [id])
+  versions        ProcessVersion[] @relation("ProcessVersions")
+  chatSessions    ChatSession[]
+  chatMessages    ChatMessage[]
+
+  @@index([ownerId])
+  @@index([primaryCategoryId])
+  @@index([status])
+}
+
+model ProcessVersion {
+  id              String   @id @default(cuid())
+  processId       String
+  versionNumber   String
+  majorVersion    Int
+  minorVersion    Int
+  bpmnXml         String   // Store BPMN XML
+  bpmnFileUrl     String?
+  changeSummary   String?
+  changeType      String   // major, minor, patch
+  tags            String?  // JSON array
+  parentVersionId String?
+  branchName      String   @default("main")
+  createdAt       DateTime @default(now())
+  createdBy       String
+  metadata        String?  // elementCount, poolCount, laneCount, taskCount as JSON string
+
+  // Relations
+  process       Process          @relation("ProcessVersions", fields: [processId], references: [id], onDelete: Cascade)
+  creator       User             @relation(fields: [createdBy], references: [id])
+  parentVersion ProcessVersion?  @relation("VersionHistory", fields: [parentVersionId], references: [id])
+  childVersions ProcessVersion[] @relation("VersionHistory")
+  currentFor    Process[]        @relation("CurrentVersion")
+
+  @@index([processId])
+  @@index([createdBy])
+}
+
+model ChatSession {
+  id        String   @id @default(cuid())
+  processId String?
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  process  Process?      @relation(fields: [processId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id])
+  messages ChatMessage[]
+
+  @@index([userId])
+  @@index([processId])
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  sessionId String
+  processId String?
+  userId    String
+  role      String   // user, assistant
+  content   String   // Message content
+  metadata  String?  // modelUsed, tokensUsed, latencyMs, attachments as JSON string
+  createdAt DateTime @default(now())
+
+  // Relations
+  session ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  process Process?    @relation(fields: [processId], references: [id], onDelete: Cascade)
+  user    User        @relation(fields: [userId], references: [id])
+
+  @@index([sessionId])
+  @@index([processId])
+  @@index([userId])
+}

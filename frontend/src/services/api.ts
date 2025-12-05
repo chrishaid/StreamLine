@@ -8,7 +8,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 seconds for Claude API responses
+  timeout: 120000, // 2 minutes for Claude API responses (streaming handles longer responses)
 });
 
 // Chat API
@@ -16,6 +16,55 @@ export const chatApi = {
   sendMessage: async (request: ChatMessageRequest): Promise<ChatMessageResponse> => {
     const response = await apiClient.post<ChatMessageResponse>('/api/chat/message', request);
     return response.data;
+  },
+
+  sendMessageStream: async function* (request: ChatMessageRequest) {
+    const response = await fetch(`${API_BASE_URL}/api/chat/message/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No response body');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data.trim()) {
+              try {
+                const parsed = JSON.parse(data);
+                yield parsed;
+              } catch (e) {
+                console.error('Failed to parse SSE data:', data);
+              }
+            }
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
   },
 
   getSuggestions: async (bpmnXml: string): Promise<string[]> => {
@@ -34,24 +83,32 @@ export const processApi = {
     search?: string;
     limit?: number;
     offset?: number;
-  }): Promise<{ processes: Process[]; total: number; limit: number; offset: number }> => {
+  }): Promise<{ processes: Process[]; total: number }> => {
     const response = await apiClient.get('/api/processes', { params });
     return response.data;
   },
 
-  getById: async (id: string): Promise<Process> => {
-    const response = await apiClient.get<Process>(`/api/processes/${id}`);
+  getById: async (id: string): Promise<{ process: Process }> => {
+    const response = await apiClient.get(`/api/processes/${id}`);
     return response.data;
   },
 
-  create: async (data: CreateProcessRequest): Promise<Process> => {
-    const response = await apiClient.post<Process>('/api/processes', data);
+  create: async (data: { name: string; bpmnXml: string; description?: string }): Promise<{ process: Process }> => {
+    const response = await apiClient.post('/api/processes', data);
     return response.data;
   },
 
-  update: async (id: string, data: UpdateProcessRequest): Promise<Process> => {
-    const response = await apiClient.put<Process>(`/api/processes/${id}`, data);
+  update: async (id: string, data: { name: string; bpmnXml: string; description?: string }): Promise<{ process: Process }> => {
+    const response = await apiClient.put(`/api/processes/${id}`, data);
     return response.data;
+  },
+
+  save: async (data: { id?: string; name: string; bpmnXml: string; description?: string }): Promise<{ process: Process }> => {
+    if (data.id) {
+      return processApi.update(data.id, data);
+    } else {
+      return processApi.create(data);
+    }
   },
 
   delete: async (id: string): Promise<void> => {

@@ -9,11 +9,16 @@
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["bpmn", "process", "api"],
+  "keywords": [
+    "bpmn",
+    "process",
+    "api"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.70.1",
+    "@prisma/client": "^5.22.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0"
@@ -22,6 +27,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/node": "^24.10.1",
+    "prisma": "^5.22.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
   }
