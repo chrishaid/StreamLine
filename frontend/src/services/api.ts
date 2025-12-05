@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { ChatMessageRequest, ChatMessageResponse, Process, CreateProcessRequest, UpdateProcessRequest } from '../types';
+import { getToken } from './authApi';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -10,6 +11,33 @@ const apiClient = axios.create({
   },
   timeout: 30000, // 30 seconds for Claude API responses
 });
+
+// Add auth token to all requests
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = getToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Handle auth errors
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Token expired or invalid
+      // Redirect to login (the app will handle this)
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Chat API
 export const chatApi = {

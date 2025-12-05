@@ -1,7 +1,16 @@
 import { create } from 'zustand';
 import { Process, Category, ChatMessage, UIState, BPMNEditorState } from '../types';
+import { AuthUser } from '../services/authApi';
 
 interface AppState {
+  // Authentication State
+  user: AuthUser | null;
+  isAuthenticated: boolean;
+  isAuthLoading: boolean;
+  setUser: (user: AuthUser | null) => void;
+  setAuthLoading: (loading: boolean) => void;
+  logout: () => void;
+
   // UI State
   ui: UIState;
   setActiveView: (view: UIState['activeView']) => void;
@@ -54,6 +63,14 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set) => ({
+  // Authentication State
+  user: null,
+  isAuthenticated: false,
+  isAuthLoading: true,
+  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  setAuthLoading: (loading) => set({ isAuthLoading: loading }),
+  logout: () => set({ user: null, isAuthenticated: false }),
+
   // Initial UI State
   ui: {
     sidebarCollapsed: false,
