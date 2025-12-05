@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { Process, Category, ChatMessage, UIState, BPMNEditorState } from '../types';
-import { AuthUser } from '../services/authApi';
+import type { Process, Category, ChatMessage, UIState, BPMNEditorState } from '../types';
+import type { AuthUser } from '../services/authApi';
 
 interface AppState {
   // Authentication State
@@ -46,7 +46,7 @@ interface AppState {
 
   // BPMN XML
   currentBpmnXml: string | null;
-  setCurrentBpmnXml: (xml: string) => void;
+  setCurrentBpmnXml: (xml: string | null) => void;
 
   // Chat State
   chatMessages: ChatMessage[];

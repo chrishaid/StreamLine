@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Minimize2, MessageSquare, Loader2, AlertCircle } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
-import { ChatMessage } from '../../types';
+import type { ChatMessage } from '../../types';
 import { chatApi } from '../../services/api';
 import { extractBpmnXmlFromText, validateBpmnXml } from '../../utils/helpers';
 
@@ -62,7 +62,6 @@ export function ChatPanel() {
         sessionId: newSessionId,
         processId: currentProcess?.id,
         includeContext: true,
-        bpmnXml: currentBpmnXml || undefined,
       });
 
       // Add assistant's message

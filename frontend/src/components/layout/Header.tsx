@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, User, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { Search, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 import { authApi, clearToken } from '../../services/authApi';

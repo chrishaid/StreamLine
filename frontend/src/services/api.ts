@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ChatMessageRequest, ChatMessageResponse, Process, CreateProcessRequest, UpdateProcessRequest } from '../types';
+import type { ChatMessageRequest, ChatMessageResponse, Process, CreateProcessRequest, UpdateProcessRequest } from '../types';
 import { getToken } from './authApi';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -60,6 +60,8 @@ export const processApi = {
     status?: string;
     categoryId?: string;
     search?: string;
+    ownerId?: string;
+    tags?: string;
     limit?: number;
     offset?: number;
   }): Promise<{ processes: Process[]; total: number; limit: number; offset: number }> => {
@@ -72,8 +74,8 @@ export const processApi = {
     return response.data;
   },
 
-  create: async (data: CreateProcessRequest): Promise<Process> => {
-    const response = await apiClient.post<Process>('/api/processes', data);
+  create: async (data: CreateProcessRequest & { bpmnXml?: string }): Promise<{ process: Process; version: any }> => {
+    const response = await apiClient.post('/api/processes', data);
     return response.data;
   },
 
@@ -84,6 +86,31 @@ export const processApi = {
 
   delete: async (id: string): Promise<void> => {
     await apiClient.delete(`/api/processes/${id}`);
+  },
+
+  duplicate: async (id: string, name: string): Promise<{ process: Process; version: any }> => {
+    const response = await apiClient.post(`/api/processes/${id}/duplicate`, { name });
+    return response.data;
+  },
+
+  // Version management
+  getVersions: async (id: string): Promise<any[]> => {
+    const response = await apiClient.get(`/api/processes/${id}/versions`);
+    return response.data.versions;
+  },
+
+  getCurrentVersion: async (id: string): Promise<any> => {
+    const response = await apiClient.get(`/api/processes/${id}/versions/current`);
+    return response.data;
+  },
+
+  createVersion: async (id: string, data: {
+    bpmnXml: string;
+    changeSummary: string;
+    changeType: 'major' | 'minor' | 'patch';
+  }): Promise<any> => {
+    const response = await apiClient.post(`/api/processes/${id}/versions`, data);
+    return response.data;
   },
 };
 

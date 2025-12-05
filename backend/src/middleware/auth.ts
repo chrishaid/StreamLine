@@ -1,15 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken, JWTPayload } from '../utils/jwt';
 
-// Extend Express Request type to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: JWTPayload;
-    }
-  }
-}
-
 export function authenticateToken(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -34,7 +25,7 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
     });
   }
 
-  req.user = payload;
+  (req as any).user = payload;
   next();
 }
 
@@ -45,7 +36,7 @@ export function optionalAuth(req: Request, res: Response, next: NextFunction) {
   if (token) {
     const payload = verifyToken(token);
     if (payload) {
-      req.user = payload;
+      (req as any).user = payload;
     }
   }
 

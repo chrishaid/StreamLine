@@ -1,7 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-
-// TODO: Replace with actual database service
-const processes: any[] = [];
+import { processStore } from '../models/processModel';
 
 export async function createProcess(
   req: Request,
@@ -9,7 +7,8 @@ export async function createProcess(
   next: NextFunction
 ) {
   try {
-    const { name, description, bpmnXml, primaryCategoryId, tags } = req.body;
+    const { name, description, bpmnXml, primaryCategoryId, secondaryCategoryIds, tags } = req.body;
+    const user = (req as any).user;
 
     if (!name) {
       return res.status(400).json({
@@ -17,21 +16,18 @@ export async function createProcess(
       });
     }
 
-    const newProcess = {
-      id: crypto.randomUUID(),
+    const { process, version } = await processStore.createProcess({
       name,
-      description: description || '',
-      status: 'draft',
-      bpmnXml: bpmnXml || null,
-      primaryCategoryId: primaryCategoryId || null,
-      tags: tags || [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+      description,
+      bpmnXml,
+      primaryCategoryId,
+      secondaryCategoryIds,
+      tags,
+      ownerId: user.userId,
+      createdBy: user.userId,
+    });
 
-    processes.push(newProcess);
-
-    res.status(201).json(newProcess);
+    res.status(201).json({ process, version });
   } catch (error) {
     next(error);
   }
@@ -43,29 +39,18 @@ export async function getProcesses(
   next: NextFunction
 ) {
   try {
-    const { status, categoryId, search, limit = 50, offset = 0 } = req.query;
+    const { status, categoryId, search, ownerId, tags, limit = 50, offset = 0 } = req.query;
 
-    let filtered = [...processes];
+    const processes = await processStore.getAllProcesses({
+      status: status as string,
+      categoryId: categoryId as string,
+      search: search as string,
+      ownerId: ownerId as string,
+      tags: tags ? (tags as string).split(',') : undefined,
+    });
 
-    if (status) {
-      filtered = filtered.filter((p) => p.status === status);
-    }
-
-    if (categoryId) {
-      filtered = filtered.filter((p) => p.primaryCategoryId === categoryId);
-    }
-
-    if (search) {
-      const searchLower = (search as string).toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.name.toLowerCase().includes(searchLower) ||
-          p.description.toLowerCase().includes(searchLower)
-      );
-    }
-
-    const total = filtered.length;
-    const paginated = filtered.slice(
+    const total = processes.length;
+    const paginated = processes.slice(
       Number(offset),
       Number(offset) + Number(limit)
     );
@@ -89,7 +74,7 @@ export async function getProcessById(
   try {
     const { id } = req.params;
 
-    const process = processes.find((p) => p.id === id);
+    const process = await processStore.getProcessById(id);
 
     if (!process) {
       return res.status(404).json({
@@ -111,23 +96,17 @@ export async function updateProcess(
   try {
     const { id } = req.params;
     const updates = req.body;
+    const user = (req as any).user;
 
-    const index = processes.findIndex((p) => p.id === id);
+    const process = await processStore.updateProcess(id, updates, user.userId);
 
-    if (index === -1) {
+    if (!process) {
       return res.status(404).json({
         error: { code: 'NOT_FOUND', message: 'Process not found' },
       });
     }
 
-    processes[index] = {
-      ...processes[index],
-      ...updates,
-      id, // Prevent ID from being updated
-      updatedAt: new Date(),
-    };
-
-    res.json(processes[index]);
+    res.json(process);
   } catch (error) {
     next(error);
   }
@@ -141,17 +120,123 @@ export async function deleteProcess(
   try {
     const { id } = req.params;
 
-    const index = processes.findIndex((p) => p.id === id);
+    const deleted = await processStore.deleteProcess(id);
 
-    if (index === -1) {
+    if (!deleted) {
       return res.status(404).json({
         error: { code: 'NOT_FOUND', message: 'Process not found' },
       });
     }
 
-    processes.splice(index, 1);
-
     res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function duplicateProcess(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+    const user = (req as any).user;
+
+    if (!name) {
+      return res.status(400).json({
+        error: { code: 'MISSING_NAME', message: 'New process name is required' },
+      });
+    }
+
+    const result = await processStore.duplicateProcess(id, name, user.userId);
+
+    if (!result) {
+      return res.status(404).json({
+        error: { code: 'NOT_FOUND', message: 'Process not found' },
+      });
+    }
+
+    res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+// Version endpoints
+export async function getProcessVersions(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { id } = req.params;
+
+    const versions = await processStore.getVersionsByProcessId(id);
+
+    res.json({ versions });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function getCurrentVersion(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { id } = req.params;
+
+    const version = await processStore.getCurrentVersion(id);
+
+    if (!version) {
+      return res.status(404).json({
+        error: { code: 'NOT_FOUND', message: 'Version not found' },
+      });
+    }
+
+    res.json(version);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function createProcessVersion(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
+  try {
+    const { id } = req.params;
+    const { bpmnXml, changeSummary, changeType } = req.body;
+    const user = (req as any).user;
+
+    if (!bpmnXml || !changeSummary || !changeType) {
+      return res.status(400).json({
+        error: {
+          code: 'MISSING_FIELDS',
+          message: 'bpmnXml, changeSummary, and changeType are required',
+        },
+      });
+    }
+
+    const version = await processStore.createVersion({
+      processId: id,
+      bpmnXml,
+      changeSummary,
+      changeType,
+      createdBy: user.userId,
+    });
+
+    if (!version) {
+      return res.status(404).json({
+        error: { code: 'NOT_FOUND', message: 'Process not found' },
+      });
+    }
+
+    res.status(201).json(version);
   } catch (error) {
     next(error);
   }
