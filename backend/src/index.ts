@@ -1,14 +1,14 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import passport from './config/passport';
 import { chatRouter } from './routes/chat';
 import { processRouter } from './routes/process';
 import { authRouter } from './routes/auth';
 import { errorHandler } from './middleware/errorHandler';
 import { authenticateToken } from './middleware/auth';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -23,6 +23,21 @@ app.use(express.urlencoded({ extended: true }));
 
 // Initialize passport
 app.use(passport.initialize());
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.json({
+    name: 'StreamLine Backend API',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/health',
+      auth: '/auth',
+      chat: '/api/chat',
+      processes: '/api/processes'
+    }
+  });
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {

@@ -6,6 +6,7 @@ interface MessageRequest {
   processId?: string;
   includeContext?: boolean;
   bpmnXml?: string;
+  diagramImage?: string; // Base64 encoded SVG
 }
 
 interface ChatMessage {
@@ -56,7 +57,7 @@ export class ClaudeService {
       // Call Claude API
       const response = await this.client.messages.create({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 4096,
+        max_tokens: 16384, // Significantly increased for large BPMN XML with diagram elements
         system: systemPrompt,
         messages: messages.map((msg) => ({
           role: msg.role,
@@ -116,6 +117,170 @@ export class ClaudeService {
     }
   }
 
+  async *sendMessageStream(request: MessageRequest) {
+    const {
+      message,
+      sessionId = crypto.randomUUID(),
+      processId,
+      includeContext = true,
+      bpmnXml,
+      diagramImage,
+    } = request;
+
+    // Get or create session history
+    let messages = this.sessions.get(sessionId) || [];
+
+    console.log(`📝 Session ${sessionId.substring(0, 8)}: ${messages.length} previous messages in context`);
+
+    // Build user message with optional diagram image
+    let userMessageContent: any = message;
+
+    if (diagramImage) {
+      // Include diagram image in the message
+      userMessageContent = [
+        {
+          type: 'image',
+          source: {
+            type: 'base64',
+            media_type: 'image/svg+xml',
+            data: diagramImage,
+          },
+        },
+        {
+          type: 'text',
+          text: message,
+        },
+      ];
+    }
+
+    // Add user message
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: typeof userMessageContent === 'string' ? userMessageContent : message,
+    };
+
+    messages.push(userMessage);
+
+    // Build system prompt
+    const systemPrompt = this.buildSystemPrompt(bpmnXml, !!diagramImage);
+
+    try {
+      // Call Claude API with streaming
+      // Build messages array with proper content types
+      const apiMessages = messages.map((msg, idx) => {
+        // Use the structured content for the last message if we have a diagram
+        if (idx === messages.length - 1 && diagramImage) {
+          return {
+            role: msg.role,
+            content: userMessageContent,
+          };
+        }
+        return {
+          role: msg.role,
+          content: msg.content,
+        };
+      });
+
+      console.log(`🤖 Sending ${apiMessages.length} messages to Claude (including ${Math.floor(apiMessages.length / 2)} user prompts)`);
+
+      const stream = await this.client.messages.create({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 16384, // Significantly increased for large BPMN XML with diagram elements
+        system: systemPrompt,
+        stream: true,
+        messages: apiMessages,
+      });
+
+      let fullContent = '';
+      let thinkingContent = '';
+      let currentThinking = '';
+      let isThinking = false;
+      let stopReason: string | undefined;
+
+      for await (const event of stream) {
+        if (event.type === 'content_block_start') {
+          if (event.content_block.type === 'thinking') {
+            isThinking = true;
+            currentThinking = '';
+          }
+        } else if (event.type === 'content_block_delta') {
+          if (event.delta.type === 'thinking_delta') {
+            currentThinking += event.delta.thinking;
+            thinkingContent = currentThinking;
+            yield {
+              type: 'thinking',
+              content: currentThinking,
+              sessionId,
+            };
+          } else if (event.delta.type === 'text_delta') {
+            fullContent += event.delta.text;
+            yield {
+              type: 'content',
+              content: event.delta.text,
+              fullContent,
+              sessionId,
+            };
+          }
+        } else if (event.type === 'content_block_stop') {
+          if (isThinking) {
+            isThinking = false;
+          }
+        } else if (event.type === 'message_delta') {
+          // Capture stop reason
+          if (event.delta.stop_reason) {
+            stopReason = event.delta.stop_reason;
+          }
+        } else if (event.type === 'message_stop') {
+          // Check if response might be truncated
+          const hasIncompleteXml = (fullContent.includes('<bpmn') || fullContent.includes('<?xml')) &&
+            !fullContent.includes('</bpmn:definitions>');
+
+          if (hasIncompleteXml) {
+            console.warn(`⚠️ Warning: Response contains incomplete BPMN XML (${fullContent.length} chars, stop_reason: ${stopReason || 'unknown'})`);
+            if (stopReason === 'max_tokens') {
+              console.error('❌ Response was truncated due to max_tokens limit! Consider increasing max_tokens.');
+            }
+          }
+
+          // Store the complete message in session history
+          const assistantMessage: ChatMessage = {
+            role: 'assistant',
+            content: fullContent,
+          };
+
+          messages.push(assistantMessage);
+
+          // Store session history (keep last 20 messages)
+          if (messages.length > 20) {
+            messages = messages.slice(-20);
+          }
+          this.sessions.set(sessionId, messages);
+
+          console.log(`💾 Stored session ${sessionId.substring(0, 8)}: now ${messages.length} messages total (${fullContent.length} chars, stop: ${stopReason || 'unknown'})`);
+
+          // Clean up old sessions
+          if (this.sessions.size > 100) {
+            const firstKey = this.sessions.keys().next().value;
+            this.sessions.delete(firstKey);
+          }
+
+          yield {
+            type: 'done',
+            sessionId,
+            messageId: crypto.randomUUID(),
+            processId: processId || null,
+          };
+        }
+      }
+    } catch (error: any) {
+      console.error('Claude API streaming error:', error);
+      yield {
+        type: 'error',
+        error: error.message || 'Failed to get response from Claude',
+      };
+    }
+  }
+
   async getSuggestions(bpmnXml: string): Promise<string[]> {
     const systemPrompt = `You are a BPMN process expert. Analyze the provided BPMN diagram and suggest improvements.`;
 
@@ -167,7 +332,7 @@ Provide concise, actionable suggestions.`;
     }
   }
 
-  private buildSystemPrompt(bpmnXml?: string): string {
+  private buildSystemPrompt(bpmnXml?: string, hasDiagramImage?: boolean): string {
     let prompt = `You are an expert AI assistant for StreamLine, a BPMN Process Hub application. You help users create, edit, and optimize business process diagrams using BPMN 2.0 notation.
 
 Your capabilities:
@@ -232,8 +397,10 @@ Guidelines:
 - Layout elements left-to-right with 80-120 pixel spacing
 - Consider error handling, edge cases, and process efficiency`;
 
-    if (bpmnXml) {
-      prompt += `\n\nCurrent BPMN diagram context:\n${bpmnXml}`;
+    if (bpmnXml && !hasDiagramImage) {
+      prompt += `\n\nCurrent BPMN diagram context (XML):\n${bpmnXml}`;
+    } else if (hasDiagramImage) {
+      prompt += `\n\nNote: The user has provided a visual diagram of the current BPMN process. You can see it in the attached image. Use this visual context along with any BPMN XML to understand the current state of the process and provide better suggestions.`;
     }
 
     return prompt;

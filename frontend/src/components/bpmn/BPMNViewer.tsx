@@ -46,29 +46,38 @@ export function BPMNViewer() {
   }, []);
 
   useEffect(() => {
-    if (currentBpmnXml && viewerRef.current) {
-      loadDiagram(currentBpmnXml);
+    if (viewerRef.current) {
+      // Load current XML or empty diagram if null
+      loadDiagram(currentBpmnXml || EMPTY_BPMN);
     }
   }, [currentBpmnXml]);
 
-  const loadDiagram = async (xml: string) => {
+  const loadDiagram = async (xml: string | null | undefined) => {
     if (!viewerRef.current) return;
+
+    // Use EMPTY_BPMN if xml is null, undefined, or empty
+    const xmlToLoad = xml && xml.trim() ? xml : EMPTY_BPMN;
 
     try {
       setError(null);
-      await viewerRef.current.importXML(xml);
+      await viewerRef.current.importXML(xmlToLoad);
 
       // Fit diagram to viewport
       const canvas = viewerRef.current.get('canvas');
       canvas.zoom('fit-viewport');
 
-      // Only update store if loading from external source (not from store itself)
-      if (xml !== currentBpmnXml) {
+      // Only update store if loading from external source (not from store itself) and it's valid XML
+      if (xml && xml.trim() && xml !== currentBpmnXml) {
         setCurrentBpmnXml(xml);
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load BPMN diagram');
       console.error('Error loading BPMN:', err);
+      // Try loading empty diagram as fallback
+      if (xmlToLoad !== EMPTY_BPMN) {
+        console.log('Loading empty diagram as fallback');
+        await loadDiagram(EMPTY_BPMN);
+      }
     }
   };
 

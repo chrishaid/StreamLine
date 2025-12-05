@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { processStore } from '../models/processModel';
+import { processService } from '../services/processService';
 
 export async function createProcess(
   req: Request,
@@ -16,19 +16,19 @@ export async function createProcess(
       });
     }
 
-    const { process, version } = await processStore.createProcess({
+    const result = await processService.saveProcess({
       name,
       description,
       bpmnXml,
       primaryCategoryId,
       secondaryCategoryIds,
       tags,
-      ownerId: user.userId,
-      createdBy: user.userId,
+      userId: user.userId,
     });
 
-    res.status(201).json({ process, version });
+    res.status(201).json(result);
   } catch (error) {
+    console.error('Error creating process:', error);
     next(error);
   }
 }
@@ -41,7 +41,7 @@ export async function getProcesses(
   try {
     const { status, categoryId, search, ownerId, tags, limit = 50, offset = 0 } = req.query;
 
-    const processes = await processStore.getAllProcesses({
+    const processes = await processService.getAllProcesses({
       status: status as string,
       categoryId: categoryId as string,
       search: search as string,
@@ -62,6 +62,7 @@ export async function getProcesses(
       offset: Number(offset),
     });
   } catch (error) {
+    console.error('Error getting processes:', error);
     next(error);
   }
 }
@@ -74,7 +75,7 @@ export async function getProcessById(
   try {
     const { id } = req.params;
 
-    const process = await processStore.getProcessById(id);
+    const process = await processService.getProcess(id);
 
     if (!process) {
       return res.status(404).json({
@@ -84,6 +85,7 @@ export async function getProcessById(
 
     res.json(process);
   } catch (error) {
+    console.error('Error getting process:', error);
     next(error);
   }
 }
@@ -98,7 +100,7 @@ export async function updateProcess(
     const updates = req.body;
     const user = (req as any).user;
 
-    const process = await processStore.updateProcess(id, updates, user.userId);
+    const process = await processService.updateProcess(id, updates, user.userId);
 
     if (!process) {
       return res.status(404).json({
@@ -108,6 +110,7 @@ export async function updateProcess(
 
     res.json(process);
   } catch (error) {
+    console.error('Error updating process:', error);
     next(error);
   }
 }
@@ -120,16 +123,11 @@ export async function deleteProcess(
   try {
     const { id } = req.params;
 
-    const deleted = await processStore.deleteProcess(id);
-
-    if (!deleted) {
-      return res.status(404).json({
-        error: { code: 'NOT_FOUND', message: 'Process not found' },
-      });
-    }
+    await processService.deleteProcess(id);
 
     res.status(204).send();
   } catch (error) {
+    console.error('Error deleting process:', error);
     next(error);
   }
 }
@@ -150,7 +148,7 @@ export async function duplicateProcess(
       });
     }
 
-    const result = await processStore.duplicateProcess(id, name, user.userId);
+    const result = await processService.duplicateProcess(id, name, user.userId);
 
     if (!result) {
       return res.status(404).json({
@@ -160,6 +158,7 @@ export async function duplicateProcess(
 
     res.status(201).json(result);
   } catch (error) {
+    console.error('Error duplicating process:', error);
     next(error);
   }
 }
@@ -173,10 +172,11 @@ export async function getProcessVersions(
   try {
     const { id } = req.params;
 
-    const versions = await processStore.getVersionsByProcessId(id);
+    const versions = await processService.getVersionsByProcessId(id);
 
     res.json({ versions });
   } catch (error) {
+    console.error('Error getting versions:', error);
     next(error);
   }
 }
@@ -189,7 +189,7 @@ export async function getCurrentVersion(
   try {
     const { id } = req.params;
 
-    const version = await processStore.getCurrentVersion(id);
+    const version = await processService.getCurrentVersion(id);
 
     if (!version) {
       return res.status(404).json({
@@ -199,6 +199,7 @@ export async function getCurrentVersion(
 
     res.json(version);
   } catch (error) {
+    console.error('Error getting current version:', error);
     next(error);
   }
 }
@@ -222,12 +223,12 @@ export async function createProcessVersion(
       });
     }
 
-    const version = await processStore.createVersion({
+    const version = await processService.createVersion({
       processId: id,
       bpmnXml,
       changeSummary,
       changeType,
-      createdBy: user.userId,
+      userId: user.userId,
     });
 
     if (!version) {
@@ -238,6 +239,7 @@ export async function createProcessVersion(
 
     res.status(201).json(version);
   } catch (error) {
+    console.error('Error creating version:', error);
     next(error);
   }
 }
