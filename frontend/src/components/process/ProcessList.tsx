@@ -32,14 +32,14 @@ export function ProcessList() {
 
   const handleLoadProcess = async (process: Process) => {
     try {
-      // Fetch full process data including BPMN XML
-      const { process: fullProcess } = await processApi.getById(process.id);
-
+      // Fetch full process data
+      const fullProcess = await processApi.getById(process.id);
       setCurrentProcess(fullProcess);
 
       // Load BPMN XML from the current version
-      if (fullProcess.currentVersion?.bpmnXml) {
-        setCurrentBpmnXml(fullProcess.currentVersion.bpmnXml);
+      const currentVersion = await processApi.getCurrentVersion(process.id);
+      if (currentVersion?.bpmnXml) {
+        setCurrentBpmnXml(currentVersion.bpmnXml);
       }
 
       // Navigate to editor page
@@ -64,11 +64,10 @@ export function ProcessList() {
 
     try {
       const processToUpdate = processes.find(p => p.id === processId);
-      if (!processToUpdate?.currentVersion?.bpmnXml) return;
+      if (!processToUpdate) return;
 
       await processApi.update(processId, {
         name: editName.trim(),
-        bpmnXml: processToUpdate.currentVersion.bpmnXml,
         description: processToUpdate.description || undefined,
       });
 
@@ -79,7 +78,7 @@ export function ProcessList() {
 
       // If this is the current process, update it
       if (currentProcess?.id === processId) {
-        const { process: updatedProcess } = await processApi.getById(processId);
+        const updatedProcess = await processApi.getById(processId);
         setCurrentProcess(updatedProcess);
       }
     } catch (error) {

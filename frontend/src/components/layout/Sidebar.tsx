@@ -34,6 +34,7 @@ export function Sidebar() {
         name: 'Untitled Process',
         bpmnXml: EMPTY_BPMN,
         description: 'New process',
+        primaryCategoryId: '',
       });
 
       // Set as current process
