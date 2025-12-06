@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore';
-import { getGoogleAuthUrl, getMicrosoftAuthUrl } from '../services/authApi';
+import { supabase } from '../lib/supabase';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -13,12 +13,30 @@ export function LoginPage() {
     }
   }, [isAuthenticated, navigate]);
 
-  const handleGoogleLogin = () => {
-    window.location.href = getGoogleAuthUrl();
+  const handleGoogleLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      console.error('Google login error:', error);
+    }
   };
 
-  const handleMicrosoftLogin = () => {
-    window.location.href = getMicrosoftAuthUrl();
+  const handleMicrosoftLogin = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'azure',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+
+    if (error) {
+      console.error('Microsoft login error:', error);
+    }
   };
 
   return (
