@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { FileText, Trash2, Edit2, Loader2 } from 'lucide-react';
+import { FileText, Trash2, Edit2, Loader2, MoreHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 import { processApi } from '../../services/api';
 import { Process } from '../../types';
+import { clsx } from 'clsx';
 
 export function ProcessList() {
   const navigate = useNavigate();
@@ -13,7 +14,6 @@ export function ProcessList() {
   const [editName, setEditName] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  // Load processes on mount
   useEffect(() => {
     loadProcesses();
   }, []);
@@ -32,24 +32,22 @@ export function ProcessList() {
 
   const handleLoadProcess = async (process: Process) => {
     try {
-      // Fetch full process data
       const fullProcess = await processApi.getById(process.id);
       setCurrentProcess(fullProcess);
 
-      // Load BPMN XML from the current version
       const currentVersion = await processApi.getCurrentVersion(process.id);
-      if (currentVersion?.bpmnXml) {
-        setCurrentBpmnXml(currentVersion.bpmnXml);
+      if (currentVersion?.bpmn_xml) {
+        setCurrentBpmnXml(currentVersion.bpmn_xml);
       }
 
-      // Navigate to editor page
-      navigate('/editor');
+      navigate(`/editor/${process.id}`);
     } catch (error) {
       console.error('Failed to load process:', error);
     }
   };
 
-  const handleStartEdit = (process: Process) => {
+  const handleStartEdit = (e: React.MouseEvent, process: Process) => {
+    e.stopPropagation();
     setEditingId(process.id);
     setEditName(process.name);
   };
@@ -71,12 +69,10 @@ export function ProcessList() {
         description: processToUpdate.description || undefined,
       });
 
-      // Reload processes to get updated data
       await loadProcesses();
       setEditingId(null);
       setEditName('');
 
-      // If this is the current process, update it
       if (currentProcess?.id === processId) {
         const updatedProcess = await processApi.getById(processId);
         setCurrentProcess(updatedProcess);
@@ -86,7 +82,8 @@ export function ProcessList() {
     }
   };
 
-  const handleDeleteClick = (processId: string) => {
+  const handleDeleteClick = (e: React.MouseEvent, processId: string) => {
+    e.stopPropagation();
     setDeleteConfirm(processId);
   };
 
@@ -96,7 +93,6 @@ export function ProcessList() {
       deleteFromStore(processId);
       setDeleteConfirm(null);
 
-      // If deleted process was current, clear editor
       if (currentProcess?.id === processId) {
         setCurrentProcess(null);
         setCurrentBpmnXml(null);
@@ -113,34 +109,34 @@ export function ProcessList() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
       </div>
     );
   }
 
   if (processes.length === 0) {
     return (
-      <div className="px-3 py-8 text-center text-gray-500 text-sm">
-        <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-        <p>No processes yet</p>
-        <p className="text-xs mt-1">Create your first process to get started</p>
+      <div className="px-3 py-8 text-center">
+        <FileText className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+        <p className="text-sm text-slate-500">No processes yet</p>
+        <p className="text-xs text-slate-400 mt-1">Create your first one</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       {processes.map((process) => (
         <div
           key={process.id}
-          className={`group relative rounded-lg transition-colors ${
+          className={clsx(
+            'group relative rounded-lg transition-all',
             currentProcess?.id === process.id
-              ? 'bg-primary/10 border border-primary/20'
-              : 'hover:bg-gray-100'
-          }`}
+              ? 'bg-accent/10 ring-1 ring-accent/20'
+              : 'hover:bg-slate-50'
+          )}
         >
           {editingId === process.id ? (
-            // Edit mode
             <div className="px-3 py-2">
               <input
                 type="text"
@@ -150,68 +146,79 @@ export function ProcessList() {
                   if (e.key === 'Enter') handleSaveEdit(process.id);
                   if (e.key === 'Escape') handleCancelEdit();
                 }}
-                className="w-full px-2 py-1 text-sm border border-primary rounded focus:outline-none focus:ring-2 focus:ring-primary/50"
+                className="w-full px-2 py-1 text-sm bg-white border border-accent rounded-md focus:outline-none focus:ring-2 focus:ring-accent/30"
                 autoFocus
                 onBlur={() => handleSaveEdit(process.id)}
               />
             </div>
           ) : deleteConfirm === process.id ? (
-            // Delete confirmation
-            <div className="px-3 py-2 bg-red-50">
-              <p className="text-xs text-red-800 mb-2">Delete this process?</p>
+            <div className="px-3 py-2.5 bg-red-50 rounded-lg">
+              <p className="text-xs text-slate-600 mb-2">Delete this process?</p>
               <div className="flex gap-2">
                 <button
                   onClick={() => handleConfirmDelete(process.id)}
-                  className="flex-1 px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+                  className="flex-1 px-2 py-1 text-xs bg-red-600 text-white rounded-md hover:bg-red-700 font-medium transition-colors"
                 >
                   Delete
                 </button>
                 <button
                   onClick={handleCancelDelete}
-                  className="flex-1 px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                  className="flex-1 px-2 py-1 text-xs bg-white text-slate-600 rounded-md border border-slate-200 hover:bg-slate-50 font-medium transition-colors"
                 >
                   Cancel
                 </button>
               </div>
             </div>
           ) : (
-            // Normal mode
-            <button
+            <div
               onClick={() => handleLoadProcess(process)}
-              className="w-full px-3 py-2 flex items-start gap-3 text-left"
+              className="w-full px-3 py-2 flex items-start gap-2.5 text-left cursor-pointer"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleLoadProcess(process);
+                }
+              }}
             >
-              <FileText className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <FileText className={clsx(
+                'w-4 h-4 mt-0.5 flex-shrink-0',
+                currentProcess?.id === process.id ? 'text-accent' : 'text-slate-400'
+              )} />
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-gray-900 truncate">
+                <div className={clsx(
+                  'text-sm truncate',
+                  currentProcess?.id === process.id
+                    ? 'font-medium text-slate-800'
+                    : 'text-slate-700'
+                )}>
                   {process.name}
                 </div>
-                <div className="text-xs text-gray-500 mt-0.5">
-                  Updated {new Date(process.updatedAt).toLocaleDateString()}
+                <div className="text-xs text-slate-400 mt-0.5">
+                  {new Date(process.updatedAt).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                  })}
                 </div>
               </div>
-              <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+              <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex gap-0.5">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleStartEdit(process);
-                  }}
-                  className="p-1 hover:bg-gray-200 rounded"
+                  onClick={(e) => handleStartEdit(e, process)}
+                  className="p-1 hover:bg-slate-200 rounded-md transition-colors"
                   title="Rename"
                 >
-                  <Edit2 className="w-3.5 h-3.5" />
+                  <Edit2 className="w-3 h-3 text-slate-500" />
                 </button>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteClick(process.id);
-                  }}
-                  className="p-1 hover:bg-red-100 text-red-600 rounded"
+                  onClick={(e) => handleDeleteClick(e, process.id)}
+                  className="p-1 hover:bg-red-100 rounded-md transition-colors"
                   title="Delete"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-3 h-3 text-slate-500 hover:text-red-600" />
                 </button>
               </div>
-            </button>
+            </div>
           )}
         </div>
       ))}

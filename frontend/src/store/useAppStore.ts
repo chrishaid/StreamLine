@@ -97,14 +97,35 @@ export const useAppStore = create<AppState>((set) => ({
   // Process Management
   processes: [],
   setProcesses: (processes) => set({ processes }),
-  addProcess: (process) =>
-    set((state) => ({ processes: [...state.processes, process] })),
-  updateProcess: (id, updates) =>
-    set((state) => ({
-      processes: state.processes.map((p) =>
-        p.id === id ? { ...p, ...updates } : p
-      ),
-    })),
+  addProcess: (process) => {
+    console.log('[Store] addProcess called:', { process, currentProcesses: useAppStore.getState().processes.length });
+    set((state) => {
+      const newProcesses = [...state.processes, process];
+      console.log('[Store] Processes after add:', newProcesses.map(p => ({ id: p.id, name: p.name })));
+      return { processes: newProcesses };
+    });
+  },
+  updateProcess: (id, updates) => {
+    console.log('[Store] updateProcess called:', { id, updates, currentProcesses: useAppStore.getState().processes.length });
+    set((state) => {
+      const processExists = state.processes.some((p) => p.id === id);
+      let newProcesses;
+
+      if (processExists) {
+        // Update existing process
+        newProcesses = state.processes.map((p) =>
+          p.id === id ? { ...p, ...updates } : p
+        );
+      } else {
+        // Process not in array yet - add it if updates has all required fields
+        console.log('[Store] Process not found in array, adding it');
+        newProcesses = [...state.processes, updates as Process];
+      }
+
+      console.log('[Store] Processes after update:', newProcesses.map(p => ({ id: p.id, name: p.name })));
+      return { processes: newProcesses };
+    });
+  },
   deleteProcess: (id) =>
     set((state) => ({
       processes: state.processes.filter((p) => p.id !== id),

@@ -1,5 +1,22 @@
 import axios from 'axios';
-import type { ChatMessageRequest, ChatMessageResponse, Process, CreateProcessRequest, UpdateProcessRequest } from '../types';
+import type {
+  ChatMessageRequest,
+  ChatMessageResponse,
+  Process,
+  CreateProcessRequest,
+  UpdateProcessRequest,
+  Organization,
+  OrganizationMember,
+  OrganizationTag,
+  OrganizationInvitation,
+  OrganizationWithMembership,
+  CreateOrganizationRequest,
+  UpdateOrganizationRequest,
+  InviteMemberRequest,
+  UpdateMemberRequest,
+  CreateOrganizationTagRequest,
+  UpdateOrganizationTagRequest,
+} from '../types';
 import { supabase } from '../lib/supabase';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
@@ -134,13 +151,71 @@ export const processApi = {
   },
 
   create: async (data: CreateProcessRequest & { bpmnXml?: string }): Promise<{ process: Process; version: any }> => {
+    console.log('[API] processApi.create called with:', { name: data.name, hasBpmn: !!data.bpmnXml });
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
+    console.log('[API] Authenticated as:', user.email);
 
-    // Create process version first
+    // First ensure user exists in public.users table
+    const { data: existingUser, error: userCheckError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (!existingUser && !userCheckError) {
+      // User doesn't exist, try to create
+      const { error: createUserError } = await supabase
+        .from('users')
+        .insert({
+          id: user.id,
+          email: user.email!,
+          name: user.user_metadata?.full_name || user.email!,
+          avatar_url: user.user_metadata?.avatar_url || null,
+          role: 'editor',
+          last_login_at: new Date().toISOString(),
+        });
+      if (createUserError) {
+        console.warn('Could not create user profile:', createUserError);
+      }
+    }
+
+    // Build process data - only include primary_category_id if it's a valid UUID
+    const processInsertData: any = {
+      name: data.name,
+      description: data.description || '',
+      status: 'draft',
+      owner_id: user.id,
+      created_by: user.id,
+      updated_by: user.id,
+      tags: data.tags || [],
+    };
+
+    // Only add primary_category_id if it's provided and not empty
+    if (data.primaryCategoryId && data.primaryCategoryId.trim() !== '') {
+      processInsertData.primary_category_id = data.primaryCategoryId;
+    }
+
+    // Create process first (without current_version_id)
+    console.log('[API] Inserting process:', processInsertData);
+    const { data: process, error: processError } = await supabase
+      .from('processes')
+      .insert(processInsertData)
+      .select()
+      .single();
+
+    if (processError) {
+      console.error('[API] Process creation error:', processError);
+      throw processError;
+    }
+    console.log('[API] Process created:', process.id);
+
+    // Create process version with process_id
     const { data: version, error: versionError } = await supabase
       .from('process_versions')
       .insert({
+        process_id: process.id,
         version_number: '1.0',
         major_version: 1,
         minor_version: 0,
@@ -152,39 +227,38 @@ export const processApi = {
       .select()
       .single();
 
-    if (versionError) throw versionError;
+    if (versionError) {
+      console.error('Version creation error:', versionError);
+      // Try to clean up the process if version creation fails
+      await supabase.from('processes').delete().eq('id', process.id);
+      throw versionError;
+    }
 
-    // Create process
-    const { data: process, error: processError } = await supabase
+    // Update process with current_version_id
+    const { data: updatedProcess, error: updateError } = await supabase
       .from('processes')
-      .insert({
-        name: data.name,
-        description: data.description || '',
-        status: 'draft',
-        owner_id: user.id,
-        created_by: user.id,
-        updated_by: user.id,
-        primary_category_id: data.primaryCategoryId,
-        tags: data.tags || [],
-        current_version_id: version.id,
-      })
+      .update({ current_version_id: version.id })
+      .eq('id', process.id)
       .select()
       .single();
 
-    if (processError) throw processError;
-
-    // Update version with process_id
-    await supabase.from('process_versions').update({ process_id: process.id }).eq('id', version.id);
+    if (updateError) {
+      console.error('Process update error:', updateError);
+      throw updateError;
+    }
 
     return {
-      process: mapDbRowToProcess(process),
+      process: mapDbRowToProcess(updatedProcess),
       version,
     };
   },
 
   update: async (id: string, data: UpdateProcessRequest): Promise<Process> => {
+    console.log('[API] processApi.update called:', { id, data });
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
+    console.log('[API] Authenticated user for update:', user.email);
 
     const updateData: any = {
       updated_by: user.id,
@@ -197,6 +271,9 @@ export const processApi = {
     if (data.primaryCategoryId !== undefined) updateData.primary_category_id = data.primaryCategoryId;
     if (data.secondaryCategoryIds !== undefined) updateData.secondary_category_ids = data.secondaryCategoryIds;
     if (data.tags !== undefined) updateData.tags = data.tags;
+    if (data.isFavorite !== undefined) updateData.is_favorite = data.isFavorite;
+
+    console.log('[API] Sending update to Supabase:', { id, updateData });
 
     const { data: process, error } = await supabase
       .from('processes')
@@ -205,9 +282,16 @@ export const processApi = {
       .select()
       .single();
 
-    if (error) throw error;
-    if (!process) throw new Error('Process not found');
+    if (error) {
+      console.error('[API] Supabase update error:', error);
+      throw error;
+    }
+    if (!process) {
+      console.error('[API] No process returned from update');
+      throw new Error('Process not found');
+    }
 
+    console.log('[API] Update successful, returned process:', process);
     return mapDbRowToProcess(process);
   },
 
@@ -221,14 +305,42 @@ export const processApi = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    // Get original process
+    // Get original process and version
     const original = await processApi.getById(id);
     const originalVersion = await processApi.getCurrentVersion(id);
 
-    // Create new version
+    // Build process data - only include primary_category_id if it's valid
+    const processInsertData: any = {
+      name,
+      description: original.description,
+      status: 'draft',
+      owner_id: user.id,
+      created_by: user.id,
+      updated_by: user.id,
+      tags: original.tags,
+    };
+
+    if (original.primaryCategoryId && original.primaryCategoryId.trim() !== '') {
+      processInsertData.primary_category_id = original.primaryCategoryId;
+    }
+
+    // Create new process first
+    const { data: process, error: processError } = await supabase
+      .from('processes')
+      .insert(processInsertData)
+      .select()
+      .single();
+
+    if (processError) {
+      console.error('Duplicate process creation error:', processError);
+      throw processError;
+    }
+
+    // Create new version with process_id
     const { data: version, error: versionError } = await supabase
       .from('process_versions')
       .insert({
+        process_id: process.id,
         version_number: '1.0',
         major_version: 1,
         minor_version: 0,
@@ -241,32 +353,27 @@ export const processApi = {
       .select()
       .single();
 
-    if (versionError) throw versionError;
+    if (versionError) {
+      console.error('Duplicate version creation error:', versionError);
+      await supabase.from('processes').delete().eq('id', process.id);
+      throw versionError;
+    }
 
-    // Create new process
-    const { data: process, error: processError } = await supabase
+    // Update process with current_version_id
+    const { data: updatedProcess, error: updateError } = await supabase
       .from('processes')
-      .insert({
-        name,
-        description: original.description,
-        status: 'draft',
-        owner_id: user.id,
-        created_by: user.id,
-        updated_by: user.id,
-        primary_category_id: original.primaryCategoryId,
-        tags: original.tags,
-        current_version_id: version.id,
-      })
+      .update({ current_version_id: version.id })
+      .eq('id', process.id)
       .select()
       .single();
 
-    if (processError) throw processError;
-
-    // Update version with process_id
-    await supabase.from('process_versions').update({ process_id: process.id }).eq('id', version.id);
+    if (updateError) {
+      console.error('Duplicate process update error:', updateError);
+      throw updateError;
+    }
 
     return {
-      process: mapDbRowToProcess(process),
+      process: mapDbRowToProcess(updatedProcess),
       version,
     };
   },
@@ -355,6 +462,436 @@ export const processApi = {
       .eq('id', id);
 
     return version;
+  },
+};
+
+// Helper to map database row to Organization type
+function mapDbRowToOrganization(row: any): Organization {
+  return {
+    id: row.id,
+    name: row.name,
+    slug: row.slug,
+    description: row.description,
+    logoUrl: row.logo_url,
+    createdBy: row.created_by,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+    settings: row.settings || {},
+  };
+}
+
+function mapDbRowToOrganizationMember(row: any): OrganizationMember {
+  return {
+    id: row.id,
+    organizationId: row.organization_id,
+    userId: row.user_id,
+    role: row.role,
+    invitedBy: row.invited_by,
+    invitedAt: new Date(row.invited_at),
+    joinedAt: row.joined_at ? new Date(row.joined_at) : undefined,
+    status: row.status,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+    user: row.users ? {
+      id: row.users.id,
+      name: row.users.name,
+      email: row.users.email,
+      avatarUrl: row.users.avatar_url,
+    } : undefined,
+  };
+}
+
+function mapDbRowToOrganizationTag(row: any): OrganizationTag {
+  return {
+    id: row.id,
+    organizationId: row.organization_id,
+    name: row.name,
+    parentTagId: row.parent_tag_id,
+    description: row.description,
+    color: row.color,
+    createdBy: row.created_by,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+  };
+}
+
+function mapDbRowToOrganizationInvitation(row: any): OrganizationInvitation {
+  return {
+    id: row.id,
+    organizationId: row.organization_id,
+    email: row.email,
+    role: row.role,
+    invitedBy: row.invited_by,
+    token: row.token,
+    expiresAt: new Date(row.expires_at),
+    acceptedAt: row.accepted_at ? new Date(row.accepted_at) : undefined,
+    createdAt: new Date(row.created_at),
+  };
+}
+
+// Organization API
+export const organizationApi = {
+  // Get all organizations the current user belongs to
+  getMyOrganizations: async (): Promise<OrganizationWithMembership[]> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('organization_members')
+      .select(`
+        role,
+        organizations (
+          id,
+          name,
+          slug,
+          description,
+          logo_url,
+          created_by,
+          created_at,
+          updated_at,
+          settings
+        )
+      `)
+      .eq('user_id', user.id)
+      .eq('status', 'active');
+
+    if (error) throw error;
+
+    return (data || []).map((row: any) => ({
+      ...mapDbRowToOrganization(row.organizations),
+      currentUserRole: row.role,
+    }));
+  },
+
+  // Get a single organization by ID
+  getById: async (id: string): Promise<OrganizationWithMembership> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error('Organization not found');
+
+    // Get current user's role
+    const { data: memberData } = await supabase
+      .from('organization_members')
+      .select('role')
+      .eq('organization_id', id)
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .single();
+
+    // Get counts
+    const { count: memberCount } = await supabase
+      .from('organization_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('organization_id', id)
+      .eq('status', 'active');
+
+    const { count: processCount } = await supabase
+      .from('processes')
+      .select('*', { count: 'exact', head: true })
+      .eq('organization_id', id);
+
+    return {
+      ...mapDbRowToOrganization(data),
+      currentUserRole: memberData?.role,
+      memberCount: memberCount || 0,
+      processCount: processCount || 0,
+    };
+  },
+
+  // Get organization by slug
+  getBySlug: async (slug: string): Promise<OrganizationWithMembership> => {
+    const { data, error } = await supabase
+      .from('organizations')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error('Organization not found');
+
+    return organizationApi.getById(data.id);
+  },
+
+  // Create a new organization
+  create: async (request: CreateOrganizationRequest): Promise<Organization> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Use the helper function to create org and add owner
+    const { data, error } = await supabase.rpc('create_organization', {
+      org_name: request.name,
+      org_slug: request.slug,
+      org_description: request.description || null,
+    });
+
+    if (error) throw error;
+
+    // Fetch the created organization
+    return organizationApi.getById(data);
+  },
+
+  // Update an organization
+  update: async (id: string, request: UpdateOrganizationRequest): Promise<Organization> => {
+    const updateData: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (request.name !== undefined) updateData.name = request.name;
+    if (request.description !== undefined) updateData.description = request.description;
+    if (request.logoUrl !== undefined) updateData.logo_url = request.logoUrl;
+    if (request.settings !== undefined) updateData.settings = request.settings;
+
+    const { data, error } = await supabase
+      .from('organizations')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error('Organization not found');
+
+    return mapDbRowToOrganization(data);
+  },
+
+  // Delete an organization
+  delete: async (id: string): Promise<void> => {
+    const { error } = await supabase.from('organizations').delete().eq('id', id);
+    if (error) throw error;
+  },
+
+  // Members
+  getMembers: async (organizationId: string): Promise<OrganizationMember[]> => {
+    const { data, error } = await supabase
+      .from('organization_members')
+      .select(`
+        *,
+        users (
+          id,
+          name,
+          email,
+          avatar_url
+        )
+      `)
+      .eq('organization_id', organizationId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map(mapDbRowToOrganizationMember);
+  },
+
+  updateMember: async (
+    organizationId: string,
+    userId: string,
+    request: UpdateMemberRequest
+  ): Promise<OrganizationMember> => {
+    const updateData: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (request.role !== undefined) updateData.role = request.role;
+    if (request.status !== undefined) updateData.status = request.status;
+
+    const { data, error } = await supabase
+      .from('organization_members')
+      .update(updateData)
+      .eq('organization_id', organizationId)
+      .eq('user_id', userId)
+      .select(`
+        *,
+        users (
+          id,
+          name,
+          email,
+          avatar_url
+        )
+      `)
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error('Member not found');
+
+    return mapDbRowToOrganizationMember(data);
+  },
+
+  removeMember: async (organizationId: string, userId: string): Promise<void> => {
+    const { error } = await supabase
+      .from('organization_members')
+      .delete()
+      .eq('organization_id', organizationId)
+      .eq('user_id', userId);
+
+    if (error) throw error;
+  },
+
+  // Invitations
+  getInvitations: async (organizationId: string): Promise<OrganizationInvitation[]> => {
+    const { data, error } = await supabase
+      .from('organization_invitations')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .is('accepted_at', null)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return (data || []).map(mapDbRowToOrganizationInvitation);
+  },
+
+  createInvitation: async (
+    organizationId: string,
+    request: InviteMemberRequest
+  ): Promise<OrganizationInvitation> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('organization_invitations')
+      .insert({
+        organization_id: organizationId,
+        email: request.email,
+        role: request.role,
+        invited_by: user.id,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return mapDbRowToOrganizationInvitation(data);
+  },
+
+  deleteInvitation: async (invitationId: string): Promise<void> => {
+    const { error } = await supabase
+      .from('organization_invitations')
+      .delete()
+      .eq('id', invitationId);
+
+    if (error) throw error;
+  },
+
+  acceptInvitation: async (token: string): Promise<string> => {
+    const { data, error } = await supabase.rpc('accept_organization_invitation', {
+      invitation_token: token,
+    });
+
+    if (error) throw error;
+
+    return data;
+  },
+
+  // Tags
+  getTags: async (organizationId: string): Promise<OrganizationTag[]> => {
+    const { data, error } = await supabase
+      .from('organization_tags')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .order('name', { ascending: true });
+
+    if (error) throw error;
+
+    return (data || []).map(mapDbRowToOrganizationTag);
+  },
+
+  createTag: async (
+    organizationId: string,
+    request: CreateOrganizationTagRequest
+  ): Promise<OrganizationTag> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('organization_tags')
+      .insert({
+        organization_id: organizationId,
+        name: request.name,
+        parent_tag_id: request.parentTagId || null,
+        description: request.description || null,
+        color: request.color || null,
+        created_by: user.id,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return mapDbRowToOrganizationTag(data);
+  },
+
+  updateTag: async (
+    tagId: string,
+    request: UpdateOrganizationTagRequest
+  ): Promise<OrganizationTag> => {
+    const updateData: any = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (request.name !== undefined) updateData.name = request.name;
+    if (request.parentTagId !== undefined) updateData.parent_tag_id = request.parentTagId;
+    if (request.description !== undefined) updateData.description = request.description;
+    if (request.color !== undefined) updateData.color = request.color;
+
+    const { data, error } = await supabase
+      .from('organization_tags')
+      .update(updateData)
+      .eq('id', tagId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error('Tag not found');
+
+    return mapDbRowToOrganizationTag(data);
+  },
+
+  deleteTag: async (tagId: string): Promise<void> => {
+    const { error } = await supabase.from('organization_tags').delete().eq('id', tagId);
+    if (error) throw error;
+  },
+
+  // Set current organization for user
+  setCurrentOrganization: async (organizationId: string | null): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { error } = await supabase
+      .from('users')
+      .update({ current_organization_id: organizationId })
+      .eq('id', user.id);
+
+    if (error) throw error;
+  },
+
+  // Get current user's active organization
+  getCurrentOrganization: async (): Promise<OrganizationWithMembership | null> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('current_organization_id')
+      .eq('id', user.id)
+      .single();
+
+    if (userError || !userData?.current_organization_id) {
+      return null;
+    }
+
+    try {
+      return await organizationApi.getById(userData.current_organization_id);
+    } catch {
+      return null;
+    }
   },
 };
 

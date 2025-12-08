@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import { useAppStore } from '../../store/useAppStore';
 import {
@@ -45,36 +45,51 @@ export function BPMNModeler() {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const autoSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastLoadedXmlRef = useRef<string | null>(null);
+  const isLoadingRef = useRef(false);
 
+  // Initialize modeler once
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Initialize BPMN modeler
+    console.log('[BPMNModeler] Initializing...');
     modelerRef.current = new BpmnModeler({
       container: containerRef.current,
-      keyboard: {
-        bindTo: document,
-      },
     });
-
-    // Load initial diagram
-    loadDiagram(currentBpmnXml || EMPTY_BPMN);
 
     // Listen for changes
     const eventBus = modelerRef.current.get('eventBus');
     eventBus.on('commandStack.changed', handleCommandStackChanged);
 
+    setIsReady(true);
+
     return () => {
+      console.log('[BPMNModeler] Destroying...');
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
       modelerRef.current?.destroy();
+      modelerRef.current = null;
+      setIsReady(false);
     };
   }, []);
 
+  // Load diagram when ready or when XML changes
   useEffect(() => {
-    if (currentBpmnXml && modelerRef.current) {
-      loadDiagram(currentBpmnXml);
+    if (!isReady || !modelerRef.current || isLoadingRef.current) return;
+
+    const xmlToLoad = currentBpmnXml || EMPTY_BPMN;
+
+    // Skip if same XML already loaded
+    if (lastLoadedXmlRef.current === xmlToLoad) {
+      return;
     }
-  }, [currentBpmnXml]);
+
+    console.log('[BPMNModeler] Loading diagram...', xmlToLoad.substring(0, 50));
+    loadDiagram(xmlToLoad);
+  }, [isReady, currentBpmnXml]);
 
   const handleCommandStackChanged = () => {
     const commandStack = modelerRef.current?.get('commandStack');
@@ -129,15 +144,17 @@ export function BPMNModeler() {
     }
   };
 
-  const loadDiagram = async (xml: string | undefined | null) => {
-    if (!modelerRef.current) return;
+  const loadDiagram = async (xml: string) => {
+    if (!modelerRef.current || isLoadingRef.current) return;
 
-    // Use EMPTY_BPMN if xml is undefined, null, or empty
+    isLoadingRef.current = true;
     const xmlToLoad = xml && xml.trim() ? xml : EMPTY_BPMN;
 
     try {
       setError(null);
       await modelerRef.current.importXML(xmlToLoad);
+      lastLoadedXmlRef.current = xmlToLoad;
+      console.log('[BPMNModeler] Diagram loaded successfully');
 
       // Fit diagram to viewport
       const canvas = modelerRef.current.get('canvas');
@@ -150,19 +167,24 @@ export function BPMNModeler() {
         setCanUndo(false);
         setCanRedo(false);
       }
-
-      // Only update store if loading from external source and it's valid XML
-      if (xml && xml.trim() && xml !== currentBpmnXml) {
-        setCurrentBpmnXml(xml);
-      }
     } catch (err: any) {
       setError(err.message || 'Failed to load BPMN diagram');
-      console.error('Error loading BPMN:', err);
+      console.error('[BPMNModeler] Error loading BPMN:', err);
+
       // Try loading empty diagram as fallback
       if (xmlToLoad !== EMPTY_BPMN) {
-        console.log('Loading empty diagram as fallback');
-        await loadDiagram(EMPTY_BPMN);
+        console.log('[BPMNModeler] Loading empty diagram as fallback');
+        lastLoadedXmlRef.current = EMPTY_BPMN;
+        try {
+          await modelerRef.current.importXML(EMPTY_BPMN);
+          const canvas = modelerRef.current.get('canvas');
+          canvas.zoom('fit-viewport');
+        } catch (e) {
+          console.error('[BPMNModeler] Failed to load fallback:', e);
+        }
       }
+    } finally {
+      isLoadingRef.current = false;
     }
   };
 
@@ -242,27 +264,27 @@ export function BPMNModeler() {
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col bg-gray-50">
+    <div className="relative w-full h-full flex flex-col bg-slate-50">
       {/* Toolbar */}
-      <div className="h-12 border-b border-gray-200 bg-white flex items-center justify-between px-4">
+      <div className="h-11 border-b border-slate-200 bg-white flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <button
             onClick={handleSave}
-            className="flex items-center gap-2 px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary-600 transition-colors text-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-accent text-white rounded-md hover:bg-accent-700 transition-colors text-sm font-medium"
           >
-            <Save className="w-4 h-4" />
+            <Save className="w-3.5 h-3.5" />
             Save
           </button>
           {isAutoSaving ? (
-            <span className="text-xs text-blue-600 font-medium">• Auto-saving...</span>
+            <span className="text-xs text-accent font-medium">Saving...</span>
           ) : editor.isDirty ? (
-            <span className="text-xs text-amber-600 font-medium">• Unsaved changes</span>
+            <span className="text-xs text-amber-600 font-medium">Unsaved</span>
           ) : null}
-          <div className="w-px h-6 bg-gray-300 mx-2" />
+          <div className="w-px h-5 bg-slate-200 mx-1.5" />
           <button
             onClick={handleUndo}
             disabled={!canUndo}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600"
             title="Undo"
           >
             <Undo className="w-4 h-4" />
@@ -270,41 +292,41 @@ export function BPMNModeler() {
           <button
             onClick={handleRedo}
             disabled={!canRedo}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600"
             title="Redo"
           >
             <Redo className="w-4 h-4" />
           </button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={handleZoomOut}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
             title="Zoom Out"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
-          <span className="text-sm text-gray-600 min-w-[60px] text-center">
+          <span className="text-xs text-slate-500 min-w-[50px] text-center font-medium">
             {Math.round(editor.zoom * 100)}%
           </span>
           <button
             onClick={handleZoomIn}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
             title="Zoom In"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
           <button
             onClick={handleFitViewport}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
             title="Fit to Viewport"
           >
             <Maximize2 className="w-4 h-4" />
           </button>
-          <div className="w-px h-6 bg-gray-300 mx-2" />
+          <div className="w-px h-5 bg-slate-200 mx-1.5" />
           <button
             onClick={handleExportSVG}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
             title="Export SVG"
           >
             <Download className="w-4 h-4" />
@@ -315,7 +337,7 @@ export function BPMNModeler() {
       {/* BPMN Canvas */}
       <div className="flex-1 relative">
         {error && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-4 py-2 rounded-lg shadow-lg z-50">
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-50 text-red-700 px-4 py-2 rounded-lg shadow-soft text-sm z-50">
             {error}
           </div>
         )}
@@ -323,14 +345,14 @@ export function BPMNModeler() {
       </div>
 
       {/* Status Bar */}
-      <div className="h-8 border-t border-gray-200 bg-white flex items-center justify-between px-4 text-xs text-gray-600">
+      <div className="h-7 border-t border-slate-100 bg-white flex items-center justify-between px-4 text-2xs text-slate-500">
         <div>
           {editor.lastSaved
-            ? `Last saved: ${new Date(editor.lastSaved).toLocaleTimeString()}`
+            ? `Saved ${new Date(editor.lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
             : 'Not saved'}
         </div>
-        <div className="flex items-center gap-4">
-          <span>Editing mode</span>
+        <div className="flex items-center gap-3">
+          <span>Edit mode</span>
           <span>Ready</span>
         </div>
       </div>

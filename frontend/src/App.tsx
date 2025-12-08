@@ -3,6 +3,9 @@ import { AuthProvider } from './components/auth/AuthProvider';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { HomePage } from './pages/HomePage';
 import { EditorPage } from './pages/EditorPage';
+import { TagsPage } from './pages/TagsPage';
+import { OrganizationsPage } from './pages/OrganizationsPage';
+import { OrganizationDetailPage } from './pages/OrganizationDetailPage';
 import { LoginPage } from './pages/LoginPage';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
 
@@ -37,6 +40,30 @@ function App() {
             element={
               <ProtectedRoute>
                 <EditorPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tags"
+            element={
+              <ProtectedRoute>
+                <TagsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizations"
+            element={
+              <ProtectedRoute>
+                <OrganizationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizations/:slug"
+            element={
+              <ProtectedRoute>
+                <OrganizationDetailPage />
               </ProtectedRoute>
             }
           />

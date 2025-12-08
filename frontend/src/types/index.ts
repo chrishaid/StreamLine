@@ -21,6 +21,7 @@ export interface Process {
   isFavorite: boolean;
   relatedProcessIds: string[];
   metadata: Record<string, any>;
+  organizationId?: string | null;
 }
 
 export interface ProcessVersion {
@@ -95,6 +96,7 @@ export interface User {
   };
   createdAt: Date;
   lastLoginAt: Date;
+  currentOrganizationId?: string | null;
 }
 
 export interface ChatSession {
@@ -120,6 +122,7 @@ export interface UpdateProcessRequest {
   primaryCategoryId?: string;
   secondaryCategoryIds?: string[];
   tags?: string[];
+  isFavorite?: boolean;
 }
 
 export interface ChatMessageRequest {
@@ -173,4 +176,112 @@ export interface RouteParams {
   processId?: string;
   versionId?: string;
   categoryId?: string;
+}
+
+// Organization types
+export type OrganizationRole = 'owner' | 'admin' | 'member' | 'viewer';
+export type MemberStatus = 'active' | 'pending' | 'inactive';
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  logoUrl?: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  settings: Record<string, any>;
+}
+
+export interface OrganizationMember {
+  id: string;
+  organizationId: string;
+  userId: string;
+  role: OrganizationRole;
+  invitedBy?: string;
+  invitedAt: Date;
+  joinedAt?: Date;
+  status: MemberStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  // Joined user data
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+    avatarUrl?: string;
+  };
+}
+
+export interface OrganizationTag {
+  id: string;
+  organizationId: string;
+  name: string;
+  parentTagId?: string | null;
+  description?: string;
+  color?: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  // For hierarchical display
+  children?: OrganizationTag[];
+  level?: number;
+}
+
+export interface OrganizationInvitation {
+  id: string;
+  organizationId: string;
+  email: string;
+  role: OrganizationRole;
+  invitedBy: string;
+  token: string;
+  expiresAt: Date;
+  acceptedAt?: Date;
+  createdAt: Date;
+}
+
+// Organization request types
+export interface CreateOrganizationRequest {
+  name: string;
+  slug: string;
+  description?: string;
+}
+
+export interface UpdateOrganizationRequest {
+  name?: string;
+  description?: string;
+  logoUrl?: string;
+  settings?: Record<string, any>;
+}
+
+export interface InviteMemberRequest {
+  email: string;
+  role: OrganizationRole;
+}
+
+export interface UpdateMemberRequest {
+  role?: OrganizationRole;
+  status?: MemberStatus;
+}
+
+export interface CreateOrganizationTagRequest {
+  name: string;
+  parentTagId?: string;
+  description?: string;
+  color?: string;
+}
+
+export interface UpdateOrganizationTagRequest {
+  name?: string;
+  parentTagId?: string | null;
+  description?: string;
+  color?: string;
+}
+
+// Organization with additional data for display
+export interface OrganizationWithMembership extends Organization {
+  memberCount?: number;
+  processCount?: number;
+  currentUserRole?: OrganizationRole;
 }

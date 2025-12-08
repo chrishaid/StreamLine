@@ -25,58 +25,72 @@ export function BPMNViewer() {
   const viewerRef = useRef<any>(null);
   const { currentBpmnXml, setCurrentBpmnXml, setZoom, editor } = useAppStore();
   const [error, setError] = useState<string | null>(null);
+  const [isReady, setIsReady] = useState(false);
+  const lastLoadedXmlRef = useRef<string | null>(null);
 
+  // Initialize viewer once
   useEffect(() => {
     if (!containerRef.current) return;
 
-    // Initialize BPMN viewer
+    console.log('[BPMNViewer] Initializing...');
     viewerRef.current = new BpmnViewer({
       container: containerRef.current,
-      keyboard: {
-        bindTo: document,
-      },
     });
 
-    // Load initial diagram
-    loadDiagram(currentBpmnXml || EMPTY_BPMN);
+    setIsReady(true);
 
     return () => {
+      console.log('[BPMNViewer] Destroying...');
       viewerRef.current?.destroy();
+      viewerRef.current = null;
+      setIsReady(false);
     };
   }, []);
 
+  // Load diagram when ready or when XML changes
   useEffect(() => {
-    if (viewerRef.current) {
-      // Load current XML or empty diagram if null
-      loadDiagram(currentBpmnXml || EMPTY_BPMN);
-    }
-  }, [currentBpmnXml]);
+    if (!isReady || !viewerRef.current) return;
 
-  const loadDiagram = async (xml: string | null | undefined) => {
+    const xmlToLoad = currentBpmnXml || EMPTY_BPMN;
+
+    // Skip if same XML already loaded
+    if (lastLoadedXmlRef.current === xmlToLoad) {
+      return;
+    }
+
+    console.log('[BPMNViewer] Loading diagram...', xmlToLoad.substring(0, 50));
+    loadDiagram(xmlToLoad);
+  }, [isReady, currentBpmnXml]);
+
+  const loadDiagram = async (xml: string) => {
     if (!viewerRef.current) return;
 
-    // Use EMPTY_BPMN if xml is null, undefined, or empty
     const xmlToLoad = xml && xml.trim() ? xml : EMPTY_BPMN;
 
     try {
       setError(null);
       await viewerRef.current.importXML(xmlToLoad);
+      lastLoadedXmlRef.current = xmlToLoad;
+      console.log('[BPMNViewer] Diagram loaded successfully');
 
       // Fit diagram to viewport
       const canvas = viewerRef.current.get('canvas');
       canvas.zoom('fit-viewport');
-
-      // Only update store if loading from external source (not from store itself) and it's valid XML
-      if (xml && xml.trim() && xml !== currentBpmnXml) {
-        setCurrentBpmnXml(xml);
-      }
     } catch (err: any) {
       setError(err.message || 'Failed to load BPMN diagram');
-      console.error('Error loading BPMN:', err);
+      console.error('[BPMNViewer] Error loading BPMN:', err);
+
       // Try loading empty diagram as fallback
       if (xmlToLoad !== EMPTY_BPMN) {
-        console.log('Loading empty diagram as fallback');
-        await loadDiagram(EMPTY_BPMN);
+        console.log('[BPMNViewer] Loading empty diagram as fallback');
+        lastLoadedXmlRef.current = EMPTY_BPMN;
+        try {
+          await viewerRef.current.importXML(EMPTY_BPMN);
+          const canvas = viewerRef.current.get('canvas');
+          canvas.zoom('fit-viewport');
+        } catch (e) {
+          console.error('[BPMNViewer] Failed to load fallback:', e);
+        }
       }
     }
   };
@@ -125,46 +139,46 @@ export function BPMNViewer() {
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col bg-gray-50">
+    <div className="relative w-full h-full flex flex-col bg-slate-50">
       {/* Toolbar */}
-      <div className="h-12 border-b border-gray-200 bg-white flex items-center justify-between px-4">
+      <div className="h-11 border-b border-slate-200 bg-white flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-slate-500">
             {editor.mode === 'view' ? 'Viewing' : 'Editing'}
           </span>
           {editor.isDirty && (
-            <span className="text-xs text-amber-600 font-medium">• Unsaved changes</span>
+            <span className="text-xs text-amber-600 font-medium">Unsaved</span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <button
             onClick={handleZoomOut}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
             title="Zoom Out"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
-          <span className="text-sm text-gray-600 min-w-[60px] text-center">
+          <span className="text-xs text-slate-500 min-w-[50px] text-center font-medium">
             {Math.round(editor.zoom * 100)}%
           </span>
           <button
             onClick={handleZoomIn}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
             title="Zoom In"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
           <button
             onClick={handleFitViewport}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
             title="Fit to Viewport"
           >
             <Maximize2 className="w-4 h-4" />
           </button>
-          <div className="w-px h-6 bg-gray-300 mx-2" />
+          <div className="w-px h-5 bg-slate-200 mx-1.5" />
           <button
             onClick={handleExportSVG}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
             title="Export SVG"
           >
             <Download className="w-4 h-4" />
@@ -175,7 +189,7 @@ export function BPMNViewer() {
       {/* BPMN Canvas */}
       <div className="flex-1 relative">
         {error && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-4 py-2 rounded-lg shadow-lg z-50">
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-50 text-red-700 px-4 py-2 rounded-lg shadow-soft text-sm z-50">
             {error}
           </div>
         )}
@@ -183,14 +197,13 @@ export function BPMNViewer() {
       </div>
 
       {/* Status Bar */}
-      <div className="h-8 border-t border-gray-200 bg-white flex items-center justify-between px-4 text-xs text-gray-600">
+      <div className="h-7 border-t border-slate-100 bg-white flex items-center justify-between px-4 text-2xs text-slate-500">
         <div>
           {editor.lastSaved
-            ? `Last saved: ${new Date(editor.lastSaved).toLocaleTimeString()}`
+            ? `Saved ${new Date(editor.lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
             : 'Not saved'}
         </div>
-        <div className="flex items-center gap-4">
-          <span>Elements: 0</span>
+        <div className="flex items-center gap-3">
           <span>Ready</span>
         </div>
       </div>

@@ -1,20 +1,27 @@
 @import "tailwindcss";
+@config "../tailwind.config.js";
 
-* {
+/* Reset and base styles */
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+html {
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  margin: 0;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  background-color: #F1F5F9;
+  color: #1E293B;
+  line-height: 1.5;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 #root {
@@ -23,15 +30,60 @@ body {
   overflow: hidden;
 }
 
-/* BPMN specific styles */
+/* Refined scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Selection styling with accent color */
+::selection {
+  background-color: rgba(13, 148, 136, 0.15);
+  color: inherit;
+}
+
+/* Focus ring styling - subtle accent */
+:focus-visible {
+  outline: 2px solid rgba(13, 148, 136, 0.5);
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for interactive elements */
+button, a, input, select, textarea {
+  transition: all 0.15s ease;
+}
+
+/* BPMN Container Styles */
 .bpmn-container {
   width: 100%;
   height: 100%;
   position: relative;
+  background-color: #FAFBFC;
 }
 
 .bjs-container {
-  background-color: white;
+  background-color: #FAFBFC;
+}
+
+/* BPMN canvas with subtle grid pattern */
+.bjs-container .djs-container {
+  background-image:
+    linear-gradient(to right, #E2E8F0 1px, transparent 1px),
+    linear-gradient(to bottom, #E2E8F0 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .djs-overlay-context-pad {
@@ -40,9 +92,144 @@ body {
 
 .djs-palette {
   z-index: 100;
+  background: white !important;
+  border: 1px solid #E2E8F0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.06), 0 8px 24px -4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.djs-palette .entry:hover {
+  background-color: #F1F5F9 !important;
 }
 
 .djs-container svg {
   min-height: 100%;
   min-width: 100%;
+}
+
+/* Properties panel styling */
+.bpp-properties-panel {
+  background: white !important;
+  border-left: 1px solid #E2E8F0 !important;
+}
+
+/* Context pad styling */
+.djs-context-pad {
+  background: white !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Hide BPMN.io powered-by logo to prevent overlapping chat panel */
+.bjs-powered-by {
+  display: none !important;
+}
+
+/* Refined button base styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Input base styles */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea,
+select {
+  background-color: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: #1E293B;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #0D9488;
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94A3B8;
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* Subtle divider */
+.divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #E2E8F0, transparent);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
 }
