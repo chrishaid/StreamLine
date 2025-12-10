@@ -121,7 +121,7 @@ export function ChatPanel() {
   }
 
   return (
-    <div className="fixed right-3 top-32 bottom-3 w-96 bg-white border border-slate-200 flex flex-col shadow-soft-lg z-30 rounded-xl overflow-hidden">
+    <div className="fixed right-3 top-44 bottom-3 w-96 bg-white border border-slate-200 flex flex-col shadow-soft-lg z-30 rounded-xl overflow-hidden">
       {/* Header */}
       <div className="h-14 border-b border-slate-100 flex items-center justify-between px-5">
         <h2 className="text-sm font-semibold text-slate-700">Chat with Claude</h2>
