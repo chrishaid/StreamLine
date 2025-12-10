@@ -17,6 +17,7 @@ import {
 import { MainLayout } from '../components/layout/MainLayout';
 import { processApi } from '../services/api';
 import { getTagColor } from '../utils/tagColors';
+import { useAppStore } from '../store/useAppStore';
 import type { Process } from '../types';
 
 interface HierarchicalTag {
@@ -30,6 +31,7 @@ interface HierarchicalTag {
 
 export function TagsPage() {
   const navigate = useNavigate();
+  const { currentOrganization } = useAppStore();
   const [processes, setProcesses] = useState<Process[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -45,12 +47,14 @@ export function TagsPage() {
 
   useEffect(() => {
     fetchProcesses();
-  }, []);
+  }, [currentOrganization]);
 
   const fetchProcesses = async () => {
     setIsLoading(true);
     try {
-      const response = await processApi.getAll({ limit: 200 });
+      // Filter by current organization (null for personal workspace)
+      const organizationId = currentOrganization?.id || null;
+      const response = await processApi.getAll({ limit: 200, organizationId });
       setProcesses(response.processes);
     } catch (error) {
       console.error('Failed to fetch processes:', error);
@@ -344,7 +348,7 @@ export function TagsPage() {
         <div className="w-80 border-r border-slate-200 bg-white flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-slate-100">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-2">
               <button
                 onClick={() => navigate('/')}
                 className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
@@ -353,6 +357,9 @@ export function TagsPage() {
               </button>
               <h1 className="text-lg font-semibold text-slate-800">Tag Manager</h1>
             </div>
+            <p className="text-xs text-slate-500 mb-4">
+              {currentOrganization ? currentOrganization.name : 'Personal Workspace'}
+            </p>
 
             <div className="mb-3">
               <input
