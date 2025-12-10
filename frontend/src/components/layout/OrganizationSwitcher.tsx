@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, ChevronDown, Check, Plus, User } from 'lucide-react';
 import { organizationApi } from '../../services/api';
+import { useAppStore } from '../../store/useAppStore';
 import type { OrganizationWithMembership } from '../../types';
 
 export function OrganizationSwitcher() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [organizations, setOrganizations] = useState<OrganizationWithMembership[]>([]);
-  const [currentOrg, setCurrentOrg] = useState<OrganizationWithMembership | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Use global store for current organization
+  const { currentOrganization, setCurrentOrganization } = useAppStore();
 
   useEffect(() => {
     loadOrganizations();
@@ -22,7 +25,8 @@ export function OrganizationSwitcher() {
         organizationApi.getCurrentOrganization(),
       ]);
       setOrganizations(orgs);
-      setCurrentOrg(current);
+      // Set initial org in global store
+      setCurrentOrganization(current);
     } catch (err) {
       console.error('Failed to load organizations:', err);
     } finally {
@@ -33,10 +37,9 @@ export function OrganizationSwitcher() {
   const handleSelectOrg = async (org: OrganizationWithMembership | null) => {
     try {
       await organizationApi.setCurrentOrganization(org?.id || null);
-      setCurrentOrg(org);
+      setCurrentOrganization(org);
       setIsOpen(false);
-      // Optionally refresh the page to reload data in the new org context
-      window.location.reload();
+      // No page reload needed - processes will re-fetch based on org change
     } catch (err) {
       console.error('Failed to switch organization:', err);
     }
@@ -54,13 +57,13 @@ export function OrganizationSwitcher() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors text-sm"
       >
-        {currentOrg ? (
+        {currentOrganization ? (
           <>
             <div className="w-5 h-5 bg-accent/20 rounded flex items-center justify-center">
               <Building2 className="w-3 h-3 text-accent" />
             </div>
             <span className="font-medium text-slate-700 max-w-[120px] truncate">
-              {currentOrg.name}
+              {currentOrganization.name}
             </span>
           </>
         ) : (
@@ -93,7 +96,7 @@ export function OrganizationSwitcher() {
                 <p className="font-medium text-slate-700 text-sm">Personal</p>
                 <p className="text-xs text-slate-500">Your personal workspace</p>
               </div>
-              {!currentOrg && <Check className="w-4 h-4 text-accent" />}
+              {!currentOrganization && <Check className="w-4 h-4 text-accent" />}
             </button>
 
             {organizations.length > 0 && (
@@ -129,7 +132,7 @@ export function OrganizationSwitcher() {
                     {org.memberCount || 0} members · {org.currentUserRole}
                   </p>
                 </div>
-                {currentOrg?.id === org.id && <Check className="w-4 h-4 text-accent" />}
+                {currentOrganization?.id === org.id && <Check className="w-4 h-4 text-accent" />}
               </button>
             ))}
 

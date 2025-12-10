@@ -13,13 +13,15 @@ export function MainLayout({ children, showChat = false }: MainLayoutProps) {
   const { chatPanelCollapsed } = ui;
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      <Header />
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar />
-        <main className={`flex-1 flex ${showChat && !chatPanelCollapsed ? 'mr-96' : ''}`}>
-          {children}
-        </main>
+    <div className="h-screen p-3 bg-slate-100">
+      <div className="h-full flex flex-col overflow-hidden rounded-xl shadow-lg bg-white">
+        <Header />
+        <div className="flex-1 flex overflow-hidden">
+          <Sidebar />
+          <main className={`flex-1 flex ${showChat && !chatPanelCollapsed ? 'mr-96' : ''}`}>
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );

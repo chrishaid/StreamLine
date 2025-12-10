@@ -5,14 +5,14 @@ import { BPMNViewer } from '../components/bpmn/BPMNViewer';
 import { BPMNModeler } from '../components/bpmn/BPMNModeler';
 import { ChatPanel } from '../components/chat/ChatPanel';
 import { useAppStore } from '../store/useAppStore';
-import { processApi } from '../services/api';
-import { Edit, Eye, Save, ChevronDown, ChevronUp, ArrowLeft, CheckCircle, Star } from 'lucide-react';
-import type { Process } from '../types';
+import { processApi, organizationApi } from '../services/api';
+import { Edit, Eye, Save, ChevronDown, ChevronUp, ArrowLeft, CheckCircle, Star, Copy, Users, X, Building2, User, Files } from 'lucide-react';
+import type { Process, OrganizationWithMembership } from '../types';
 
 export function EditorPage() {
   const { processId: id } = useParams<{ processId: string }>();
   const navigate = useNavigate();
-  const { editor, setEditorMode, currentBpmnXml, setCurrentBpmnXml, currentProcess, setCurrentProcess, addProcess, updateProcess } = useAppStore();
+  const { editor, setEditorMode, currentBpmnXml, setCurrentBpmnXml, currentProcess, setCurrentProcess, addProcess, updateProcess, currentOrganization } = useAppStore();
   const [showChat] = useState(true);
   // Auto-show metadata panel for new processes (no id means new)
   const [showMetadata, setShowMetadata] = useState(!id);
@@ -29,6 +29,13 @@ export function EditorPage() {
   const processDataAutoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+
+  // Copy and Access states
+  const [showCopyToModal, setShowCopyToModal] = useState(false);
+  const [showAccessPanel, setShowAccessPanel] = useState(false);
+  const [organizations, setOrganizations] = useState<OrganizationWithMembership[]>([]);
+  const [isCopying, setIsCopying] = useState(false);
+  const [orgMembers, setOrgMembers] = useState<any[]>([]);
 
   const isEditMode = editor.mode === 'edit';
 
@@ -227,6 +234,7 @@ export function EditorPage() {
           tags: processData.tags,
           primaryCategoryId: processData.primaryCategoryId || '',
           bpmnXml: currentBpmnXml || '',
+          organizationId: currentOrganization?.id || null,
         });
         console.log('[EditorPage] Process created:', process);
 
@@ -266,6 +274,92 @@ export function EditorPage() {
     });
   };
 
+  // Load organizations when copy modal opens
+  useEffect(() => {
+    if (showCopyToModal) {
+      loadOrganizations();
+    }
+  }, [showCopyToModal]);
+
+  // Load org members when access panel opens
+  useEffect(() => {
+    if (showAccessPanel && currentProcess?.organizationId) {
+      loadOrgMembers();
+    }
+  }, [showAccessPanel, currentProcess?.organizationId]);
+
+  const loadOrganizations = async () => {
+    try {
+      const orgs = await organizationApi.getMyOrganizations();
+      setOrganizations(orgs);
+    } catch (error) {
+      console.error('Failed to load organizations:', error);
+    }
+  };
+
+  const loadOrgMembers = async () => {
+    if (!currentProcess?.organizationId) return;
+    try {
+      const members = await organizationApi.getMembers(currentProcess.organizationId);
+      setOrgMembers(members);
+    } catch (error) {
+      console.error('Failed to load org members:', error);
+    }
+  };
+
+  const handleCopyToOrg = async (targetOrgId: string | null) => {
+    if (!currentProcess) return;
+    setIsCopying(true);
+    try {
+      // Check if copying to the same workspace (duplicate in place)
+      const isSameWorkspace = targetOrgId === currentProcess.organizationId ||
+        (targetOrgId === null && currentProcess.organizationId === null);
+
+      let newName: string;
+      let successMessage: string;
+
+      if (isSameWorkspace) {
+        // Duplicate in same workspace
+        newName = `${currentProcess.name} (Copy)`;
+        successMessage = 'Process duplicated';
+      } else {
+        // Copy to different workspace
+        const targetName = targetOrgId
+          ? organizations.find(o => o.id === targetOrgId)?.name || 'Organization'
+          : 'Personal';
+        newName = `${currentProcess.name} (Copy to ${targetName})`;
+        successMessage = `Process copied to ${targetName}`;
+      }
+
+      await processApi.duplicate(currentProcess.id, newName, targetOrgId);
+      setShowCopyToModal(false);
+      alert(successMessage);
+    } catch (error) {
+      console.error('Error copying process:', error);
+      alert('Failed to copy process');
+    } finally {
+      setIsCopying(false);
+    }
+  };
+
+  const handleDuplicate = async () => {
+    if (!currentProcess) return;
+    try {
+      const newName = `${currentProcess.name} (Copy)`;
+      const { process: newProcess } = await processApi.duplicate(
+        currentProcess.id,
+        newName,
+        currentProcess.organizationId
+      );
+      alert('Process duplicated successfully');
+      // Navigate to the new process
+      navigate(`/editor/${newProcess.id}`);
+    } catch (error) {
+      console.error('Error duplicating process:', error);
+      alert('Failed to duplicate process');
+    }
+  };
+
   return (
     <MainLayout showChat={showChat}>
       <div className="flex-1 flex flex-col">
@@ -289,15 +383,44 @@ export function EditorPage() {
 
             {/* Favorite Toggle */}
             {currentProcess && (
-              <button
-                onClick={handleToggleFavorite}
-                className={`p-1.5 rounded-md transition-colors ${
-                  isFavorite ? 'text-amber-500 hover:text-amber-600' : 'text-slate-300 hover:text-amber-400'
-                }`}
-                title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-              >
-                <Star className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
-              </button>
+              <>
+                <button
+                  onClick={handleToggleFavorite}
+                  className={`p-1.5 rounded-md transition-colors ${
+                    isFavorite ? 'text-amber-500 hover:text-amber-600' : 'text-slate-300 hover:text-amber-400'
+                  }`}
+                  title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  <Star className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
+                </button>
+
+                {/* Duplicate Button */}
+                <button
+                  onClick={handleDuplicate}
+                  className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                  title="Duplicate process"
+                >
+                  <Files className="w-4 h-4" />
+                </button>
+
+                {/* Copy To Button */}
+                <button
+                  onClick={() => setShowCopyToModal(true)}
+                  className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                  title="Copy to another workspace"
+                >
+                  <Copy className="w-4 h-4" />
+                </button>
+
+                {/* Access Button */}
+                <button
+                  onClick={() => setShowAccessPanel(true)}
+                  className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                  title="Who has access"
+                >
+                  <Users className="w-4 h-4" />
+                </button>
+              </>
             )}
 
             {(processData.status || currentProcess?.status) && (
@@ -497,6 +620,158 @@ export function EditorPage() {
       </div>
 
       {showChat && <ChatPanel />}
+
+      {/* Copy To Modal */}
+      {showCopyToModal && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowCopyToModal(false)} />
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4" onClick={() => setShowCopyToModal(false)}>
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-800">Copy to...</h3>
+                <button onClick={() => setShowCopyToModal(false)} className="p-1 hover:bg-slate-100 rounded-lg">
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+              <p className="text-sm text-slate-500 mb-4">Select where to copy "{currentProcess?.name}"</p>
+
+              <div className="space-y-2">
+                {/* Personal option */}
+                <button
+                  onClick={() => handleCopyToOrg(null)}
+                  disabled={isCopying}
+                  className={`w-full p-3 rounded-lg border text-left flex items-center gap-3 transition-colors ${
+                    isCopying
+                      ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed'
+                      : 'border-slate-200 hover:border-accent hover:bg-accent/5'
+                  }`}
+                >
+                  <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+                    <User className="w-4 h-4 text-slate-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-700">Personal Workspace</p>
+                    <p className="text-xs text-slate-500">
+                      {!currentProcess?.organizationId ? 'Duplicate here' : 'Your private processes'}
+                    </p>
+                  </div>
+                  {!currentProcess?.organizationId && (
+                    <span className="ml-auto text-xs text-accent font-medium">(Current)</span>
+                  )}
+                </button>
+
+                {/* Organizations */}
+                {organizations.map(org => (
+                  <button
+                    key={org.id}
+                    onClick={() => handleCopyToOrg(org.id)}
+                    disabled={isCopying}
+                    className={`w-full p-3 rounded-lg border text-left flex items-center gap-3 transition-colors ${
+                      isCopying
+                        ? 'border-slate-100 bg-slate-50 text-slate-400 cursor-not-allowed'
+                        : 'border-slate-200 hover:border-accent hover:bg-accent/5'
+                    }`}
+                  >
+                    <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-accent" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-700">{org.name}</p>
+                      <p className="text-xs text-slate-500">
+                        {currentProcess?.organizationId === org.id ? 'Duplicate here' : `${org.memberCount || 0} members`}
+                      </p>
+                    </div>
+                    {currentProcess?.organizationId === org.id && (
+                      <span className="ml-auto text-xs text-accent font-medium">(Current)</span>
+                    )}
+                  </button>
+                ))}
+
+                {organizations.length === 0 && (
+                  <p className="text-sm text-slate-500 text-center py-4">
+                    No organizations available. Create one first.
+                  </p>
+                )}
+              </div>
+
+              {isCopying && (
+                <div className="mt-4 text-center text-sm text-slate-500">
+                  Copying process...
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Access Panel Modal */}
+      {showAccessPanel && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-50" onClick={() => setShowAccessPanel(false)} />
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4" onClick={() => setShowAccessPanel(false)}>
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-800">Who has access</h3>
+                <button onClick={() => setShowAccessPanel(false)} className="p-1 hover:bg-slate-100 rounded-lg">
+                  <X className="w-5 h-5 text-slate-400" />
+                </button>
+              </div>
+
+              {currentProcess?.organizationId ? (
+                <>
+                  <div className="flex items-center gap-2 mb-4 p-3 bg-accent/5 rounded-lg">
+                    <Building2 className="w-4 h-4 text-accent" />
+                    <span className="text-sm text-slate-700">
+                      Shared with organization members
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {orgMembers.length > 0 ? (
+                      orgMembers.map((member: any) => (
+                        <div key={member.userId} className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50">
+                          <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
+                            {member.user?.avatarUrl ? (
+                              <img src={member.user.avatarUrl} alt="" className="w-8 h-8 rounded-full" />
+                            ) : (
+                              <User className="w-4 h-4 text-slate-500" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-700 truncate">{member.user?.name || member.user?.email || 'Unknown'}</p>
+                            <p className="text-xs text-slate-500 capitalize">{member.role}</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-slate-500 text-center py-4">Loading members...</p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <User className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <p className="text-sm text-slate-600 font-medium">Private to you</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    This process is in your personal workspace and is only visible to you.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowAccessPanel(false);
+                      setShowCopyToModal(true);
+                    }}
+                    className="mt-4 text-sm text-accent hover:underline"
+                  >
+                    Copy to an organization to share
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
     </MainLayout>
   );
 }

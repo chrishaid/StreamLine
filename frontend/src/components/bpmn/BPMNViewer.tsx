@@ -23,7 +23,7 @@ const EMPTY_BPMN = `<?xml version="1.0" encoding="UTF-8"?>
 export function BPMNViewer() {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<any>(null);
-  const { currentBpmnXml, setCurrentBpmnXml, setZoom, editor } = useAppStore();
+  const { currentBpmnXml, setZoom, editor } = useAppStore();
   const [error, setError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const lastLoadedXmlRef = useRef<string | null>(null);

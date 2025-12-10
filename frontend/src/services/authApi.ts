@@ -5,9 +5,9 @@ export interface AuthUser {
   email: string;
   name: string;
   avatarUrl?: string;
-  provider: 'google' | 'microsoft';
+  provider?: 'google' | 'microsoft';
   role: 'viewer' | 'editor' | 'admin';
-  preferences: {
+  preferences?: {
     defaultView: string;
     autoSaveInterval: number;
     theme: 'light' | 'dark';

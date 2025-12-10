@@ -27,28 +27,37 @@ const EMPTY_BPMN = `<?xml version="1.0" encoding="UTF-8"?>
 export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { ui, setActiveView, toggleSidebar, setCurrentProcess, setCurrentBpmnXml, addProcess, setEditorMode, processes, currentProcess } = useAppStore();
+  const { ui, setActiveView, toggleSidebar, setCurrentProcess, setCurrentBpmnXml, addProcess, setEditorMode, processes, currentProcess, currentOrganization } = useAppStore();
   const { sidebarCollapsed, activeView } = ui;
   const [allProcesses, setAllProcesses] = useState<Process[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const isOnTagsPage = location.pathname === '/tags';
 
-  // Load processes for recent/favorites
+  // Load processes for recent/favorites - refetch when organization changes
   useEffect(() => {
     loadProcesses();
-  }, []);
+  }, [currentOrganization?.id]);
 
-  // Refresh when store processes change
+  // Refresh when store processes change - filter by current organization
   useEffect(() => {
     if (processes.length > 0) {
-      setAllProcesses(processes);
+      const filteredProcesses = processes.filter(p => {
+        if (currentOrganization?.id) {
+          return p.organizationId === currentOrganization.id;
+        }
+        return !p.organizationId; // Personal workspace = no org
+      });
+      setAllProcesses(filteredProcesses);
     }
-  }, [processes]);
+  }, [processes, currentOrganization?.id]);
 
   const loadProcesses = async () => {
     setIsLoading(true);
     try {
-      const { processes: fetchedProcesses } = await processApi.getAll({ limit: 100 });
+      const { processes: fetchedProcesses } = await processApi.getAll({
+        organizationId: currentOrganization?.id || null,
+        limit: 100,
+      });
       setAllProcesses(fetchedProcesses);
     } catch (error) {
       console.error('Failed to load processes:', error);
@@ -98,6 +107,7 @@ export function Sidebar() {
         bpmnXml: EMPTY_BPMN,
         description: 'New process',
         primaryCategoryId: '',
+        organizationId: currentOrganization?.id || null,
       });
 
       setCurrentProcess(process);

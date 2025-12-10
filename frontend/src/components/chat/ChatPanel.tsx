@@ -108,19 +108,20 @@ export function ChatPanel() {
 
   if (ui.chatPanelCollapsed) {
     return (
-      <div className="fixed right-4 bottom-4">
+      <div className="fixed right-6 bottom-6 z-40">
         <button
           onClick={toggleChatPanel}
-          className="bg-accent text-white p-4 rounded-full shadow-soft-lg hover:bg-accent-700 transition-colors"
+          className="bg-accent text-white px-10 py-6 rounded-3xl shadow-2xl hover:bg-accent-700 transition-all hover:scale-105 flex items-center gap-4 border-2 border-white/20"
         >
-          <MessageSquare className="w-5 h-5" />
+          <MessageSquare className="w-12 h-12" />
+          <span className="text-2xl font-bold">AI Chat</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div className="fixed right-0 top-14 bottom-0 w-96 bg-white border-l border-slate-200 flex flex-col shadow-soft-lg">
+    <div className="fixed right-3 top-32 bottom-3 w-96 bg-white border border-slate-200 flex flex-col shadow-soft-lg z-30 rounded-xl overflow-hidden">
       {/* Header */}
       <div className="h-14 border-b border-slate-100 flex items-center justify-between px-5">
         <h2 className="text-sm font-semibold text-slate-700">Chat with Claude</h2>

@@ -19,15 +19,17 @@ import type {
 } from '../types';
 import { supabase } from '../lib/supabase';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// For Vercel deployment, chat API uses local serverless functions
+// VITE_API_URL is only needed for local development with the Express backend
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
-// Axios client for Claude API calls (still needs backend)
+// Axios client (kept for potential future use, but chat now uses fetch for streaming)
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 seconds for Claude API responses
+  timeout: 30000,
 });
 
 // Add Supabase auth token to backend requests
@@ -55,6 +57,18 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Helper to get auth token for fetch requests
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (session?.access_token) {
+    headers['Authorization'] = `Bearer ${session.access_token}`;
+  }
+  return headers;
+}
+
 // Helper to map database row to Process type
 function mapDbRowToProcess(row: any): Process {
   return {
@@ -77,21 +91,141 @@ function mapDbRowToProcess(row: any): Process {
     isFavorite: row.is_favorite || false,
     relatedProcessIds: row.related_process_ids || [],
     metadata: row.metadata || {},
+    organizationId: row.organization_id || null,
   };
 }
 
-// Chat API
+// Chat API - Uses fetch for SSE streaming support
 export const chatApi = {
   sendMessage: async (request: ChatMessageRequest): Promise<ChatMessageResponse> => {
-    const response = await apiClient.post<ChatMessageResponse>('/api/chat/message', request);
-    return response.data;
+    const headers = await getAuthHeaders();
+
+    const response = await fetch('/api/chat/message', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error?.message || `HTTP ${response.status}`);
+    }
+
+    // Handle SSE streaming response
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('No response body');
+    }
+
+    const decoder = new TextDecoder();
+    let fullContent = '';
+    let sessionId = request.sessionId || '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const text = decoder.decode(value, { stream: true });
+      const lines = text.split('\n');
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (data.type === 'content') {
+              fullContent = data.fullContent;
+              sessionId = data.sessionId;
+            } else if (data.type === 'done') {
+              sessionId = data.sessionId;
+            } else if (data.type === 'error') {
+              throw new Error(data.error);
+            }
+          } catch (e) {
+            // Skip non-JSON lines (like 'event: connected')
+          }
+        }
+      }
+    }
+
+    return {
+      message: {
+        id: crypto.randomUUID(),
+        sessionId,
+        processId: request.processId || null,
+        role: 'assistant',
+        content: fullContent,
+        createdAt: new Date(),
+      },
+      sessionId,
+    };
+  },
+
+  // Streaming version for real-time updates
+  sendMessageStream: async function* (request: ChatMessageRequest): AsyncGenerator<{
+    type: 'content' | 'done' | 'error';
+    content?: string;
+    fullContent?: string;
+    sessionId?: string;
+    error?: string;
+  }> {
+    const headers = await getAuthHeaders();
+
+    const response = await fetch('/api/chat/message', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      yield { type: 'error', error: errorData.error?.message || `HTTP ${response.status}` };
+      return;
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      yield { type: 'error', error: 'No response body' };
+      return;
+    }
+
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const text = decoder.decode(value, { stream: true });
+      const lines = text.split('\n');
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            yield data;
+          } catch (e) {
+            // Skip non-JSON lines
+          }
+        }
+      }
+    }
   },
 
   getSuggestions: async (bpmnXml: string): Promise<string[]> => {
-    const response = await apiClient.post<{ suggestions: string[] }>('/api/chat/suggestions', {
-      bpmnXml,
+    const headers = await getAuthHeaders();
+
+    const response = await fetch('/api/chat/suggestions', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ bpmnXml }),
     });
-    return response.data.suggestions;
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error?.message || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.suggestions;
   },
 };
 
@@ -103,9 +237,11 @@ export const processApi = {
     search?: string;
     ownerId?: string;
     tags?: string;
+    organizationId?: string | null; // null = personal processes, undefined = all accessible
     limit?: number;
     offset?: number;
   }): Promise<{ processes: Process[]; total: number; limit: number; offset: number }> => {
+    console.log('[API] processApi.getAll called with organizationId:', params?.organizationId, 'type:', typeof params?.organizationId);
     let query = supabase.from('processes').select('*', { count: 'exact' });
 
     if (params?.status) {
@@ -123,6 +259,21 @@ export const processApi = {
     if (params?.tags) {
       query = query.contains('tags', [params.tags]);
     }
+    // Organization filtering
+    if (params?.organizationId !== undefined) {
+      if (params.organizationId === null) {
+        // Show only personal processes (no organization)
+        console.log('[API] Filtering for personal processes (organization_id IS NULL)');
+        query = query.is('organization_id', null);
+      } else {
+        // Show only processes for specific organization
+        console.log('[API] Filtering for organization:', params.organizationId);
+        query = query.eq('organization_id', params.organizationId);
+      }
+    } else {
+      console.log('[API] No organization filter (showing all accessible)');
+    }
+    // If organizationId is undefined, show all accessible processes (RLS handles this)
 
     const limit = params?.limit || 50;
     const offset = params?.offset || 0;
@@ -132,6 +283,8 @@ export const processApi = {
     const { data, error, count } = await query;
 
     if (error) throw error;
+
+    console.log('[API] Query returned', data?.length, 'processes. First few org_ids:', data?.slice(0, 5).map((p: any) => ({ name: p.name, org_id: p.organization_id })));
 
     return {
       processes: (data || []).map(mapDbRowToProcess),
@@ -150,8 +303,8 @@ export const processApi = {
     return mapDbRowToProcess(data);
   },
 
-  create: async (data: CreateProcessRequest & { bpmnXml?: string }): Promise<{ process: Process; version: any }> => {
-    console.log('[API] processApi.create called with:', { name: data.name, hasBpmn: !!data.bpmnXml });
+  create: async (data: CreateProcessRequest & { bpmnXml?: string; organizationId?: string | null }): Promise<{ process: Process; version: any }> => {
+    console.log('[API] processApi.create called with:', { name: data.name, hasBpmn: !!data.bpmnXml, organizationId: data.organizationId });
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
@@ -191,6 +344,11 @@ export const processApi = {
       updated_by: user.id,
       tags: data.tags || [],
     };
+
+    // Set organization_id if provided (null means personal, undefined means don't set)
+    if (data.organizationId !== undefined) {
+      processInsertData.organization_id = data.organizationId;
+    }
 
     // Only add primary_category_id if it's provided and not empty
     if (data.primaryCategoryId && data.primaryCategoryId.trim() !== '') {
@@ -301,7 +459,7 @@ export const processApi = {
     if (error) throw error;
   },
 
-  duplicate: async (id: string, name: string): Promise<{ process: Process; version: any }> => {
+  duplicate: async (id: string, name: string, targetOrganizationId?: string | null): Promise<{ process: Process; version: any }> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
@@ -318,6 +476,7 @@ export const processApi = {
       created_by: user.id,
       updated_by: user.id,
       tags: original.tags,
+      organization_id: targetOrganizationId === undefined ? original.organizationId : targetOrganizationId,
     };
 
     if (original.primaryCategoryId && original.primaryCategoryId.trim() !== '') {

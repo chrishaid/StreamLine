@@ -1,7 +1,21 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken, JWTPayload } from '../utils/jwt';
+import { supabase } from '../lib/supabase';
 
-export function authenticateToken(req: Request, res: Response, next: NextFunction) {
+export interface AuthUser {
+  id: string;
+  email: string;
+  name?: string;
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: AuthUser;
+    }
+  }
+}
+
+export async function authenticateToken(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
@@ -14,29 +28,55 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
     });
   }
 
-  const payload = verifyToken(token);
+  try {
+    // Verify the token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
 
-  if (!payload) {
-    return res.status(403).json({
+    if (error || !user) {
+      console.log('[Auth] Token verification failed:', error?.message || 'No user');
+      return res.status(403).json({
+        error: {
+          code: 'INVALID_TOKEN',
+          message: 'Invalid or expired token',
+        },
+      });
+    }
+
+    // Set user on request
+    req.user = {
+      id: user.id,
+      email: user.email || '',
+      name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
+    };
+
+    next();
+  } catch (err: any) {
+    console.error('[Auth] Error verifying token:', err.message);
+    return res.status(500).json({
       error: {
-        code: 'INVALID_TOKEN',
-        message: 'Invalid or expired token',
+        code: 'AUTH_ERROR',
+        message: 'Failed to verify authentication',
       },
     });
   }
-
-  (req as any).user = payload;
-  next();
 }
 
-export function optionalAuth(req: Request, res: Response, next: NextFunction) {
+export async function optionalAuth(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
   if (token) {
-    const payload = verifyToken(token);
-    if (payload) {
-      (req as any).user = payload;
+    try {
+      const { data: { user } } = await supabase.auth.getUser(token);
+      if (user) {
+        req.user = {
+          id: user.id,
+          email: user.email || '',
+          name: user.user_metadata?.full_name || user.user_metadata?.name || user.email,
+        };
+      }
+    } catch (err) {
+      // Silently ignore auth errors for optional auth
     }
   }
 

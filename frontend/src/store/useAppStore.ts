@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Process, Category, ChatMessage, UIState, BPMNEditorState } from '../types';
+import type { Process, Category, ChatMessage, UIState, BPMNEditorState, OrganizationWithMembership } from '../types';
 import type { AuthUser } from '../services/authApi';
 
 interface AppState {
@@ -10,6 +10,10 @@ interface AppState {
   setUser: (user: AuthUser | null) => void;
   setAuthLoading: (loading: boolean) => void;
   logout: () => void;
+
+  // Organization State
+  currentOrganization: OrganizationWithMembership | null; // null = personal workspace
+  setCurrentOrganization: (org: OrganizationWithMembership | null) => void;
 
   // UI State
   ui: UIState;
@@ -69,7 +73,11 @@ export const useAppStore = create<AppState>((set) => ({
   isAuthLoading: true,
   setUser: (user) => set({ user, isAuthenticated: !!user }),
   setAuthLoading: (loading) => set({ isAuthLoading: loading }),
-  logout: () => set({ user: null, isAuthenticated: false }),
+  logout: () => set({ user: null, isAuthenticated: false, currentOrganization: null }),
+
+  // Organization State
+  currentOrganization: null,
+  setCurrentOrganization: (org) => set({ currentOrganization: org }),
 
   // Initial UI State
   ui: {

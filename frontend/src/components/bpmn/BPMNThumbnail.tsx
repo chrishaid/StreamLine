@@ -43,13 +43,14 @@ export function BPMNThumbnail({ processId, className = '' }: BPMNThumbnailProps)
 
   // Initialize viewer and render diagram when XML is available
   useEffect(() => {
-    if (!containerRef.current || !bpmnXml) return;
+    const container = containerRef.current;
+    if (!container || !bpmnXml) return;
 
     const renderDiagram = async () => {
       try {
         // Create a minimal viewer without navigation controls
         viewerRef.current = new BpmnViewer({
-          container: containerRef.current,
+          container,
         });
 
         await viewerRef.current.importXML(bpmnXml);

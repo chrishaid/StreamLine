@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, Trash2, Edit2, Loader2, MoreHorizontal } from 'lucide-react';
+import { FileText, Trash2, Edit2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 import { processApi } from '../../services/api';
@@ -8,20 +8,23 @@ import { clsx } from 'clsx';
 
 export function ProcessList() {
   const navigate = useNavigate();
-  const { processes, setProcesses, deleteProcess: deleteFromStore, currentProcess, setCurrentProcess, setCurrentBpmnXml } = useAppStore();
+  const { processes, setProcesses, deleteProcess: deleteFromStore, currentProcess, setCurrentProcess, setCurrentBpmnXml, currentOrganization } = useAppStore();
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
+  // Reload when organization changes
   useEffect(() => {
     loadProcesses();
-  }, []);
+  }, [currentOrganization?.id]);
 
   const loadProcesses = async () => {
     setIsLoading(true);
     try {
-      const { processes: fetchedProcesses } = await processApi.getAll();
+      const { processes: fetchedProcesses } = await processApi.getAll({
+        organizationId: currentOrganization?.id || null,
+      });
       setProcesses(fetchedProcesses);
     } catch (error) {
       console.error('Failed to load processes:', error);

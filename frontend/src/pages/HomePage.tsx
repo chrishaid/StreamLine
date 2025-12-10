@@ -10,7 +10,7 @@ import type { Process } from '../types';
 
 export function HomePage() {
   const navigate = useNavigate();
-  const { setCurrentBpmnXml, setCurrentProcess, clearChat, addProcess } = useAppStore();
+  const { setCurrentBpmnXml, setCurrentProcess, clearChat, addProcess, currentOrganization } = useAppStore();
 
   const [processes, setProcesses] = useState<Process[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,14 +20,17 @@ export function HomePage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showAllTags, setShowAllTags] = useState(false);
 
+  // Refetch processes when organization changes
   useEffect(() => {
     fetchProcesses();
-  }, []);
+  }, [currentOrganization?.id]);
 
   const fetchProcesses = async () => {
     setIsLoading(true);
     try {
+      // Filter by current organization (null = personal workspace)
       const response = await processApi.getAll({
+        organizationId: currentOrganization?.id || null,
         limit: 100,
       });
       setProcesses(response.processes);
@@ -68,6 +71,7 @@ export function HomePage() {
             tags: ['uploaded'],
             primaryCategoryId: '',
             bpmnXml: text,
+            organizationId: currentOrganization?.id || null,
           });
 
           console.log('[HomePage] Process created:', process.id);
