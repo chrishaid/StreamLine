@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { MainLayout } from '../components/layout/MainLayout';
 import { organizationApi } from '../services/api';
+import { supabase } from '../lib/supabase';
 import type {
   OrganizationWithMembership,
   OrganizationMember,
@@ -115,10 +116,30 @@ export function OrganizationDetailPage() {
     setError(null);
 
     try {
-      await organizationApi.createInvitation(organization!.id, {
+      // Create the invitation in the database
+      const invitation = await organizationApi.createInvitation(organization!.id, {
         email: inviteEmail.trim(),
         role: inviteRole,
       });
+
+      // Get current user's name for the email
+      const { data: { user } } = await supabase.auth.getUser();
+      const inviterName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || 'A team member';
+
+      // Send the invitation email
+      try {
+        await organizationApi.sendInvitationEmail({
+          email: inviteEmail.trim(),
+          organizationName: organization!.name,
+          inviterName,
+          role: inviteRole,
+          inviteToken: invitation.token,
+        });
+      } catch (emailError) {
+        // Log but don't fail - invitation was created, just email failed
+        console.warn('Failed to send invitation email:', emailError);
+      }
+
       setShowInviteModal(false);
       setInviteEmail('');
       setInviteRole('member');

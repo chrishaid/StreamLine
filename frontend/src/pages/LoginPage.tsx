@@ -1,20 +1,36 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore';
 import { supabase } from '../lib/supabase';
 import { Workflow, Sparkles, PenTool, BarChart3 } from 'lucide-react';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isAuthenticated } = useAppStore();
+
+  // Get redirect parameter from URL
+  const redirectTo = searchParams.get('redirect');
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      // If there's a pending redirect, go there instead
+      const pendingRedirect = sessionStorage.getItem('auth_redirect');
+      if (pendingRedirect) {
+        sessionStorage.removeItem('auth_redirect');
+        navigate(pendingRedirect);
+      } else {
+        navigate('/');
+      }
     }
   }, [isAuthenticated, navigate]);
 
   const handleGoogleLogin = async () => {
+    // Store redirect URL before OAuth
+    if (redirectTo) {
+      sessionStorage.setItem('auth_redirect', redirectTo);
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -28,6 +44,11 @@ export function LoginPage() {
   };
 
   const handleMicrosoftLogin = async () => {
+    // Store redirect URL before OAuth
+    if (redirectTo) {
+      sessionStorage.setItem('auth_redirect', redirectTo);
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'azure',
       options: {

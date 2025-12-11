@@ -1052,6 +1052,32 @@ export const organizationApi = {
       return null;
     }
   },
+
+  // Send invitation email
+  sendInvitationEmail: async (params: {
+    email: string;
+    organizationName: string;
+    inviterName: string;
+    role: string;
+    inviteToken: string;
+  }): Promise<{ success: boolean; messageId?: string }> => {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/api/organizations/invite/email`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        ...params,
+        frontendUrl: window.location.origin,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error?.message || 'Failed to send invitation email');
+    }
+
+    return response.json();
+  },
 };
 
 // Health check

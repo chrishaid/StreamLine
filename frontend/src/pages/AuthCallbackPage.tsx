@@ -38,8 +38,14 @@ export function AuthCallbackPage() {
           }
 
           if (data.session) {
-            // Successfully authenticated
-            navigate('/');
+            // Successfully authenticated - check for pending redirect
+            const pendingRedirect = sessionStorage.getItem('auth_redirect');
+            if (pendingRedirect) {
+              sessionStorage.removeItem('auth_redirect');
+              navigate(pendingRedirect);
+            } else {
+              navigate('/');
+            }
             return;
           }
         }
@@ -57,7 +63,14 @@ export function AuthCallbackPage() {
         }
 
         if (session) {
-          navigate('/');
+          // Check for pending redirect
+          const pendingRedirect = sessionStorage.getItem('auth_redirect');
+          if (pendingRedirect) {
+            sessionStorage.removeItem('auth_redirect');
+            navigate(pendingRedirect);
+          } else {
+            navigate('/');
+          }
         } else {
           // No session and no code - something went wrong
           setError('Authentication failed. Please try again.');

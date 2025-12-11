@@ -6,6 +6,7 @@ import { EditorPage } from './pages/EditorPage';
 import { TagsPage } from './pages/TagsPage';
 import { OrganizationsPage } from './pages/OrganizationsPage';
 import { OrganizationDetailPage } from './pages/OrganizationDetailPage';
+import { InviteAcceptPage } from './pages/InviteAcceptPage';
 import { LoginPage } from './pages/LoginPage';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
 
@@ -17,6 +18,7 @@ function App() {
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/invite/:token" element={<InviteAcceptPage />} />
 
           {/* Protected routes */}
           <Route
