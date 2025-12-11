@@ -1053,7 +1053,7 @@ export const organizationApi = {
     }
   },
 
-  // Send invitation email
+  // Send invitation email (uses Vercel serverless function)
   sendInvitationEmail: async (params: {
     email: string;
     organizationName: string;
@@ -1061,10 +1061,11 @@ export const organizationApi = {
     role: string;
     inviteToken: string;
   }): Promise<{ success: boolean; messageId?: string }> => {
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${API_BASE_URL}/api/organizations/invite/email`, {
+    const response = await fetch('/api/send-invite', {
       method: 'POST',
-      headers,
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         ...params,
         frontendUrl: window.location.origin,
