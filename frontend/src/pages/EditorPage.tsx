@@ -37,6 +37,12 @@ export function EditorPage() {
   const [isCopying, setIsCopying] = useState(false);
   const [orgMembers, setOrgMembers] = useState<any[]>([]);
 
+  // Tag autocomplete states
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false);
+  const tagInputRef = useRef<HTMLInputElement>(null);
+
   const isEditMode = editor.mode === 'edit';
 
   // Sync isFavorite when currentProcess changes
@@ -45,6 +51,38 @@ export function EditorPage() {
       setIsFavorite(currentProcess.isFavorite);
     }
   }, [currentProcess]);
+
+  // Load available tags for autocomplete
+  useEffect(() => {
+    loadAvailableTags();
+  }, [currentOrganization]);
+
+  const loadAvailableTags = async () => {
+    try {
+      const tags = new Set<string>();
+
+      // Get tags from organization_tags table if in an org
+      if (currentOrganization?.id) {
+        const orgTags = await organizationApi.getTags(currentOrganization.id);
+        orgTags.forEach(t => tags.add(t.name));
+      }
+
+      // Also get tags from existing processes in this workspace
+      const organizationId = currentOrganization?.id || null;
+      const response = await processApi.getAll({ limit: 200, organizationId });
+      response.processes.forEach(p => p.tags?.forEach(t => tags.add(t)));
+
+      setAvailableTags(Array.from(tags).sort());
+    } catch (error) {
+      console.error('Failed to load tags:', error);
+    }
+  };
+
+  // Filter tags for autocomplete
+  const filteredTagSuggestions = availableTags.filter(tag =>
+    tag.toLowerCase().includes(tagInput.toLowerCase()) &&
+    !processData.tags?.includes(tag)
+  );
 
   const handleToggleFavorite = async () => {
     if (!currentProcess) return;
@@ -254,16 +292,24 @@ export function EditorPage() {
     }
   };
 
+  const addTag = (tag: string) => {
+    const newTag = tag.trim();
+    if (newTag && !processData.tags?.includes(newTag)) {
+      setProcessData({
+        ...processData,
+        tags: [...(processData.tags || []), newTag],
+      });
+    }
+    setTagInput('');
+    setShowTagSuggestions(false);
+  };
+
   const handleTagInput = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && e.currentTarget.value.trim()) {
-      const newTag = e.currentTarget.value.trim();
-      if (!processData.tags?.includes(newTag)) {
-        setProcessData({
-          ...processData,
-          tags: [...(processData.tags || []), newTag],
-        });
-      }
-      e.currentTarget.value = '';
+    if (e.key === 'Enter' && tagInput.trim()) {
+      e.preventDefault();
+      addTag(tagInput);
+    } else if (e.key === 'Escape') {
+      setShowTagSuggestions(false);
     }
   };
 
@@ -574,15 +620,55 @@ export function EditorPage() {
 
               <div className="md:col-span-2">
                 <label className="block text-xs font-medium text-slate-600 mb-1.5">
-                  Tags {isEditMode && '(press Enter to add)'}
+                  Tags {isEditMode && '(type to search or add new)'}
                 </label>
                 {isEditMode && (
-                  <input
-                    type="text"
-                    onKeyDown={handleTagInput}
-                    placeholder="Add tags..."
-                    className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all mb-2"
-                  />
+                  <div className="relative mb-2">
+                    <input
+                      ref={tagInputRef}
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => {
+                        setTagInput(e.target.value);
+                        setShowTagSuggestions(true);
+                      }}
+                      onFocus={() => setShowTagSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowTagSuggestions(false), 200)}
+                      onKeyDown={handleTagInput}
+                      placeholder="Add tags..."
+                      className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+                    />
+                    {showTagSuggestions && (tagInput || availableTags.length > 0) && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {filteredTagSuggestions.length > 0 ? (
+                          filteredTagSuggestions.slice(0, 10).map((tag) => (
+                            <button
+                              key={tag}
+                              type="button"
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => addTag(tag)}
+                              className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-accent/10 hover:text-accent transition-colors"
+                            >
+                              {tag}
+                            </button>
+                          ))
+                        ) : tagInput ? (
+                          <button
+                            type="button"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => addTag(tagInput)}
+                            className="w-full px-3 py-2 text-left text-sm text-slate-600 hover:bg-accent/10 transition-colors"
+                          >
+                            Create "<span className="font-medium text-accent">{tagInput}</span>"
+                          </button>
+                        ) : (
+                          <div className="px-3 py-2 text-sm text-slate-400">
+                            Type to search or create a tag
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
                 {processData.tags && processData.tags.length > 0 ? (
                   <div className="flex flex-wrap gap-1.5">

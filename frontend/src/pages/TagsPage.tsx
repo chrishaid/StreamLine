@@ -15,10 +15,10 @@ import {
   Merge,
 } from 'lucide-react';
 import { MainLayout } from '../components/layout/MainLayout';
-import { processApi } from '../services/api';
+import { processApi, organizationApi } from '../services/api';
 import { getTagColor } from '../utils/tagColors';
 import { useAppStore } from '../store/useAppStore';
-import type { Process } from '../types';
+import type { Process, OrganizationTag } from '../types';
 
 interface HierarchicalTag {
   name: string;
@@ -33,7 +33,9 @@ export function TagsPage() {
   const navigate = useNavigate();
   const { currentOrganization } = useAppStore();
   const [processes, setProcesses] = useState<Process[]>([]);
+  const [organizationTags, setOrganizationTags] = useState<OrganizationTag[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedTags, setExpandedTags] = useState<Set<string>>(new Set());
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -46,18 +48,26 @@ export function TagsPage() {
   const [mergeTargetTag, setMergeTargetTag] = useState('');
 
   useEffect(() => {
-    fetchProcesses();
+    fetchData();
   }, [currentOrganization]);
 
-  const fetchProcesses = async () => {
+  const fetchData = async () => {
     setIsLoading(true);
     try {
       // Filter by current organization (null for personal workspace)
       const organizationId = currentOrganization?.id || null;
       const response = await processApi.getAll({ limit: 200, organizationId });
       setProcesses(response.processes);
+
+      // Also fetch organization tags if in an organization
+      if (currentOrganization?.id) {
+        const tags = await organizationApi.getTags(currentOrganization.id);
+        setOrganizationTags(tags);
+      } else {
+        setOrganizationTags([]);
+      }
     } catch (error) {
-      console.error('Failed to fetch processes:', error);
+      console.error('Failed to fetch data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +78,16 @@ export function TagsPage() {
     const tagCounts = new Map<string, number>();
     const allTags = new Set<string>();
 
-    // Count all tags and collect unique paths
+    // Add organization tags first (these are the "defined" tags)
+    organizationTags.forEach((orgTag) => {
+      allTags.add(orgTag.name);
+      // Initialize count to 0 for org-defined tags
+      if (!tagCounts.has(orgTag.name)) {
+        tagCounts.set(orgTag.name, 0);
+      }
+    });
+
+    // Count all tags from processes and collect unique paths
     processes.forEach((process) => {
       process.tags?.forEach((tag) => {
         tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1);
@@ -127,14 +146,17 @@ export function TagsPage() {
     });
 
     return rootTags;
-  }, [processes, expandedTags]);
+  }, [processes, organizationTags, expandedTags]);
 
   // Get flat list of all tags for search/merge
   const allFlatTags = useMemo(() => {
     const tags = new Set<string>();
+    // Include organization-defined tags
+    organizationTags.forEach((t) => tags.add(t.name));
+    // Include tags from processes
     processes.forEach((p) => p.tags?.forEach((t) => tags.add(t)));
     return Array.from(tags).sort();
-  }, [processes]);
+  }, [processes, organizationTags]);
 
   // Filter tags based on search
   const filteredTags = useMemo(() => {
@@ -190,12 +212,28 @@ export function TagsPage() {
 
     const fullTagPath = parentTag ? `${parentTag}/${newTagName.trim()}` : newTagName.trim();
 
-    // Find a process to add this tag to (or create a placeholder)
-    // For now, just show that the tag structure is ready to use
-    alert(`Tag "${fullTagPath}" is ready to use. Add it to processes via the editor or process library.`);
-    setShowCreateModal(false);
-    setNewTagName('');
-    setParentTag('');
+    setIsCreatingTag(true);
+    try {
+      if (currentOrganization?.id) {
+        // Create tag in organization_tags table
+        await organizationApi.createTag(currentOrganization.id, {
+          name: fullTagPath,
+        });
+        await fetchData(); // Refresh data
+        alert(`Tag "${fullTagPath}" created successfully!`);
+      } else {
+        // For personal workspace, just inform the user
+        alert(`Tag "${fullTagPath}" is ready to use. Add it to processes via the editor.`);
+      }
+      setShowCreateModal(false);
+      setNewTagName('');
+      setParentTag('');
+    } catch (error) {
+      console.error('Failed to create tag:', error);
+      alert('Failed to create tag');
+    } finally {
+      setIsCreatingTag(false);
+    }
   };
 
   const handleRenameTag = async () => {
@@ -219,7 +257,7 @@ export function TagsPage() {
         await processApi.update(process.id, { tags: newTags });
       }
 
-      await fetchProcesses();
+      await fetchData();
       setShowEditModal(false);
       setSelectedTag(newTag);
       setEditTagName('');
@@ -244,7 +282,7 @@ export function TagsPage() {
         await processApi.update(process.id, { tags: newTags });
       }
 
-      await fetchProcesses();
+      await fetchData();
       if (selectedTag === tagToDelete) {
         setSelectedTag(null);
       }
@@ -274,7 +312,7 @@ export function TagsPage() {
         await processApi.update(process.id, { tags: [...new Set(newTags)] });
       }
 
-      await fetchProcesses();
+      await fetchData();
       setShowMergeModal(false);
       setSelectedTag(mergeTargetTag);
       setMergeTargetTag('');
@@ -656,11 +694,11 @@ export function TagsPage() {
               </button>
               <button
                 onClick={handleCreateTag}
-                disabled={!newTagName.trim()}
+                disabled={!newTagName.trim() || isCreatingTag}
                 className="px-4 py-2 text-sm bg-accent text-white rounded-lg hover:bg-accent-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <Check className="w-4 h-4" />
-                Create Tag
+                {isCreatingTag ? 'Creating...' : 'Create Tag'}
               </button>
             </div>
           </div>
