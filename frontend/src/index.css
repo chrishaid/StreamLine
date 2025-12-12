@@ -120,9 +120,14 @@ button, a, input, select, textarea {
   box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Hide BPMN.io powered-by logo to prevent overlapping chat panel */
+/* Reposition BPMN.io powered-by logo to lower left at 60% size */
 .bjs-powered-by {
-  display: none !important;
+  right: auto !important;
+  left: 15px !important;
+  bottom: 15px !important;
+  transform: scale(0.6) !important;
+  transform-origin: bottom left !important;
+  opacity: 0.7 !important;
 }
 
 /* Refined button base styles */
