@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Settings, LogOut, ChevronDown, Search, Tag, FileText } from 'lucide-react';
+import { Settings, LogOut, ChevronDown, Tag, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 import { supabase } from '../../lib/supabase';
@@ -113,7 +113,6 @@ export function Header() {
       {/* Search */}
       <div className="flex-1 max-w-md mx-8 relative" ref={searchRef}>
         <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
@@ -123,7 +122,7 @@ export function Header() {
             }}
             onFocus={() => setShowSearchResults(true)}
             placeholder="Search processes or tags..."
-            className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
           />
         </div>
 
