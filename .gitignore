@@ -49,3 +49,5 @@ coverage/
 
 # Local development
 .vite
+.vercel
+.env*.local

@@ -44,7 +44,10 @@
       "Bash(vercel --prod:*)",
       "Bash(vercel login)",
       "Bash(vercel link:*)",
-      "Bash(vercel env pull:*)"
+      "Bash(vercel env pull:*)",
+      "Bash(vercel env add:*)",
+      "Bash(vercel logs:*)",
+      "Bash(vercel inspect:*)"
     ],
     "deny": [],
     "ask": []
