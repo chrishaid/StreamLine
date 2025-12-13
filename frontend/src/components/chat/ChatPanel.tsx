@@ -5,6 +5,21 @@ import type { ChatMessage } from '../../types';
 import { chatApi } from '../../services/api';
 import { extractBpmnXmlFromText, validateBpmnXml } from '../../utils/helpers';
 
+const POSITION_CLASSES = {
+  right: {
+    panel: 'right-3 top-44 bottom-3 w-96',
+    collapsed: 'right-6 bottom-6',
+  },
+  left: {
+    panel: 'left-3 top-44 bottom-3 w-96',
+    collapsed: 'left-6 bottom-6',
+  },
+  bottom: {
+    panel: 'left-3 right-3 bottom-3 h-80',
+    collapsed: 'right-6 bottom-6',
+  },
+};
+
 export function ChatPanel() {
   const {
     chatMessages,
@@ -16,7 +31,11 @@ export function ChatPanel() {
     setCurrentBpmnXml,
     currentBpmnXml,
     currentProcess,
+    userPreferences,
   } = useAppStore();
+
+  const position = userPreferences.chatPosition || 'right';
+  const positionClasses = POSITION_CLASSES[position];
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +127,7 @@ export function ChatPanel() {
 
   if (ui.chatPanelCollapsed) {
     return (
-      <div className="fixed right-6 bottom-6 z-40">
+      <div className={`fixed ${positionClasses.collapsed} z-40`}>
         <button
           onClick={toggleChatPanel}
           className="bg-accent text-white px-10 py-6 rounded-3xl shadow-2xl hover:bg-accent-700 transition-all hover:scale-105 flex items-center gap-4 border-2 border-white/20"
@@ -121,7 +140,7 @@ export function ChatPanel() {
   }
 
   return (
-    <div className="fixed right-3 top-44 bottom-3 w-96 bg-white border border-slate-200 flex flex-col shadow-soft-lg z-30 rounded-xl overflow-hidden">
+    <div className={`fixed ${positionClasses.panel} bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col shadow-soft-lg z-30 rounded-xl overflow-hidden transition-all`}>
       {/* Header */}
       <div className="h-14 border-b border-slate-100 flex items-center justify-between px-5">
         <h2 className="text-sm font-semibold text-slate-700">Chat with Claude</h2>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Settings, LogOut, ChevronDown, Tag, FileText } from 'lucide-react';
+import { LogOut, ChevronDown, Tag, FileText } from 'lucide-react';
+import { SettingsDropdown } from './SettingsDropdown';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 import { supabase } from '../../lib/supabase';
@@ -174,9 +175,7 @@ export function Header() {
 
       {/* Right Actions */}
       <div className="flex items-center gap-2">
-        <button className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-          <Settings className="w-4 h-4 text-slate-500" />
-        </button>
+        <SettingsDropdown />
 
         {/* User Menu */}
         <div className="relative">

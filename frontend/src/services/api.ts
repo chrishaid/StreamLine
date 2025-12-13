@@ -1081,6 +1081,65 @@ export const organizationApi = {
   },
 };
 
+// User Preferences API
+export interface UserPreferencesData {
+  theme: 'light' | 'dark';
+  chatPosition: 'right' | 'left' | 'bottom';
+  autoSaveInterval: number;
+  defaultView: string;
+}
+
+const DEFAULT_PREFERENCES: UserPreferencesData = {
+  theme: 'light',
+  chatPosition: 'right',
+  autoSaveInterval: 60,
+  defaultView: 'browse',
+};
+
+export const userPreferencesApi = {
+  getPreferences: async (): Promise<UserPreferencesData> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('preferences')
+      .eq('id', user.id)
+      .single();
+
+    if (error) {
+      console.error('Failed to fetch preferences:', error);
+      return DEFAULT_PREFERENCES;
+    }
+
+    return { ...DEFAULT_PREFERENCES, ...(data?.preferences || {}) };
+  },
+
+  updatePreferences: async (preferences: Partial<UserPreferencesData>): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // Get current preferences first
+    const { data: current } = await supabase
+      .from('users')
+      .select('preferences')
+      .eq('id', user.id)
+      .single();
+
+    const merged = { ...(current?.preferences || {}), ...preferences };
+
+    const { error } = await supabase
+      .from('users')
+      .update({ preferences: merged })
+      .eq('id', user.id);
+
+    if (error) {
+      console.error('Failed to update preferences:', error);
+      throw new Error('Failed to save preferences');
+    }
+  },
+};
+
 // Health check
 export const healthCheck = async (): Promise<{ status: string; timestamp: string }> => {
   const response = await apiClient.get('/health');

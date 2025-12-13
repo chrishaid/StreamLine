@@ -2,6 +2,20 @@ import { create } from 'zustand';
 import type { Process, Category, ChatMessage, UIState, BPMNEditorState, OrganizationWithMembership } from '../types';
 import type { AuthUser } from '../services/authApi';
 
+export interface UserPreferences {
+  theme: 'light' | 'dark';
+  chatPosition: 'right' | 'left' | 'bottom';
+  autoSaveInterval: number; // in seconds, 0 = disabled
+  defaultView: string;
+}
+
+export const DEFAULT_PREFERENCES: UserPreferences = {
+  theme: 'light',
+  chatPosition: 'right',
+  autoSaveInterval: 60,
+  defaultView: 'browse',
+};
+
 interface AppState {
   // Authentication State
   user: AuthUser | null;
@@ -64,6 +78,11 @@ interface AppState {
   setIsLoading: (loading: boolean) => void;
   loadingMessage: string | null;
   setLoadingMessage: (message: string | null) => void;
+
+  // User Preferences
+  userPreferences: UserPreferences;
+  setUserPreferences: (prefs: UserPreferences) => void;
+  updateUserPreference: <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -197,4 +216,12 @@ export const useAppStore = create<AppState>((set) => ({
   setIsLoading: (loading) => set({ isLoading: loading }),
   loadingMessage: null,
   setLoadingMessage: (message) => set({ loadingMessage: message }),
+
+  // User Preferences
+  userPreferences: DEFAULT_PREFERENCES,
+  setUserPreferences: (prefs) => set({ userPreferences: prefs }),
+  updateUserPreference: (key, value) =>
+    set((state) => ({
+      userPreferences: { ...state.userPreferences, [key]: value },
+    })),
 }));
