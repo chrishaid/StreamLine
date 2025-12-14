@@ -17,6 +17,8 @@ import {
   Clock,
   Copy,
   Check,
+  AlertTriangle,
+  Save,
 } from 'lucide-react';
 import { MainLayout } from '../components/layout/MainLayout';
 import { organizationApi } from '../services/api';
@@ -60,6 +62,22 @@ export function OrganizationDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
 
+  // Settings state
+  const [orgName, setOrgName] = useState('');
+  const [orgDescription, setOrgDescription] = useState('');
+  const [orgLogoUrl, setOrgLogoUrl] = useState('');
+  const [defaultInviteRole, setDefaultInviteRole] = useState<OrganizationRole>('member');
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isSavingDefaults, setIsSavingDefaults] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [selectedNewOwner, setSelectedNewOwner] = useState<string>('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [settingsSuccess, setSettingsSuccess] = useState<string | null>(null);
+
   const canManage =
     organization?.currentUserRole === 'owner' || organization?.currentUserRole === 'admin';
 
@@ -75,6 +93,11 @@ export function OrganizationDetailPage() {
       if (canManage) {
         loadInvitations();
       }
+      // Initialize settings form
+      setOrgName(organization.name);
+      setOrgDescription(organization.description || '');
+      setOrgLogoUrl(organization.logoUrl || '');
+      setDefaultInviteRole((organization.settings?.defaultInviteRole as OrganizationRole) || 'member');
     }
   }, [organization]);
 
@@ -186,6 +209,83 @@ export function OrganizationDetailPage() {
     setCopiedToken(token);
     setTimeout(() => setCopiedToken(null), 2000);
   };
+
+  // Settings handlers
+  const handleSaveProfile = async () => {
+    if (!organization) return;
+    setIsSavingProfile(true);
+    setSettingsError(null);
+    setSettingsSuccess(null);
+
+    try {
+      await organizationApi.update(organization.id, {
+        name: orgName.trim(),
+        description: orgDescription.trim() || undefined,
+        logoUrl: orgLogoUrl.trim() || undefined,
+      });
+      setSettingsSuccess('Organization profile updated successfully');
+      loadOrganization(); // Refresh data
+    } catch (err: any) {
+      setSettingsError(err.message || 'Failed to update organization');
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  const handleSaveDefaults = async () => {
+    if (!organization) return;
+    setIsSavingDefaults(true);
+    setSettingsError(null);
+    setSettingsSuccess(null);
+
+    try {
+      await organizationApi.update(organization.id, {
+        settings: { ...organization.settings, defaultInviteRole },
+      });
+      setSettingsSuccess('Member defaults updated successfully');
+      loadOrganization();
+    } catch (err: any) {
+      setSettingsError(err.message || 'Failed to update defaults');
+    } finally {
+      setIsSavingDefaults(false);
+    }
+  };
+
+  const handleTransferOwnership = async () => {
+    if (!organization || !selectedNewOwner) return;
+    setIsTransferring(true);
+    setSettingsError(null);
+
+    try {
+      await organizationApi.transferOwnership(organization.id, selectedNewOwner);
+      setShowTransferModal(false);
+      setSelectedNewOwner('');
+      setSettingsSuccess('Ownership transferred successfully. You are now an admin.');
+      loadOrganization();
+      loadMembers();
+    } catch (err: any) {
+      setSettingsError(err.message || 'Failed to transfer ownership');
+    } finally {
+      setIsTransferring(false);
+    }
+  };
+
+  const handleDeleteOrganization = async () => {
+    if (!organization || deleteConfirmText !== organization.name) return;
+    setIsDeleting(true);
+    setSettingsError(null);
+
+    try {
+      await organizationApi.delete(organization.id);
+      navigate('/organizations');
+    } catch (err: any) {
+      setSettingsError(err.message || 'Failed to delete organization');
+      setIsDeleting(false);
+    }
+  };
+
+  const isOwner = organization?.currentUserRole === 'owner';
+  const admins = members.filter((m) => m.role === 'admin');
 
   if (isLoading) {
     return (
@@ -418,11 +518,169 @@ export function OrganizationDetailPage() {
 
           {/* Settings Tab */}
           {activeTab === 'settings' && (
-            <div className="bg-white rounded-xl border border-slate-200 p-6">
-              <h3 className="font-medium text-slate-800 mb-4">Organization Settings</h3>
-              <p className="text-sm text-slate-500">
-                Organization settings and configuration options will appear here.
-              </p>
+            <div className="space-y-6">
+              {/* Success/Error Messages */}
+              {settingsSuccess && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700 flex items-center gap-2">
+                  <Check className="w-4 h-4" />
+                  {settingsSuccess}
+                </div>
+              )}
+              {settingsError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  {settingsError}
+                </div>
+              )}
+
+              {/* Organization Profile */}
+              <div className="bg-white rounded-xl border border-slate-200 p-6">
+                <h3 className="font-medium text-slate-800 mb-4">Organization Profile</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Organization Name
+                    </label>
+                    <input
+                      type="text"
+                      value={orgName}
+                      onChange={(e) => setOrgName(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={orgDescription}
+                      onChange={(e) => setOrgDescription(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent resize-none"
+                      placeholder="Brief description of your organization..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Logo URL
+                    </label>
+                    <input
+                      type="url"
+                      value={orgLogoUrl}
+                      onChange={(e) => setOrgLogoUrl(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                      placeholder="https://example.com/logo.png"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Slug
+                    </label>
+                    <input
+                      type="text"
+                      value={organization?.slug || ''}
+                      disabled
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg bg-slate-50 text-slate-500"
+                    />
+                    <p className="text-xs text-slate-400 mt-1">
+                      The URL slug cannot be changed after creation.
+                    </p>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleSaveProfile}
+                      disabled={isSavingProfile || !orgName.trim()}
+                      className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save className="w-4 h-4" />
+                      {isSavingProfile ? 'Saving...' : 'Save Profile'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Member Defaults */}
+              <div className="bg-white rounded-xl border border-slate-200 p-6">
+                <h3 className="font-medium text-slate-800 mb-4">Member Defaults</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Default Role for New Invitations
+                    </label>
+                    <select
+                      value={defaultInviteRole}
+                      onChange={(e) => setDefaultInviteRole(e.target.value as OrganizationRole)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                    >
+                      <option value="admin">Admin - Can manage members and settings</option>
+                      <option value="member">Member - Can create and edit processes</option>
+                      <option value="viewer">Viewer - Can only view processes</option>
+                    </select>
+                    <p className="text-xs text-slate-400 mt-1">
+                      New invitations will default to this role.
+                    </p>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleSaveDefaults}
+                      disabled={isSavingDefaults}
+                      className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save className="w-4 h-4" />
+                      {isSavingDefaults ? 'Saving...' : 'Save Defaults'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Danger Zone */}
+              {isOwner && (
+                <div className="bg-white rounded-xl border-2 border-red-200 p-6">
+                  <h3 className="font-medium text-red-600 mb-4 flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5" />
+                    Danger Zone
+                  </h3>
+                  <div className="space-y-4">
+                    {/* Transfer Ownership */}
+                    <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-slate-800">Transfer Ownership</p>
+                        <p className="text-sm text-slate-500">
+                          Transfer this organization to another admin.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowTransferModal(true)}
+                        disabled={admins.length === 0}
+                        className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Transfer
+                      </button>
+                    </div>
+                    {admins.length === 0 && (
+                      <p className="text-xs text-slate-500 -mt-2 ml-4">
+                        You need at least one admin to transfer ownership.
+                      </p>
+                    )}
+
+                    {/* Delete Organization */}
+                    <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-slate-800">Delete Organization</p>
+                        <p className="text-sm text-slate-500">
+                          Permanently delete this organization and all its data.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowDeleteModal(true)}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -483,6 +741,116 @@ export function OrganizationDetailPage() {
                   className="flex-1 px-4 py-2.5 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isInviting ? 'Sending...' : 'Send Invitation'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Transfer Ownership Modal */}
+      {showTransferModal && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowTransferModal(false)} />
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+              <h2 className="text-xl font-semibold text-slate-800 mb-2">Transfer Ownership</h2>
+              <p className="text-sm text-slate-500 mb-4">
+                Select an admin to transfer ownership to. You will become an admin after transfer.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    New Owner
+                  </label>
+                  <select
+                    value={selectedNewOwner}
+                    onChange={(e) => setSelectedNewOwner(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+                  >
+                    <option value="">Select an admin...</option>
+                    {admins.map((admin) => (
+                      <option key={admin.userId} value={admin.userId}>
+                        {admin.user?.name || admin.user?.email || 'Unknown User'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowTransferModal(false);
+                    setSelectedNewOwner('');
+                  }}
+                  className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleTransferOwnership}
+                  disabled={isTransferring || !selectedNewOwner}
+                  className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isTransferring ? 'Transferring...' : 'Transfer Ownership'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Delete Organization Modal */}
+      {showDeleteModal && (
+        <>
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowDeleteModal(false)} />
+          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-slate-800">Delete Organization</h2>
+              </div>
+
+              <p className="text-sm text-slate-600 mb-4">
+                This action <strong>cannot be undone</strong>. This will permanently delete the{' '}
+                <strong>{organization?.name}</strong> organization, all processes, tags, and member data.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Type <strong>{organization?.name}</strong> to confirm
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirmText}
+                    onChange={(e) => setDeleteConfirmText(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-200 focus:border-red-400"
+                    placeholder={organization?.name}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setDeleteConfirmText('');
+                  }}
+                  className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteOrganization}
+                  disabled={isDeleting || deleteConfirmText !== organization?.name}
+                  className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete Organization'}
                 </button>
               </div>
             </div>

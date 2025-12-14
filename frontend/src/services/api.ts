@@ -827,6 +827,47 @@ export const organizationApi = {
     if (error) throw error;
   },
 
+  // Transfer ownership to another member (must be admin or owner)
+  transferOwnership: async (organizationId: string, newOwnerId: string): Promise<void> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // First, demote the current owner to admin
+    const { error: demoteError } = await supabase
+      .from('organization_members')
+      .update({ role: 'admin', updated_at: new Date().toISOString() })
+      .eq('organization_id', organizationId)
+      .eq('user_id', user.id)
+      .eq('role', 'owner');
+
+    if (demoteError) throw demoteError;
+
+    // Then, promote the new owner
+    const { error: promoteError } = await supabase
+      .from('organization_members')
+      .update({ role: 'owner', updated_at: new Date().toISOString() })
+      .eq('organization_id', organizationId)
+      .eq('user_id', newOwnerId);
+
+    if (promoteError) {
+      // Try to rollback
+      await supabase
+        .from('organization_members')
+        .update({ role: 'owner', updated_at: new Date().toISOString() })
+        .eq('organization_id', organizationId)
+        .eq('user_id', user.id);
+      throw promoteError;
+    }
+
+    // Update the organization's created_by to the new owner
+    const { error: orgError } = await supabase
+      .from('organizations')
+      .update({ created_by: newOwnerId, updated_at: new Date().toISOString() })
+      .eq('id', organizationId);
+
+    if (orgError) console.error('Failed to update organization created_by:', orgError);
+  },
+
   // Members
   getMembers: async (organizationId: string): Promise<OrganizationMember[]> => {
     const { data, error } = await supabase
