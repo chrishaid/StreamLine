@@ -7,16 +7,16 @@ import { extractBpmnXmlFromText, validateBpmnXml } from '../../utils/helpers';
 
 const POSITION_CLASSES = {
   right: {
-    panel: 'right-3 top-44 bottom-3 w-96',
-    collapsed: 'right-6 bottom-6',
+    panel: 'right-8 top-48 bottom-8 w-[420px]',
+    collapsed: 'right-8 bottom-8',
   },
   left: {
-    panel: 'left-3 top-44 bottom-3 w-96',
-    collapsed: 'left-6 bottom-6',
+    panel: 'left-8 top-48 bottom-8 w-[420px]',
+    collapsed: 'left-8 bottom-8',
   },
   bottom: {
-    panel: 'left-3 right-3 bottom-3 h-80',
-    collapsed: 'right-6 bottom-6',
+    panel: 'left-8 right-8 bottom-8 h-96',
+    collapsed: 'right-8 bottom-8',
   },
 };
 
@@ -130,35 +130,35 @@ export function ChatPanel() {
       <div className={`fixed ${positionClasses.collapsed} z-40`}>
         <button
           onClick={toggleChatPanel}
-          className="bg-sage text-white px-10 py-6 rounded-3xl shadow-2xl hover:bg-sage-600 transition-all hover:scale-105 flex items-center gap-4 border-2 border-white/20"
+          className="bg-sage text-white px-8 py-5 rounded-2xl shadow-soft-lg hover:bg-sage-600 transition-all hover:scale-105 flex items-center gap-4 border border-sage-400"
         >
-          <MessageSquare className="w-12 h-12" />
-          <span className="text-2xl font-bold">AI Chat</span>
+          <MessageSquare className="w-8 h-8" />
+          <span className="text-lg font-semibold">AI Chat</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div className={`fixed ${positionClasses.panel} bg-white dark:bg-forest-800 border border-mist-300 dark:border-pine flex flex-col shadow-soft-lg z-30 rounded-xl overflow-hidden transition-all`}>
+    <div className={`fixed ${positionClasses.panel} bg-white dark:bg-forest-800 border border-mist-300 dark:border-pine flex flex-col shadow-soft-lg z-30 rounded-2xl overflow-hidden transition-all`}>
       {/* Header */}
-      <div className="h-14 border-b border-mist dark:border-pine flex items-center justify-between px-5 bg-gradient-to-r from-forest/5 to-sage/5">
-        <h2 className="text-sm font-semibold text-forest dark:text-mist">Chat with Claude</h2>
+      <div className="h-16 border-b border-mist dark:border-pine flex items-center justify-between px-6 bg-gradient-to-r from-forest/5 to-sage/5">
+        <h2 className="text-base font-semibold text-forest dark:text-mist">Chat with Claude</h2>
         <button
           onClick={toggleChatPanel}
-          className="p-1.5 hover:bg-mist dark:hover:bg-pine rounded-md transition-colors"
+          className="p-2 hover:bg-mist dark:hover:bg-pine rounded-lg transition-colors"
         >
-          <Minimize2 className="w-4 h-4 text-slate-500 dark:text-stone" />
+          <Minimize2 className="w-5 h-5 text-slate-500 dark:text-stone" />
         </button>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-4">
+      <div className="flex-1 overflow-y-auto p-6 space-y-5">
         {chatMessages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <MessageSquare className="w-12 h-12 mb-3 text-mist-400" />
-            <p className="text-sm font-medium text-forest dark:text-mist mb-1">Start a conversation</p>
-            <p className="text-xs text-stone max-w-xs">
+          <div className="flex flex-col items-center justify-center h-full text-center px-6">
+            <MessageSquare className="w-14 h-14 mb-4 text-mist-400" />
+            <p className="text-base font-medium text-forest dark:text-mist mb-2">Start a conversation</p>
+            <p className="text-sm text-stone max-w-xs leading-relaxed">
               Ask Claude to create a BPMN process, suggest improvements, or explain a diagram.
             </p>
           </div>
@@ -170,14 +170,14 @@ export function ChatPanel() {
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[85%] rounded-xl px-3.5 py-2.5 ${
+                  className={`max-w-[85%] rounded-2xl px-5 py-4 ${
                     message.role === 'user'
-                      ? 'bg-sage text-white'
+                      ? 'bg-sage text-white shadow-soft'
                       : 'bg-mist dark:bg-pine text-forest dark:text-mist'
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
-                  <span className={`text-2xs mt-1.5 block ${
+                  <span className={`text-2xs mt-2 block ${
                     message.role === 'user' ? 'text-white/70' : 'text-stone'
                   }`}>
                     {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -191,43 +191,43 @@ export function ChatPanel() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-mist dark:border-pine p-4">
+      <div className="border-t border-mist dark:border-pine p-5">
         {error && (
-          <div className="mb-3 p-2.5 bg-ember-50 border border-ember-100 rounded-lg flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-ember mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-ember-700">{error}</p>
+          <div className="mb-4 p-4 bg-ember-50 border border-ember-100 rounded-xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-ember mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-ember-700">{error}</p>
           </div>
         )}
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
-            className="flex-1 resize-none border border-mist-300 dark:border-pine rounded-lg px-3 py-2 text-sm text-forest dark:text-mist dark:bg-forest-800 placeholder-stone focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+            className="flex-1 resize-none border border-mist-300 dark:border-pine rounded-xl px-4 py-3 text-sm text-forest dark:text-mist dark:bg-forest-800 placeholder-stone focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
             rows={2}
             disabled={isSending}
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isSending}
-            className="bg-sage text-white px-3 rounded-lg hover:bg-sage-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center self-end h-10"
+            className="bg-sage text-white px-4 rounded-xl hover:bg-sage-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center self-end h-12 shadow-soft"
           >
             {isSending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
-              <Send className="w-4 h-4" />
+              <Send className="w-5 h-5" />
             )}
           </button>
         </div>
-        <div className="mt-2 flex gap-1.5 flex-wrap">
+        <div className="mt-4 flex gap-2 flex-wrap">
           <button
             onClick={() =>
               handleQuickAction(
                 'Create a simple BPMN process for employee onboarding with start event, tasks for document submission, equipment setup, and training, and an end event.'
               )
             }
-            className="text-xs px-2.5 py-1 bg-mist hover:bg-mist-300 text-slate-600 dark:text-mist dark:bg-pine dark:hover:bg-sage/20 rounded-full transition-colors"
+            className="text-xs px-4 py-2 bg-mist hover:bg-mist-300 text-slate-600 dark:text-mist dark:bg-pine dark:hover:bg-sage/20 rounded-lg transition-colors"
             disabled={isSending}
           >
             Create new process
@@ -238,7 +238,7 @@ export function ChatPanel() {
                 'Please analyze the current BPMN diagram and suggest improvements.'
               )
             }
-            className="text-xs px-2.5 py-1 bg-mist hover:bg-mist-300 text-slate-600 dark:text-mist dark:bg-pine dark:hover:bg-sage/20 rounded-full transition-colors disabled:opacity-50"
+            className="text-xs px-4 py-2 bg-mist hover:bg-mist-300 text-slate-600 dark:text-mist dark:bg-pine dark:hover:bg-sage/20 rounded-lg transition-colors disabled:opacity-50"
             disabled={isSending || !currentBpmnXml}
           >
             Suggest improvements
@@ -247,7 +247,7 @@ export function ChatPanel() {
             onClick={() =>
               handleQuickAction('Please explain this BPMN diagram in simple terms.')
             }
-            className="text-xs px-2.5 py-1 bg-mist hover:bg-mist-300 text-slate-600 dark:text-mist dark:bg-pine dark:hover:bg-sage/20 rounded-full transition-colors disabled:opacity-50"
+            className="text-xs px-4 py-2 bg-mist hover:bg-mist-300 text-slate-600 dark:text-mist dark:bg-pine dark:hover:bg-sage/20 rounded-lg transition-colors disabled:opacity-50"
             disabled={isSending || !currentBpmnXml}
           >
             Explain diagram

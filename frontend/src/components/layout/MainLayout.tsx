@@ -13,8 +13,8 @@ export function MainLayout({ children, showChat = false }: MainLayoutProps) {
   const { chatPanelCollapsed } = ui;
 
   return (
-    <div className="h-screen p-3 bg-slate-100">
-      <div className="h-full flex flex-col overflow-hidden rounded-xl shadow-lg bg-white">
+    <div className="h-screen p-5 bg-mist">
+      <div className="h-full flex flex-col overflow-hidden rounded-2xl shadow-soft-lg bg-white border border-mist-300">
         <Header />
         <div className="flex-1 flex overflow-hidden">
           <Sidebar />
