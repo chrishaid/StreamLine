@@ -130,7 +130,7 @@ export function ChatPanel() {
       <div className={`fixed ${positionClasses.collapsed} z-40`}>
         <button
           onClick={toggleChatPanel}
-          className="bg-accent text-white px-10 py-6 rounded-3xl shadow-2xl hover:bg-accent-700 transition-all hover:scale-105 flex items-center gap-4 border-2 border-white/20"
+          className="bg-sage text-white px-10 py-6 rounded-3xl shadow-2xl hover:bg-sage-600 transition-all hover:scale-105 flex items-center gap-4 border-2 border-white/20"
         >
           <MessageSquare className="w-12 h-12" />
           <span className="text-2xl font-bold">AI Chat</span>
@@ -140,15 +140,15 @@ export function ChatPanel() {
   }
 
   return (
-    <div className={`fixed ${positionClasses.panel} bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col shadow-soft-lg z-30 rounded-xl overflow-hidden transition-all`}>
+    <div className={`fixed ${positionClasses.panel} bg-white dark:bg-forest-800 border border-mist-300 dark:border-pine flex flex-col shadow-soft-lg z-30 rounded-xl overflow-hidden transition-all`}>
       {/* Header */}
-      <div className="h-14 border-b border-slate-100 flex items-center justify-between px-5">
-        <h2 className="text-sm font-semibold text-slate-700">Chat with Claude</h2>
+      <div className="h-14 border-b border-mist dark:border-pine flex items-center justify-between px-5 bg-gradient-to-r from-forest/5 to-sage/5">
+        <h2 className="text-sm font-semibold text-forest dark:text-mist">Chat with Claude</h2>
         <button
           onClick={toggleChatPanel}
-          className="p-1.5 hover:bg-slate-100 rounded-md transition-colors"
+          className="p-1.5 hover:bg-mist dark:hover:bg-pine rounded-md transition-colors"
         >
-          <Minimize2 className="w-4 h-4 text-slate-500" />
+          <Minimize2 className="w-4 h-4 text-slate-500 dark:text-stone" />
         </button>
       </div>
 
@@ -156,9 +156,9 @@ export function ChatPanel() {
       <div className="flex-1 overflow-y-auto p-5 space-y-4">
         {chatMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
-            <MessageSquare className="w-12 h-12 mb-3 text-slate-300" />
-            <p className="text-sm font-medium text-slate-600 mb-1">Start a conversation</p>
-            <p className="text-xs text-slate-400 max-w-xs">
+            <MessageSquare className="w-12 h-12 mb-3 text-mist-400" />
+            <p className="text-sm font-medium text-forest dark:text-mist mb-1">Start a conversation</p>
+            <p className="text-xs text-stone max-w-xs">
               Ask Claude to create a BPMN process, suggest improvements, or explain a diagram.
             </p>
           </div>
@@ -172,13 +172,13 @@ export function ChatPanel() {
                 <div
                   className={`max-w-[85%] rounded-xl px-3.5 py-2.5 ${
                     message.role === 'user'
-                      ? 'bg-accent text-white'
-                      : 'bg-slate-100 text-slate-700'
+                      ? 'bg-sage text-white'
+                      : 'bg-mist dark:bg-pine text-forest dark:text-mist'
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                   <span className={`text-2xs mt-1.5 block ${
-                    message.role === 'user' ? 'text-white/70' : 'text-slate-400'
+                    message.role === 'user' ? 'text-white/70' : 'text-stone'
                   }`}>
                     {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
@@ -191,11 +191,11 @@ export function ChatPanel() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-slate-100 p-4">
+      <div className="border-t border-mist dark:border-pine p-4">
         {error && (
-          <div className="mb-3 p-2.5 bg-red-50 border border-red-100 rounded-lg flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-red-700">{error}</p>
+          <div className="mb-3 p-2.5 bg-ember-50 border border-ember-100 rounded-lg flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-ember mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-ember-700">{error}</p>
           </div>
         )}
         <div className="flex gap-2">
@@ -204,14 +204,14 @@ export function ChatPanel() {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
-            className="flex-1 resize-none border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+            className="flex-1 resize-none border border-mist-300 dark:border-pine rounded-lg px-3 py-2 text-sm text-forest dark:text-mist dark:bg-forest-800 placeholder-stone focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
             rows={2}
             disabled={isSending}
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isSending}
-            className="bg-accent text-white px-3 rounded-lg hover:bg-accent-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center self-end h-10"
+            className="bg-sage text-white px-3 rounded-lg hover:bg-sage-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center self-end h-10"
           >
             {isSending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -227,7 +227,7 @@ export function ChatPanel() {
                 'Create a simple BPMN process for employee onboarding with start event, tasks for document submission, equipment setup, and training, and an end event.'
               )
             }
-            className="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors"
+            className="text-xs px-2.5 py-1 bg-mist hover:bg-mist-300 text-slate-600 dark:text-mist dark:bg-pine dark:hover:bg-sage/20 rounded-full transition-colors"
             disabled={isSending}
           >
             Create new process
@@ -238,7 +238,7 @@ export function ChatPanel() {
                 'Please analyze the current BPMN diagram and suggest improvements.'
               )
             }
-            className="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors disabled:opacity-50"
+            className="text-xs px-2.5 py-1 bg-mist hover:bg-mist-300 text-slate-600 dark:text-mist dark:bg-pine dark:hover:bg-sage/20 rounded-full transition-colors disabled:opacity-50"
             disabled={isSending || !currentBpmnXml}
           >
             Suggest improvements
@@ -247,7 +247,7 @@ export function ChatPanel() {
             onClick={() =>
               handleQuickAction('Please explain this BPMN diagram in simple terms.')
             }
-            className="text-xs px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors disabled:opacity-50"
+            className="text-xs px-2.5 py-1 bg-mist hover:bg-mist-300 text-slate-600 dark:text-mist dark:bg-pine dark:hover:bg-sage/20 rounded-full transition-colors disabled:opacity-50"
             disabled={isSending || !currentBpmnXml}
           >
             Explain diagram

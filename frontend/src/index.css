@@ -1,27 +1,44 @@
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
-/* Theme CSS Variables */
+/* Range Brand - Theme CSS Variables */
 :root {
+  /* Core brand colors */
+  --color-forest: #1e3a2f;
+  --color-pine: #2d5a47;
+  --color-sage: #4a7c67;
+  --color-mist: #e8f0ec;
+  --color-ember: #c2410c;
+  --color-gold: #a16207;
+  --color-ink: #1a1a1a;
+  --color-slate: #5c6b64;
+  --color-stone: #94a39b;
+  --color-paper: #fafbfa;
+
+  /* Semantic tokens */
   --bg-primary: #ffffff;
-  --bg-secondary: #f8fafc;
-  --bg-tertiary: #f1f5f9;
-  --text-primary: #1e293b;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --border-color: #e2e8f0;
-  --border-hover: #cbd5e1;
+  --bg-secondary: #fafbfa;
+  --bg-tertiary: #e8f0ec;
+  --text-primary: #1e3a2f;
+  --text-secondary: #5c6b64;
+  --text-muted: #94a39b;
+  --border-color: #d1ddd6;
+  --border-hover: #b3c7bc;
+  --accent-color: #4a7c67;
+  --accent-hover: #3d6655;
 }
 
 .dark {
-  --bg-primary: #1e293b;
-  --bg-secondary: #0f172a;
-  --bg-tertiary: #1e293b;
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  --border-color: #334155;
-  --border-hover: #475569;
+  --bg-primary: #1e3a2f;
+  --bg-secondary: #152a22;
+  --bg-tertiary: #1a3329;
+  --text-primary: #e8f0ec;
+  --text-secondary: #b3c7bc;
+  --text-muted: #94a39b;
+  --border-color: #2d5a47;
+  --border-hover: #4a7c67;
+  --accent-color: #7aa892;
+  --accent-hover: #a8c5b9;
 }
 
 /* Reset and base styles */
@@ -54,7 +71,7 @@ body {
   overflow: hidden;
 }
 
-/* Refined scrollbar styling */
+/* Refined scrollbar styling - Range green */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -65,23 +82,23 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #b3c7bc;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94A3B8;
+  background: #94a39b;
 }
 
-/* Selection styling with accent color */
+/* Selection styling with sage accent */
 ::selection {
-  background-color: rgba(13, 148, 136, 0.15);
+  background-color: rgba(74, 124, 103, 0.2);
   color: inherit;
 }
 
-/* Focus ring styling - subtle accent */
+/* Focus ring styling - sage accent */
 :focus-visible {
-  outline: 2px solid rgba(13, 148, 136, 0.5);
+  outline: 2px solid rgba(74, 124, 103, 0.6);
   outline-offset: 2px;
 }
 
@@ -95,18 +112,18 @@ button, a, input, select, textarea {
   width: 100%;
   height: 100%;
   position: relative;
-  background-color: #FAFBFC;
+  background-color: #fafbfa;
 }
 
 .bjs-container {
-  background-color: #FAFBFC;
+  background-color: #fafbfa;
 }
 
-/* BPMN canvas with subtle grid pattern */
+/* BPMN canvas with subtle grid pattern - mist/sage tones */
 .bjs-container .djs-container {
   background-image:
-    linear-gradient(to right, #E2E8F0 1px, transparent 1px),
-    linear-gradient(to bottom, #E2E8F0 1px, transparent 1px);
+    linear-gradient(to right, #d1ddd6 1px, transparent 1px),
+    linear-gradient(to bottom, #d1ddd6 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
@@ -117,13 +134,13 @@ button, a, input, select, textarea {
 .djs-palette {
   z-index: 100;
   background: white !important;
-  border: 1px solid #E2E8F0 !important;
+  border: 1px solid #d1ddd6 !important;
   border-radius: 8px !important;
   box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.06), 0 8px 24px -4px rgba(0, 0, 0, 0.1) !important;
 }
 
 .djs-palette .entry:hover {
-  background-color: #F1F5F9 !important;
+  background-color: #e8f0ec !important;
 }
 
 .djs-container svg {
@@ -134,7 +151,7 @@ button, a, input, select, textarea {
 /* Properties panel styling */
 .bpp-properties-panel {
   background: white !important;
-  border-left: 1px solid #E2E8F0 !important;
+  border-left: 1px solid #d1ddd6 !important;
 }
 
 /* Context pad styling */
@@ -174,7 +191,7 @@ button, a, input, select, textarea {
   cursor: not-allowed;
 }
 
-/* Input base styles */
+/* Input base styles - Range themed */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -182,11 +199,11 @@ input[type="search"],
 textarea,
 select {
   background-color: white;
-  border: 1px solid #E2E8F0;
+  border: 1px solid #d1ddd6;
   border-radius: 0.5rem;
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
-  color: #1E293B;
+  color: #1e3a2f;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -196,14 +213,14 @@ input[type="password"]:focus,
 input[type="search"]:focus,
 textarea:focus,
 select:focus {
-  border-color: #0D9488;
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+  border-color: #4a7c67;
+  box-shadow: 0 0 0 3px rgba(74, 124, 103, 0.15);
   outline: none;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #94A3B8;
+  color: #94a39b;
 }
 
 /* Card hover effect */
@@ -219,7 +236,7 @@ textarea::placeholder {
 /* Subtle divider */
 .divider {
   height: 1px;
-  background: linear-gradient(to right, transparent, #E2E8F0, transparent);
+  background: linear-gradient(to right, transparent, #d1ddd6, transparent);
 }
 
 /* Loading spinner animation */
@@ -261,4 +278,20 @@ textarea::placeholder {
 
 .animate-slide-up {
   animation: slideUp 0.3s ease-out;
+}
+
+/* Range Brand Typography - Italic headings for brand feel */
+.brand-heading {
+  font-family: "Computer Modern Serif", "Latin Modern Roman", Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  color: #1e3a2f;
+}
+
+/* Range Logo text styling */
+.range-wordmark {
+  font-family: "Computer Modern Serif", "Latin Modern Roman", Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
 }

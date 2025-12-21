@@ -128,10 +128,10 @@ export function Sidebar() {
 
   if (sidebarCollapsed) {
     return (
-      <div className="w-14 border-r border-slate-200 bg-white flex flex-col items-center py-3 gap-1">
+      <div className="w-14 border-r border-mist-300 bg-white flex flex-col items-center py-3 gap-1">
         <button
           onClick={toggleSidebar}
-          className="p-2 hover:bg-slate-100 rounded-lg transition-colors mb-2"
+          className="p-2 hover:bg-mist rounded-lg transition-colors mb-2"
           title="Expand sidebar"
         >
           <ChevronRight className="w-4 h-4 text-slate-500" />
@@ -139,7 +139,7 @@ export function Sidebar() {
 
         <button
           onClick={handleNewProcess}
-          className="p-2.5 bg-accent hover:bg-accent-700 rounded-lg transition-colors mb-4"
+          className="p-2.5 bg-sage hover:bg-sage-600 rounded-lg transition-colors mb-4"
           title="New Process"
         >
           <Plus className="w-4 h-4 text-white" />
@@ -152,8 +152,8 @@ export function Sidebar() {
             className={clsx(
               'p-2 rounded-lg transition-colors',
               activeView === item.id && !isOnTagsPage
-                ? 'bg-slate-100 text-slate-800'
-                : 'hover:bg-slate-50 text-slate-500'
+                ? 'bg-mist text-forest'
+                : 'hover:bg-mist/50 text-slate-500'
             )}
             title={item.label}
           >
@@ -166,8 +166,8 @@ export function Sidebar() {
           className={clsx(
             'p-2 rounded-lg transition-colors mt-2',
             isOnTagsPage
-              ? 'bg-slate-100 text-slate-800'
-              : 'hover:bg-slate-50 text-slate-500'
+              ? 'bg-mist text-forest'
+              : 'hover:bg-mist/50 text-slate-500'
           )}
           title="Manage Tags"
         >
@@ -178,16 +178,16 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="w-60 border-r border-slate-200 bg-white flex flex-col">
+    <aside className="w-60 border-r border-mist-300 bg-white flex flex-col">
       {/* Header with collapse button */}
-      <div className="h-14 px-3 flex items-center justify-between border-b border-slate-100">
-        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Navigation</span>
+      <div className="h-14 px-3 flex items-center justify-between border-b border-mist">
+        <span className="text-xs font-semibold text-stone uppercase tracking-wider">Navigation</span>
         <button
           onClick={toggleSidebar}
-          className="p-1.5 hover:bg-slate-100 rounded-md transition-colors"
+          className="p-1.5 hover:bg-mist rounded-md transition-colors"
           title="Collapse sidebar"
         >
-          <ChevronLeft className="w-4 h-4 text-slate-400" />
+          <ChevronLeft className="w-4 h-4 text-stone" />
         </button>
       </div>
 
@@ -195,7 +195,7 @@ export function Sidebar() {
       <div className="p-4">
         <button
           onClick={handleNewProcess}
-          className="w-full bg-accent hover:bg-accent-700 text-white px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium shadow-sm"
+          className="w-full bg-sage hover:bg-sage-600 text-white px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm font-medium shadow-sm"
         >
           <Plus className="w-4 h-4" />
           New Process
@@ -212,13 +212,13 @@ export function Sidebar() {
               className={clsx(
                 'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm',
                 activeView === item.id && !isOnTagsPage
-                  ? 'bg-slate-100 text-slate-800 font-medium'
-                  : 'hover:bg-slate-50 text-slate-600'
+                  ? 'bg-mist text-forest font-medium'
+                  : 'hover:bg-mist/50 text-slate-600'
               )}
             >
               <item.icon className={clsx(
                 'w-4 h-4',
-                activeView === item.id && !isOnTagsPage ? 'text-accent' : 'text-slate-400'
+                activeView === item.id && !isOnTagsPage ? 'text-sage' : 'text-stone'
               )} />
               <span>{item.label}</span>
             </button>
@@ -232,23 +232,23 @@ export function Sidebar() {
             className={clsx(
               'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-sm',
               isOnTagsPage
-                ? 'bg-slate-100 text-slate-800 font-medium'
-                : 'hover:bg-slate-50 text-slate-600'
+                ? 'bg-mist text-forest font-medium'
+                : 'hover:bg-mist/50 text-slate-600'
             )}
           >
             <Tag className={clsx(
               'w-4 h-4',
-              isOnTagsPage ? 'text-accent' : 'text-slate-400'
+              isOnTagsPage ? 'text-sage' : 'text-stone'
             )} />
             <span>Manage Tags</span>
           </button>
         </div>
 
         {/* Content Area */}
-        <div className="border-t border-slate-100 pt-4">
+        <div className="border-t border-mist pt-4">
           {activeView === 'browse' && (
             <div>
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-3">
+              <h3 className="text-xs font-semibold text-stone uppercase tracking-wider mb-3 px-3">
                 Processes
               </h3>
               <ProcessList />
@@ -257,18 +257,18 @@ export function Sidebar() {
 
           {activeView === 'recent' && (
             <div>
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-3">
+              <h3 className="text-xs font-semibold text-stone uppercase tracking-wider mb-3 px-3">
                 Recent
               </h3>
               {isLoading ? (
                 <div className="px-3 py-4 text-center">
-                  <div className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-slate-200 border-t-accent"></div>
+                  <div className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-mist-300 border-t-sage"></div>
                 </div>
               ) : recentProcesses.length === 0 ? (
                 <div className="px-3 py-6 text-center">
-                  <Clock className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                  <Clock className="w-8 h-8 text-mist-400 mx-auto mb-2" />
                   <p className="text-sm text-slate-500">No recent processes</p>
-                  <p className="text-xs text-slate-400 mt-1">Open a process to see it here</p>
+                  <p className="text-xs text-stone mt-1">Open a process to see it here</p>
                 </div>
               ) : (
                 <div className="space-y-0.5">
@@ -279,22 +279,22 @@ export function Sidebar() {
                       className={clsx(
                         'group w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all cursor-pointer text-left',
                         currentProcess?.id === process.id
-                          ? 'bg-accent/10 ring-1 ring-accent/20'
-                          : 'hover:bg-slate-50'
+                          ? 'bg-sage/10 ring-1 ring-sage/20'
+                          : 'hover:bg-mist/50'
                       )}
                     >
                       <FileText className={clsx(
                         'w-4 h-4 flex-shrink-0',
-                        currentProcess?.id === process.id ? 'text-accent' : 'text-slate-400'
+                        currentProcess?.id === process.id ? 'text-sage' : 'text-stone'
                       )} />
                       <div className="flex-1 min-w-0">
                         <div className={clsx(
                           'text-sm truncate',
-                          currentProcess?.id === process.id ? 'font-medium text-slate-800' : 'text-slate-700'
+                          currentProcess?.id === process.id ? 'font-medium text-forest' : 'text-slate-700'
                         )}>
                           {process.name}
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-stone">
                           {new Date(process.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </div>
                       </div>
@@ -302,7 +302,7 @@ export function Sidebar() {
                         onClick={(e) => toggleFavorite(e, process)}
                         className={clsx(
                           'p-1 rounded-md transition-colors opacity-0 group-hover:opacity-100',
-                          process.isFavorite ? 'text-amber-500' : 'text-slate-400 hover:text-amber-500'
+                          process.isFavorite ? 'text-gold' : 'text-stone hover:text-gold'
                         )}
                         title={process.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                       >
@@ -317,18 +317,18 @@ export function Sidebar() {
 
           {activeView === 'favorites' && (
             <div>
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-3">
+              <h3 className="text-xs font-semibold text-stone uppercase tracking-wider mb-3 px-3">
                 Favorites
               </h3>
               {isLoading ? (
                 <div className="px-3 py-4 text-center">
-                  <div className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-slate-200 border-t-accent"></div>
+                  <div className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-mist-300 border-t-sage"></div>
                 </div>
               ) : favoriteProcesses.length === 0 ? (
                 <div className="px-3 py-6 text-center">
-                  <StarOff className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                  <StarOff className="w-8 h-8 text-mist-400 mx-auto mb-2" />
                   <p className="text-sm text-slate-500">No favorites yet</p>
-                  <p className="text-xs text-slate-400 mt-1">Click the star on a process to add it</p>
+                  <p className="text-xs text-stone mt-1">Click the star on a process to add it</p>
                 </div>
               ) : (
                 <div className="space-y-0.5">
@@ -339,25 +339,25 @@ export function Sidebar() {
                       className={clsx(
                         'group w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all cursor-pointer text-left',
                         currentProcess?.id === process.id
-                          ? 'bg-accent/10 ring-1 ring-accent/20'
-                          : 'hover:bg-slate-50'
+                          ? 'bg-sage/10 ring-1 ring-sage/20'
+                          : 'hover:bg-mist/50'
                       )}
                     >
                       <FileText className={clsx(
                         'w-4 h-4 flex-shrink-0',
-                        currentProcess?.id === process.id ? 'text-accent' : 'text-slate-400'
+                        currentProcess?.id === process.id ? 'text-sage' : 'text-stone'
                       )} />
                       <div className="flex-1 min-w-0">
                         <div className={clsx(
                           'text-sm truncate',
-                          currentProcess?.id === process.id ? 'font-medium text-slate-800' : 'text-slate-700'
+                          currentProcess?.id === process.id ? 'font-medium text-forest' : 'text-slate-700'
                         )}>
                           {process.name}
                         </div>
                       </div>
                       <button
                         onClick={(e) => toggleFavorite(e, process)}
-                        className="p-1 rounded-md text-amber-500 hover:text-amber-600 transition-colors"
+                        className="p-1 rounded-md text-gold hover:text-gold-600 transition-colors"
                         title="Remove from favorites"
                       >
                         <Star className="w-3.5 h-3.5" fill="currentColor" />
