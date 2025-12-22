@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Process, OrganizationWithMembership } from '../../types';
 import { processApi, organizationApi } from '../../services/api';
 import { getTagColor } from '../../utils/tagColors';
-import { Star, Copy, Users, X, Building2, User, Eye, Pencil, Trash2, ExternalLink, MoreHorizontal } from 'lucide-react';
+import { Star, Copy, Users, X, Building2, User, Eye, Pencil, Trash2, ExternalLink } from 'lucide-react';
 import { BPMNThumbnail } from '../bpmn/BPMNThumbnail';
 
 interface ProcessCardProps {
