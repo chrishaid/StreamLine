@@ -126,9 +126,9 @@ export function HomePage() {
     <MainLayout>
       <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100/80">
         <div className="p-10 lg:p-12">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-6xl mx-auto space-y-10">
             {/* Header */}
-            <div className="mb-12">
+            <div>
               <h1 className="text-3xl font-semibold text-slate-800 mb-3">Process Library</h1>
               <p className="text-base text-slate-500">
                 Manage and explore your business process diagrams
@@ -136,7 +136,7 @@ export function HomePage() {
             </div>
 
             {/* Quick Actions */}
-            <section className="mb-12">
+            <section>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <button
                   onClick={handleCreateNewProcess}
@@ -171,7 +171,7 @@ export function HomePage() {
             </section>
 
             {/* Stats / KPI Cards */}
-            <section className="mb-12">
+            <section>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between">
@@ -212,7 +212,7 @@ export function HomePage() {
             </section>
 
             {/* Search and Filters */}
-            <section className="mb-8">
+            <section>
               <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
                 <div className="flex items-center gap-4 flex-wrap">
                   {/* Search */}
@@ -267,7 +267,7 @@ export function HomePage() {
 
             {/* Tag Filter Section */}
             {allTags.length > 0 && (
-              <section className="mb-10">
+              <section>
                 <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className="flex items-center gap-2 text-slate-500 text-sm font-medium mr-1">
@@ -310,7 +310,7 @@ export function HomePage() {
               </section>
             )}
 
-              {/* Process Grid */}
+            {/* Process Grid */}
             <section>
               {isLoading ? (
                 <div className="text-center py-20">
