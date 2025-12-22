@@ -64,31 +64,31 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-mist">
-      <div className="flex-1 flex items-center justify-center p-10">
-        <div className="max-w-md w-full">
+      <div className="flex-1 flex items-center justify-center p-12">
+        <div className="max-w-xl w-full">
           {/* Logo and Title */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-sage rounded-2xl mb-8 shadow-soft-lg">
-              <Workflow className="w-10 h-10 text-white" />
+          <div className="text-center mb-14">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-sage rounded-3xl mb-10 shadow-soft-lg">
+              <Workflow className="w-12 h-12 text-white" />
             </div>
-            <h1 className="text-3xl font-semibold text-forest tracking-tight mb-3">StreamLine</h1>
-            <p className="text-sm text-slate-500">BPMN Process Design Hub</p>
+            <h1 className="text-4xl font-semibold text-forest tracking-tight mb-4">StreamLine</h1>
+            <p className="text-base text-slate-500">BPMN Process Design Hub</p>
           </div>
 
           {/* Login Card */}
-          <div className="bg-white rounded-2xl shadow-soft-lg p-10 border border-mist-300">
-            <h2 className="text-xl font-semibold text-forest mb-3">Welcome</h2>
-            <p className="text-sm text-slate-500 mb-8">
+          <div className="bg-white rounded-3xl shadow-soft-lg p-12 border border-mist-300">
+            <h2 className="text-2xl font-semibold text-forest mb-4">Welcome</h2>
+            <p className="text-base text-slate-500 mb-10">
               Sign in to manage your business processes
             </p>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
               {/* Google Login */}
               <button
                 onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center gap-4 px-6 py-4 bg-white border border-mist-300 rounded-xl hover:bg-mist/30 hover:border-sage/40 hover:shadow-soft transition-all text-sm font-medium text-forest"
+                className="w-full flex items-center justify-center gap-5 px-8 py-5 bg-white border-2 border-mist-300 rounded-2xl hover:bg-mist/30 hover:border-sage/40 hover:shadow-soft transition-all text-base font-medium text-forest"
               >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <svg className="w-6 h-6" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -112,9 +112,9 @@ export function LoginPage() {
               {/* Microsoft Login */}
               <button
                 onClick={handleMicrosoftLogin}
-                className="w-full flex items-center justify-center gap-4 px-6 py-4 bg-white border border-mist-300 rounded-xl hover:bg-mist/30 hover:border-sage/40 hover:shadow-soft transition-all text-sm font-medium text-forest"
+                className="w-full flex items-center justify-center gap-5 px-8 py-5 bg-white border-2 border-mist-300 rounded-2xl hover:bg-mist/30 hover:border-sage/40 hover:shadow-soft transition-all text-base font-medium text-forest"
               >
-                <svg className="w-5 h-5" viewBox="0 0 23 23">
+                <svg className="w-6 h-6" viewBox="0 0 23 23">
                   <path fill="#f3f3f3" d="M0 0h23v23H0z" />
                   <path fill="#f35325" d="M1 1h10v10H1z" />
                   <path fill="#81bc06" d="M12 1h10v10H12z" />
@@ -125,45 +125,45 @@ export function LoginPage() {
               </button>
             </div>
 
-            <p className="mt-8 text-center text-xs text-stone">
+            <p className="mt-10 text-center text-sm text-stone">
               By signing in, you agree to our Terms of Service
             </p>
           </div>
 
           {/* Features */}
-          <div className="mt-12 grid grid-cols-3 gap-8">
+          <div className="mt-14 grid grid-cols-3 gap-10">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-white rounded-xl shadow-soft mb-4 border border-mist-300">
-                <Sparkles className="w-6 h-6 text-sage" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-soft mb-5 border border-mist-300">
+                <Sparkles className="w-7 h-7 text-sage" />
               </div>
-              <p className="text-sm text-forest font-medium">AI-Powered</p>
-              <p className="text-xs text-stone mt-1">Smart assistance</p>
+              <p className="text-base text-forest font-medium">AI-Powered</p>
+              <p className="text-sm text-stone mt-2">Smart assistance</p>
             </div>
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-white rounded-xl shadow-soft mb-4 border border-mist-300">
-                <PenTool className="w-6 h-6 text-pine" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-soft mb-5 border border-mist-300">
+                <PenTool className="w-7 h-7 text-pine" />
               </div>
-              <p className="text-sm text-forest font-medium">Visual Editor</p>
-              <p className="text-xs text-stone mt-1">Drag & drop</p>
+              <p className="text-base text-forest font-medium">Visual Editor</p>
+              <p className="text-sm text-stone mt-2">Drag & drop</p>
             </div>
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-white rounded-xl shadow-soft mb-4 border border-mist-300">
-                <BarChart3 className="w-6 h-6 text-analytics-500" />
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-soft mb-5 border border-mist-300">
+                <BarChart3 className="w-7 h-7 text-analytics-500" />
               </div>
-              <p className="text-sm text-forest font-medium">Analytics</p>
-              <p className="text-xs text-stone mt-1">Insights</p>
+              <p className="text-base text-forest font-medium">Analytics</p>
+              <p className="text-sm text-stone mt-2">Insights</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="py-6 text-center">
-        <div className="flex items-center justify-center gap-3 text-stone">
-          <span className="text-xs">Built and maintained by</span>
-          <div className="flex items-center gap-1.5">
-            <RangeLogo size={16} variant="mark" />
-            <span className="text-xs font-serif italic text-forest">Range</span>
+      <footer className="py-8 text-center">
+        <div className="flex items-center justify-center gap-4 text-stone">
+          <span className="text-sm">Built and maintained by</span>
+          <div className="flex items-center gap-2">
+            <RangeLogo size={18} variant="mark" />
+            <span className="text-sm font-serif italic text-forest">Range</span>
           </div>
         </div>
       </footer>

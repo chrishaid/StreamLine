@@ -141,7 +141,7 @@ export function BPMNViewer() {
   return (
     <div className="relative w-full h-full flex flex-col bg-slate-50">
       {/* Toolbar */}
-      <div className="h-11 border-b border-slate-200 bg-white flex items-center justify-between px-4">
+      <div className="h-10 border-b border-slate-200 bg-white flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <span className="text-sm text-slate-500">
             {editor.mode === 'view' ? 'Viewing' : 'Editing'}
@@ -196,16 +196,14 @@ export function BPMNViewer() {
         <div ref={containerRef} className="w-full h-full bpmn-container" />
       </div>
 
-      {/* Status Bar */}
-      <div className="h-7 border-t border-slate-100 bg-white flex items-center justify-between px-4 text-2xs text-slate-500">
+      {/* Status Bar - Minimal height */}
+      <div className="h-6 border-t border-slate-100 bg-white flex items-center justify-between px-4 text-2xs text-slate-400">
         <div>
           {editor.lastSaved
             ? `Saved ${new Date(editor.lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
             : 'Not saved'}
         </div>
-        <div className="flex items-center gap-3">
-          <span>Ready</span>
-        </div>
+        <span>View mode</span>
       </div>
     </div>
   );

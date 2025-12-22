@@ -124,91 +124,91 @@ export function HomePage() {
 
   return (
     <MainLayout>
-      <div className="flex-1 overflow-y-auto p-10">
+      <div className="flex-1 overflow-y-auto p-12">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-2xl font-semibold text-slate-800 mb-2">Process Library</h1>
-            <p className="text-sm text-slate-500">
+          <div className="mb-10">
+            <h1 className="text-3xl font-semibold text-forest mb-3">Process Library</h1>
+            <p className="text-base text-slate-500">
               Manage and explore your business process diagrams
             </p>
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
             <button
               onClick={handleCreateNewProcess}
-              className="bg-gradient-to-r from-sage to-sage-600 rounded-2xl p-6 hover:from-sage-600 hover:to-sage-700 transition-all group text-left shadow-soft hover:shadow-soft-lg transform hover:-translate-y-0.5"
+              className="bg-gradient-to-r from-sage to-sage-600 rounded-2xl p-8 hover:from-sage-600 hover:to-sage-700 transition-all group text-left shadow-soft hover:shadow-soft-lg transform hover:-translate-y-0.5"
             >
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                  <Plus className="w-7 h-7 text-white" />
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center group-hover:bg-white/30 transition-colors">
+                  <Plus className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white text-base">Create New Process</h3>
-                  <p className="text-sm text-white/80 mt-1">Start with AI or blank canvas</p>
+                  <h3 className="font-semibold text-white text-lg">Create New Process</h3>
+                  <p className="text-base text-white/80 mt-2">Start with AI or blank canvas</p>
                 </div>
               </div>
             </button>
 
             <button
               onClick={handleUploadFile}
-              className="bg-white rounded-2xl border-2 border-mist-300 p-6 hover:border-sage hover:bg-sage/5 transition-all group text-left shadow-soft hover:shadow-soft-lg transform hover:-translate-y-0.5"
+              className="bg-white rounded-2xl border-2 border-mist-300 p-8 hover:border-sage hover:bg-sage/5 transition-all group text-left shadow-soft hover:shadow-soft-lg transform hover:-translate-y-0.5"
             >
-              <div className="flex items-center gap-5">
-                <div className="w-14 h-14 bg-mist rounded-xl flex items-center justify-center group-hover:bg-sage/10 transition-colors">
-                  <Upload className="w-7 h-7 text-slate-600 group-hover:text-sage" />
+              <div className="flex items-center gap-6">
+                <div className="w-16 h-16 bg-mist rounded-2xl flex items-center justify-center group-hover:bg-sage/10 transition-colors">
+                  <Upload className="w-8 h-8 text-slate-600 group-hover:text-sage" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-800 text-base">Upload BPMN File</h3>
-                  <p className="text-sm text-slate-500 mt-1">Import existing diagram</p>
+                  <h3 className="font-semibold text-forest text-lg">Upload BPMN File</h3>
+                  <p className="text-base text-slate-500 mt-2">Import existing diagram</p>
                 </div>
               </div>
             </button>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-            <div className="bg-white rounded-2xl border border-mist-300 p-5 shadow-soft">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div className="bg-white rounded-2xl border border-mist-300 p-6 shadow-soft">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-slate-500 mb-1">Total Processes</p>
-                  <p className="text-2xl font-semibold text-slate-800">{stats.total}</p>
+                  <p className="text-sm text-slate-500 mb-2">Total Processes</p>
+                  <p className="text-3xl font-semibold text-forest">{stats.total}</p>
                 </div>
-                <div className="w-11 h-11 bg-mist rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-slate-600" />
+                <div className="w-14 h-14 bg-mist rounded-2xl flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-slate-600" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-mist-300 p-5 shadow-soft">
+            <div className="bg-white rounded-2xl border border-mist-300 p-6 shadow-soft">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-slate-500 mb-1">Active</p>
-                  <p className="text-2xl font-semibold text-slate-800">{stats.active}</p>
+                  <p className="text-sm text-slate-500 mb-2">Active</p>
+                  <p className="text-3xl font-semibold text-forest">{stats.active}</p>
                 </div>
-                <div className="w-11 h-11 bg-sage/10 rounded-xl flex items-center justify-center">
-                  <Star className="w-5 h-5 text-sage" />
+                <div className="w-14 h-14 bg-sage/10 rounded-2xl flex items-center justify-center">
+                  <Star className="w-6 h-6 text-sage" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-mist-300 p-5 shadow-soft">
+            <div className="bg-white rounded-2xl border border-mist-300 p-6 shadow-soft">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-slate-500 mb-1">Favorites</p>
-                  <p className="text-2xl font-semibold text-slate-800">{stats.favorites}</p>
+                  <p className="text-sm text-slate-500 mb-2">Favorites</p>
+                  <p className="text-3xl font-semibold text-forest">{stats.favorites}</p>
                 </div>
-                <div className="w-11 h-11 bg-gold/10 rounded-xl flex items-center justify-center">
-                  <Star className="w-5 h-5 text-gold" />
+                <div className="w-14 h-14 bg-gold/10 rounded-2xl flex items-center justify-center">
+                  <Star className="w-6 h-6 text-gold" />
                 </div>
               </div>
             </div>
           </div>
 
           {/* Search and Filters */}
-          <div className="bg-white rounded-2xl border border-mist-300 p-5 mb-6 shadow-soft">
-            <div className="flex items-center gap-4 flex-wrap">
+          <div className="bg-white rounded-2xl border border-mist-300 p-6 mb-8 shadow-soft">
+            <div className="flex items-center gap-5 flex-wrap">
               {/* Search */}
               <div className="flex-1 min-w-[200px]">
                 <input
@@ -216,7 +216,7 @@ export function HomePage() {
                   placeholder="Search processes..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-5 py-3 text-sm border border-mist-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                  className="w-full px-6 py-4 text-base border-2 border-mist-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
                 />
               </div>
 
@@ -224,7 +224,7 @@ export function HomePage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-3 text-sm border border-mist-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+                className="px-5 py-4 text-base border-2 border-mist-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
               >
                 <option value="all">All Status</option>
                 <option value="draft">Draft</option>
@@ -233,26 +233,26 @@ export function HomePage() {
               </select>
 
               {/* View Mode Toggle */}
-              <div className="flex gap-1 border border-mist-300 rounded-xl p-1">
+              <div className="flex gap-1.5 border-2 border-mist-300 rounded-xl p-1.5">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2.5 rounded-lg transition-colors ${
+                  className={`p-3 rounded-lg transition-colors ${
                     viewMode === 'grid'
-                      ? 'bg-mist text-slate-700'
-                      : 'text-slate-400 hover:text-slate-600'
+                      ? 'bg-mist text-forest'
+                      : 'text-stone hover:text-forest'
                   }`}
                 >
-                  <Grid className="w-4 h-4" />
+                  <Grid className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2.5 rounded-lg transition-colors ${
+                  className={`p-3 rounded-lg transition-colors ${
                     viewMode === 'list'
-                      ? 'bg-mist text-slate-700'
-                      : 'text-slate-400 hover:text-slate-600'
+                      ? 'bg-mist text-forest'
+                      : 'text-stone hover:text-forest'
                   }`}
                 >
-                  <List className="w-4 h-4" />
+                  <List className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -260,18 +260,18 @@ export function HomePage() {
 
           {/* Tag Filter Section */}
           {allTags.length > 0 && (
-            <div className="bg-white rounded-2xl border border-mist-300 p-5 mb-6 shadow-soft">
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center gap-2 text-slate-500 text-xs font-medium mr-2">
-                  <Tag className="w-4 h-4" />
+            <div className="bg-white rounded-2xl border border-mist-300 p-6 mb-8 shadow-soft">
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2 text-stone text-sm font-medium mr-2">
+                  <Tag className="w-5 h-5" />
                   <span>Tags:</span>
                 </div>
                 {selectedTag && (
                   <button
                     onClick={() => setSelectedTag(null)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 text-slate-600 text-xs rounded-full hover:bg-slate-200 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-mist text-slate-600 text-sm rounded-full hover:bg-mist-300 transition-colors"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-4 h-4" />
                     Clear filter
                   </button>
                 )}
@@ -279,20 +279,20 @@ export function HomePage() {
                   <button
                     key={tag}
                     onClick={() => handleTagClick(tag)}
-                    className={`px-3 py-1.5 text-xs rounded-full transition-all ${
+                    className={`px-4 py-2 text-sm rounded-full transition-all ${
                       selectedTag === tag
-                        ? `${color.bg} ${color.text} ring-2 ring-offset-1 ${color.border}`
+                        ? `${color.bg} ${color.text} ring-2 ring-offset-2 ${color.border}`
                         : `${color.bg} ${color.text} hover:ring-1 hover:ring-offset-1 ${color.border}`
                     }`}
                   >
                     {tag}
-                    <span className="ml-1.5 opacity-60">({count})</span>
+                    <span className="ml-2 opacity-60">({count})</span>
                   </button>
                 ))}
                 {allTags.length > 8 && (
                   <button
                     onClick={() => setShowAllTags(!showAllTags)}
-                    className="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-700 transition-colors"
+                    className="px-4 py-2 text-sm text-stone hover:text-forest transition-colors"
                   >
                     {showAllTags ? 'Show less' : `+${allTags.length - 8} more`}
                   </button>
@@ -303,19 +303,19 @@ export function HomePage() {
 
           {/* Process Grid */}
           {isLoading ? (
-            <div className="text-center py-16">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-mist-300 border-t-sage"></div>
-              <p className="mt-4 text-sm text-slate-500">Loading processes...</p>
+            <div className="text-center py-20">
+              <div className="inline-block animate-spin rounded-full h-10 w-10 border-2 border-mist-300 border-t-sage"></div>
+              <p className="mt-5 text-base text-slate-500">Loading processes...</p>
             </div>
           ) : filteredProcesses.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-mist-300 p-12 text-center shadow-soft">
-              <Clock className="w-12 h-12 mx-auto mb-4 text-mist-400" />
-              <p className="text-sm text-slate-600 mb-2">
+            <div className="bg-white rounded-2xl border border-mist-300 p-16 text-center shadow-soft">
+              <Clock className="w-14 h-14 mx-auto mb-5 text-mist-400" />
+              <p className="text-base text-forest mb-3">
                 {searchQuery || statusFilter !== 'all' || selectedTag
                   ? 'No processes match your filters'
                   : 'No processes yet'}
               </p>
-              <p className="text-xs text-slate-400">
+              <p className="text-sm text-stone">
                 {searchQuery || statusFilter !== 'all' || selectedTag
                   ? 'Try adjusting your search or filters'
                   : 'Create your first process to get started'}
@@ -325,8 +325,8 @@ export function HomePage() {
             <div
               className={
                 viewMode === 'grid'
-                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-                  : 'flex flex-col gap-4'
+                  ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'
+                  : 'flex flex-col gap-5'
               }
             >
               {filteredProcesses.map((process) => (

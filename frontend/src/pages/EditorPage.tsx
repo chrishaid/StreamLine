@@ -407,10 +407,10 @@ export function EditorPage() {
   };
 
   return (
-    <MainLayout showChat={showChat}>
+    <MainLayout showChat={showChat} hideFooter compact>
       <div className="flex-1 flex flex-col">
-        {/* Toolbar */}
-        <div className="h-14 border-b border-slate-200 bg-white flex items-center justify-between px-6">
+        {/* Toolbar - Compact for maximum canvas space */}
+        <div className="h-12 border-b border-slate-200 bg-white flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate('/')}

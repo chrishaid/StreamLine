@@ -48,7 +48,9 @@
       "Bash(vercel env add:*)",
       "Bash(vercel logs:*)",
       "Bash(vercel inspect:*)",
-      "Bash(vercel ls:*)"
+      "Bash(vercel ls:*)",
+      "Bash(ls:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []
