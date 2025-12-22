@@ -128,21 +128,21 @@ export function Sidebar() {
 
   if (sidebarCollapsed) {
     return (
-      <div className="w-20 border-r border-mist-300 bg-white flex flex-col items-center py-6 gap-3">
+      <div className="w-24 border-r border-mist-300 bg-white flex flex-col items-center py-6 gap-4">
         <button
           onClick={toggleSidebar}
-          className="p-3 hover:bg-mist rounded-xl transition-colors mb-4"
+          className="p-4 hover:bg-mist rounded-xl transition-colors mb-4"
           title="Expand sidebar"
         >
-          <ChevronRight className="w-4 h-4 text-slate-500" />
+          <ChevronRight className="w-5 h-5 text-slate-500" />
         </button>
 
         <button
           onClick={handleNewProcess}
-          className="p-3.5 bg-sage hover:bg-sage-600 rounded-xl transition-colors mb-6 shadow-soft"
+          className="p-4 bg-sage hover:bg-sage-600 rounded-xl transition-colors mb-6 shadow-soft"
           title="New Process"
         >
-          <Plus className="w-5 h-5 text-white" />
+          <Plus className="w-6 h-6 text-white" />
         </button>
 
         {navItems.map((item) => (
@@ -150,28 +150,28 @@ export function Sidebar() {
             key={item.id}
             onClick={() => setActiveView(item.id as any)}
             className={clsx(
-              'p-3 rounded-xl transition-colors',
+              'p-4 rounded-xl transition-colors',
               activeView === item.id && !isOnTagsPage
                 ? 'bg-mist text-forest'
                 : 'hover:bg-mist/50 text-slate-500'
             )}
             title={item.label}
           >
-            <item.icon className="w-5 h-5" />
+            <item.icon className="w-6 h-6" />
           </button>
         ))}
 
         <button
           onClick={() => navigate('/tags')}
           className={clsx(
-            'p-3 rounded-xl transition-colors mt-4',
+            'p-4 rounded-xl transition-colors mt-4',
             isOnTagsPage
               ? 'bg-mist text-forest'
               : 'hover:bg-mist/50 text-slate-500'
           )}
           title="Manage Tags"
         >
-          <Tag className="w-5 h-5" />
+          <Tag className="w-6 h-6" />
         </button>
       </div>
     );
@@ -195,9 +195,9 @@ export function Sidebar() {
       <div className="p-6">
         <button
           onClick={handleNewProcess}
-          className="w-full bg-sage hover:bg-sage-600 text-white px-5 py-4 rounded-xl transition-colors flex items-center justify-center gap-3 text-sm font-medium shadow-soft"
+          className="w-full bg-sage hover:bg-sage-600 text-white px-6 py-5 rounded-xl transition-colors flex items-center justify-center gap-4 text-base font-medium shadow-soft"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-6 h-6" />
           New Process
         </button>
       </div>
@@ -210,14 +210,14 @@ export function Sidebar() {
               key={item.id}
               onClick={() => setActiveView(item.id as any)}
               className={clsx(
-                'w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all text-sm',
+                'w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all text-base',
                 activeView === item.id && !isOnTagsPage
                   ? 'bg-mist text-forest font-medium shadow-inner-soft'
                   : 'hover:bg-mist/50 text-slate-600'
               )}
             >
               <item.icon className={clsx(
-                'w-5 h-5',
+                'w-6 h-6',
                 activeView === item.id && !isOnTagsPage ? 'text-sage' : 'text-stone'
               )} />
               <span>{item.label}</span>
@@ -230,14 +230,14 @@ export function Sidebar() {
           <button
             onClick={() => navigate('/tags')}
             className={clsx(
-              'w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all text-sm',
+              'w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all text-base',
               isOnTagsPage
                 ? 'bg-mist text-forest font-medium shadow-inner-soft'
                 : 'hover:bg-mist/50 text-slate-600'
             )}
           >
             <Tag className={clsx(
-              'w-5 h-5',
+              'w-6 h-6',
               isOnTagsPage ? 'text-sage' : 'text-stone'
             )} />
             <span>Manage Tags</span>

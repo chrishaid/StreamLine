@@ -16,7 +16,8 @@ export function MainLayout({ children, showChat = false, hideFooter = false, com
   const { chatPanelCollapsed } = ui;
 
   // Use compact padding for editor pages to maximize canvas space
-  const containerPadding = compact ? 'p-3' : 'p-6';
+  // Add sufficient margin from browser edge on all pages
+  const containerPadding = compact ? 'p-4' : 'p-8';
 
   return (
     <div className={`h-screen ${containerPadding} bg-mist`}>
