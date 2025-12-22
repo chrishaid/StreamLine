@@ -241,7 +241,7 @@ export function ChatPanel() {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-5">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {chatMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
             <MessageSquare className="w-14 h-14 mb-4 text-mist-400" />

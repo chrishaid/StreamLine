@@ -6,16 +6,17 @@ import { BPMNModeler } from '../components/bpmn/BPMNModeler';
 import { ChatPanel } from '../components/chat/ChatPanel';
 import { useAppStore } from '../store/useAppStore';
 import { processApi, organizationApi } from '../services/api';
-import { Edit, Eye, Save, ChevronDown, ChevronUp, ArrowLeft, CheckCircle, Star, Copy, Users, X, Building2, User, Files } from 'lucide-react';
+import { Edit, Eye, Save, ChevronDown, ChevronUp, ArrowLeft, CheckCircle, Star, Copy, Users, X, Building2, User, Files, Maximize2, Minimize2, MessageCircle } from 'lucide-react';
 import type { Process, OrganizationWithMembership } from '../types';
 
 export function EditorPage() {
   const { processId: id } = useParams<{ processId: string }>();
   const navigate = useNavigate();
-  const { editor, setEditorMode, currentBpmnXml, setCurrentBpmnXml, currentProcess, setCurrentProcess, addProcess, updateProcess, currentOrganization } = useAppStore();
-  const [showChat] = useState(true);
+  const { editor, setEditorMode, currentBpmnXml, setCurrentBpmnXml, currentProcess, setCurrentProcess, addProcess, updateProcess, currentOrganization, ui, toggleEditorMaximized, setEditorMaximized } = useAppStore();
   // Auto-show metadata panel for new processes (no id means new)
   const [showMetadata, setShowMetadata] = useState(!id);
+  const [fullscreenChatOpen, setFullscreenChatOpen] = useState(false);
+  const isFullscreen = ui.editorMaximized;
   const [isSaving, setIsSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [processData, setProcessData] = useState<Partial<Process>>({
@@ -51,6 +52,25 @@ export function EditorPage() {
       setIsFavorite(currentProcess.isFavorite);
     }
   }, [currentProcess]);
+
+  // Keyboard shortcut for fullscreen mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd/Ctrl+Shift+F to toggle fullscreen
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'f') {
+        e.preventDefault();
+        toggleEditorMaximized();
+      }
+      // ESC to exit fullscreen
+      if (e.key === 'Escape' && isFullscreen) {
+        setEditorMaximized(false);
+        setFullscreenChatOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen, toggleEditorMaximized, setEditorMaximized]);
 
   // Load available tags for autocomplete
   useEffect(() => {
@@ -423,8 +443,100 @@ export function EditorPage() {
     }
   };
 
+  // Fullscreen mode render
+  if (isFullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-slate-50 flex flex-col">
+        {/* Floating Toolbar */}
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
+          <div className="bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-slate-200 px-4 py-2 flex items-center gap-3">
+            <h1 className="text-sm font-semibold text-slate-800 max-w-[200px] truncate">
+              {processData.name || currentProcess?.name || 'Untitled Process'}
+            </h1>
+
+            <div className="h-4 w-px bg-slate-200"></div>
+
+            <div className="flex gap-1 bg-slate-100 p-0.5 rounded-lg">
+              <button
+                onClick={() => setEditorMode('view')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors text-xs ${
+                  editor.mode === 'view'
+                    ? 'bg-white text-slate-800 shadow-sm font-medium'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Eye className="w-3 h-3" />
+                View
+              </button>
+              <button
+                onClick={() => setEditorMode('edit')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors text-xs ${
+                  editor.mode === 'edit'
+                    ? 'bg-white text-slate-800 shadow-sm font-medium'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Edit className="w-3 h-3" />
+                Edit
+              </button>
+            </div>
+
+            {isEditMode && (
+              <>
+                <div className="h-4 w-px bg-slate-200"></div>
+                <button
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  className="flex items-center gap-1 px-3 py-1 rounded-md bg-accent text-white hover:bg-accent-700 disabled:opacity-50 text-xs font-medium transition-colors"
+                >
+                  <Save className="w-3 h-3" />
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+              </>
+            )}
+
+            <div className="h-4 w-px bg-slate-200"></div>
+
+            <button
+              onClick={() => setEditorMaximized(false)}
+              className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              title="Exit fullscreen (ESC)"
+            >
+              <Minimize2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* BPMN Canvas - Full screen */}
+        <div className="flex-1 w-full">
+          {editor.mode === 'edit' ? <BPMNModeler /> : <BPMNViewer />}
+        </div>
+
+        {/* Floating Chat Toggle */}
+        <button
+          onClick={() => setFullscreenChatOpen(!fullscreenChatOpen)}
+          className={`absolute bottom-6 right-6 z-10 p-4 rounded-full shadow-lg transition-all ${
+            fullscreenChatOpen
+              ? 'bg-accent text-white hover:bg-accent-700'
+              : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
+          }`}
+          title="Toggle chat"
+        >
+          {fullscreenChatOpen ? <X className="w-5 h-5" /> : <MessageCircle className="w-5 h-5" />}
+        </button>
+
+        {/* Fullscreen Chat Overlay */}
+        {fullscreenChatOpen && (
+          <div className="absolute right-6 bottom-20 z-10 w-[400px] h-[500px] bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden">
+            <ChatPanel />
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <MainLayout showChat={showChat} hideFooter compact>
+    <MainLayout hideFooter compact>
       <div className="flex-1 flex flex-col min-h-0 h-full">
         {/* Toolbar - Compact for maximum canvas space */}
         <div className="h-12 border-b border-slate-200 bg-white flex items-center justify-between px-4">
@@ -549,6 +661,13 @@ export function EditorPage() {
                 {isSaving ? 'Saving...' : 'Save'}
               </button>
             )}
+            <button
+              onClick={toggleEditorMaximized}
+              className="p-2 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              title={isFullscreen ? 'Exit fullscreen (ESC)' : 'Enter fullscreen (Cmd+Shift+F)'}
+            >
+              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </button>
           </div>
         </div>
 
@@ -722,7 +841,7 @@ export function EditorPage() {
         </div>
       </div>
 
-      {showChat && <ChatPanel />}
+      <ChatPanel />
 
       {/* Copy To Modal */}
       {showCopyToModal && (

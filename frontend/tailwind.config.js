@@ -173,6 +173,24 @@ export default {
       borderRadius: {
         '4xl': '2rem',
       },
+      // Spacing Grid System - 8px base with semantic tokens
+      spacing: {
+        // Semantic spacing tokens
+        'xs': '4px',     // Very tight - icon gaps
+        'sm': '8px',     // Tight - within components
+        'md': '16px',    // Medium - container padding
+        'lg': '24px',    // Loose - between sections
+        'xl': '32px',    // Major sections
+        '2xl': '48px',   // Page sections
+        '3xl': '64px',   // Large layout
+        '4xl': '80px',   // Extra large layout
+        '5xl': '96px',   // Maximum layout spacing
+        // Component-specific tokens
+        '4.5': '18px',   // Between p-4 and p-5
+        '13': '52px',    // For specific layout needs
+        '15': '60px',    // Section spacing
+        '18': '72px',    // Large section spacing
+      },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-out',
         'slide-up': 'slideUp 0.3s ease-out',

@@ -82,13 +82,13 @@ export function LoginPage() {
               Sign in to manage your business processes
             </p>
 
-            <div className="space-y-5">
+            <div className="space-y-6">
               {/* Google Login */}
               <button
                 onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center gap-5 px-8 py-5 bg-white border-2 border-mist-300 rounded-2xl hover:bg-mist/30 hover:border-sage/40 hover:shadow-soft transition-all text-base font-medium text-forest"
+                className="w-full flex items-center justify-center gap-6 px-10 py-6 bg-white border-2 border-mist-300 rounded-2xl hover:bg-mist/30 hover:border-sage/40 hover:shadow-soft transition-all text-lg font-medium text-forest"
               >
-                <svg className="w-6 h-6" viewBox="0 0 24 24">
+                <svg className="w-7 h-7" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -112,9 +112,9 @@ export function LoginPage() {
               {/* Microsoft Login */}
               <button
                 onClick={handleMicrosoftLogin}
-                className="w-full flex items-center justify-center gap-5 px-8 py-5 bg-white border-2 border-mist-300 rounded-2xl hover:bg-mist/30 hover:border-sage/40 hover:shadow-soft transition-all text-base font-medium text-forest"
+                className="w-full flex items-center justify-center gap-6 px-10 py-6 bg-white border-2 border-mist-300 rounded-2xl hover:bg-mist/30 hover:border-sage/40 hover:shadow-soft transition-all text-lg font-medium text-forest"
               >
-                <svg className="w-6 h-6" viewBox="0 0 23 23">
+                <svg className="w-7 h-7" viewBox="0 0 23 23">
                   <path fill="#f3f3f3" d="M0 0h23v23H0z" />
                   <path fill="#f35325" d="M1 1h10v10H1z" />
                   <path fill="#81bc06" d="M12 1h10v10H12z" />
@@ -131,27 +131,27 @@ export function LoginPage() {
           </div>
 
           {/* Features */}
-          <div className="mt-14 grid grid-cols-3 gap-10">
+          <div className="mt-16 grid grid-cols-3 gap-12">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-soft mb-5 border border-mist-300">
-                <Sparkles className="w-7 h-7 text-sage" />
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-soft mb-6 border border-mist-300">
+                <Sparkles className="w-10 h-10 text-sage" />
               </div>
-              <p className="text-base text-forest font-medium">AI-Powered</p>
-              <p className="text-sm text-stone mt-2">Smart assistance</p>
+              <p className="text-lg text-forest font-medium">AI-Powered</p>
+              <p className="text-base text-stone mt-2">Smart assistance</p>
             </div>
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-soft mb-5 border border-mist-300">
-                <PenTool className="w-7 h-7 text-pine" />
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-soft mb-6 border border-mist-300">
+                <PenTool className="w-10 h-10 text-pine" />
               </div>
-              <p className="text-base text-forest font-medium">Visual Editor</p>
-              <p className="text-sm text-stone mt-2">Drag & drop</p>
+              <p className="text-lg text-forest font-medium">Visual Editor</p>
+              <p className="text-base text-stone mt-2">Drag & drop</p>
             </div>
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-soft mb-5 border border-mist-300">
-                <BarChart3 className="w-7 h-7 text-analytics-500" />
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-soft mb-6 border border-mist-300">
+                <BarChart3 className="w-10 h-10 text-analytics-500" />
               </div>
-              <p className="text-base text-forest font-medium">Analytics</p>
-              <p className="text-sm text-stone mt-2">Insights</p>
+              <p className="text-lg text-forest font-medium">Analytics</p>
+              <p className="text-base text-stone mt-2">Insights</p>
             </div>
           </div>
         </div>

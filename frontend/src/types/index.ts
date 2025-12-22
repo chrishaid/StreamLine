@@ -151,6 +151,7 @@ export interface BPMNEditorState {
 export interface UIState {
   sidebarCollapsed: boolean;
   chatPanelCollapsed: boolean;
+  editorMaximized: boolean;
   activeView: 'browse' | 'recent' | 'favorites' | 'search';
   selectedProcess: Process | null;
   selectedCategory: Category | null;

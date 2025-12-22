@@ -15,7 +15,7 @@
   --color-stone: #94a39b;
   --color-paper: #fafbfa;
 
-  /* Semantic tokens */
+  /* Semantic color tokens */
   --bg-primary: #ffffff;
   --bg-secondary: #fafbfa;
   --bg-tertiary: #e8f0ec;
@@ -26,6 +26,77 @@
   --border-hover: #b3c7bc;
   --accent-color: #4a7c67;
   --accent-hover: #3d6655;
+
+  /* ========================================
+     SPACING GRID SYSTEM - 8px Base
+     ======================================== */
+
+  /* Base spacing scale */
+  --space-0: 0px;
+  --space-px: 1px;
+  --space-0-5: 2px;   /* Very tight - icon to text */
+  --space-1: 4px;     /* Very tight */
+  --space-1-5: 6px;
+  --space-2: 8px;     /* Tight - within components */
+  --space-2-5: 10px;
+  --space-3: 12px;    /* Tight */
+  --space-3-5: 14px;
+  --space-4: 16px;    /* Medium - container padding */
+  --space-5: 20px;    /* Medium */
+  --space-6: 24px;    /* Loose - between components */
+  --space-7: 28px;
+  --space-8: 32px;    /* Loose */
+  --space-9: 36px;
+  --space-10: 40px;   /* Section spacing */
+  --space-11: 44px;
+  --space-12: 48px;   /* Layout */
+  --space-14: 56px;
+  --space-16: 64px;   /* Layout */
+  --space-20: 80px;   /* Large layout */
+  --space-24: 96px;   /* Large layout */
+
+  /* Semantic spacing tokens */
+  --space-xs: var(--space-1);    /* 4px - icon gaps */
+  --space-sm: var(--space-2);    /* 8px - within components */
+  --space-md: var(--space-4);    /* 16px - container padding */
+  --space-lg: var(--space-6);    /* 24px - between sections */
+  --space-xl: var(--space-8);    /* 32px - major sections */
+  --space-2xl: var(--space-12);  /* 48px - page sections */
+  --space-3xl: var(--space-16);  /* 64px - large layout */
+
+  /* Component spacing tokens */
+  --button-padding-sm: var(--space-1-5) var(--space-3);   /* py-1.5 px-3 */
+  --button-padding-md: var(--space-2) var(--space-4);     /* py-2 px-4 */
+  --button-padding-lg: var(--space-2-5) var(--space-5);   /* py-2.5 px-5 */
+
+  --input-padding-sm: var(--space-2) var(--space-3);      /* py-2 px-3 */
+  --input-padding-md: var(--space-2-5) var(--space-4);    /* py-2.5 px-4 */
+  --input-padding-lg: var(--space-3) var(--space-5);      /* py-3 px-5 */
+
+  --card-padding-compact: var(--space-4);                 /* p-4 (16px) */
+  --card-padding-default: var(--space-5);                 /* p-5 (20px) */
+  --card-padding-spacious: var(--space-6);                /* p-6 (24px) */
+
+  --modal-header-padding: var(--space-4) var(--space-6);  /* py-4 px-6 */
+  --modal-content-padding: var(--space-6);                /* p-6 (24px) */
+  --modal-footer-padding: var(--space-4) var(--space-6);  /* py-4 px-6 */
+
+  --list-item-padding: var(--space-3) var(--space-4);     /* py-3 px-4 */
+
+  --section-gap-compact: var(--space-4);                  /* gap-4 (16px) */
+  --section-gap-default: var(--space-6);                  /* gap-6 (24px) */
+  --section-gap-spacious: var(--space-8);                 /* gap-8 (32px) */
+
+  /* Layout dimensions */
+  --header-height: var(--space-16);    /* 64px */
+  --toolbar-height: var(--space-12);   /* 48px */
+  --footer-height: var(--space-12);    /* 48px */
+  --sidebar-width: 320px;              /* w-80 */
+  --sidebar-collapsed-width: 80px;     /* w-20 */
+  --chat-panel-width: 420px;
+
+  /* Touch target minimum */
+  --touch-target-min: 44px;
 }
 
 .dark {

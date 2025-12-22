@@ -34,6 +34,8 @@ interface AppState {
   setActiveView: (view: UIState['activeView']) => void;
   toggleSidebar: () => void;
   toggleChatPanel: () => void;
+  toggleEditorMaximized: () => void;
+  setEditorMaximized: (maximized: boolean) => void;
   setSelectedProcess: (process: Process | null) => void;
   setSelectedCategory: (category: Category | null) => void;
 
@@ -102,6 +104,7 @@ export const useAppStore = create<AppState>((set) => ({
   ui: {
     sidebarCollapsed: false,
     chatPanelCollapsed: false,
+    editorMaximized: false,
     activeView: 'browse',
     selectedProcess: null,
     selectedCategory: null,
@@ -115,6 +118,14 @@ export const useAppStore = create<AppState>((set) => ({
   toggleChatPanel: () =>
     set((state) => ({
       ui: { ...state.ui, chatPanelCollapsed: !state.ui.chatPanelCollapsed },
+    })),
+  toggleEditorMaximized: () =>
+    set((state) => ({
+      ui: { ...state.ui, editorMaximized: !state.ui.editorMaximized },
+    })),
+  setEditorMaximized: (maximized) =>
+    set((state) => ({
+      ui: { ...state.ui, editorMaximized: maximized },
     })),
   setSelectedProcess: (process) =>
     set((state) => ({ ui: { ...state.ui, selectedProcess: process } })),
