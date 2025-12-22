@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { LogOut, ChevronDown, Tag, FileText } from 'lucide-react';
+import { LogOut, ChevronDown, Tag, FileText, Workflow } from 'lucide-react';
 import { SettingsDropdown } from './SettingsDropdown';
 import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../../store/useAppStore';
 import { supabase } from '../../lib/supabase';
 import { OrganizationSwitcher } from './OrganizationSwitcher';
 import { processApi } from '../../services/api';
-import { RangeLogo } from '../brand/RangeLogo';
 import type { Process } from '../../types';
 
 export function Header() {
@@ -95,23 +94,21 @@ export function Header() {
   };
 
   return (
-    <header className="h-16 border-b border-mist-300 bg-white flex items-center justify-between px-8">
+    <header className="h-16 border-b border-mist-300 bg-white flex items-center justify-between px-10">
       {/* Logo and App Name */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-8">
         <button
           onClick={() => navigate('/')}
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
-          <div className="flex items-center gap-2">
-            <RangeLogo size={28} variant="default" />
-            <span className="text-sm font-serif italic text-forest">Range</span>
+          <div className="w-9 h-9 bg-sage rounded-xl flex items-center justify-center">
+            <Workflow className="w-5 h-5 text-white" />
           </div>
-          <div className="w-px h-6 bg-mist-300" />
           <h1 className="text-xl font-semibold text-forest tracking-tight">StreamLine</h1>
         </button>
 
         {/* Organization Switcher */}
-        <div className="border-l border-mist-300 pl-6">
+        <div className="border-l border-mist-300 pl-8">
           <OrganizationSwitcher />
         </div>
       </div>
