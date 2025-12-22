@@ -408,7 +408,7 @@ export function EditorPage() {
 
   return (
     <MainLayout showChat={showChat} hideFooter compact>
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0 h-full">
         {/* Toolbar - Compact for maximum canvas space */}
         <div className="h-12 border-b border-slate-200 bg-white flex items-center justify-between px-4">
           <div className="flex items-center gap-3">

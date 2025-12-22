@@ -186,14 +186,14 @@ export function BPMNViewer() {
         </div>
       </div>
 
-      {/* BPMN Canvas */}
-      <div className="flex-1 relative">
+      {/* BPMN Canvas - Takes all available space */}
+      <div className="flex-1 relative min-h-0">
         {error && (
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-50 text-red-700 px-4 py-2 rounded-lg shadow-soft text-sm z-50">
             {error}
           </div>
         )}
-        <div ref={containerRef} className="w-full h-full bpmn-container" />
+        <div ref={containerRef} className="absolute inset-0 bpmn-container" />
       </div>
 
       {/* Status Bar - Minimal height */}

@@ -22,10 +22,10 @@ export function MainLayout({ children, showChat = false, hideFooter = false, com
     <div className={`h-screen ${containerPadding} bg-mist`}>
       <div className="h-full flex flex-col overflow-hidden rounded-2xl shadow-soft-lg bg-white border border-mist-300">
         <Header />
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex overflow-hidden min-h-0">
           <Sidebar />
-          <main className={`flex-1 flex flex-col ${showChat && !chatPanelCollapsed ? 'mr-96' : ''}`}>
-            <div className="flex-1 overflow-hidden">
+          <main className={`flex-1 flex flex-col min-h-0 ${showChat && !chatPanelCollapsed ? 'mr-96' : ''}`}>
+            <div className="flex-1 overflow-hidden min-h-0 h-full">
               {children}
             </div>
           </main>
