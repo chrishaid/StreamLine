@@ -169,6 +169,11 @@ export function EditorPage() {
         primaryCategoryId: process.primaryCategoryId,
       });
       setLastSaved(new Date(process.updatedAt));
+
+      // Track view count
+      processApi.incrementViewCount(processId).catch(err =>
+        console.warn('Failed to increment view count:', err)
+      );
     } catch (error) {
       console.error('Failed to load process:', error);
       alert('Failed to load process');
@@ -187,6 +192,12 @@ export function EditorPage() {
         changeSummary: 'Auto-saved',
         changeType: 'patch',
       });
+
+      // Track edit count
+      processApi.incrementEditCount(currentProcess.id).catch(err =>
+        console.warn('Failed to increment edit count:', err)
+      );
+
       setLastSaved(new Date());
       setHasUnsavedChanges(false);
       console.log('[EditorPage] BPMN auto-saved');
@@ -255,6 +266,12 @@ export function EditorPage() {
             changeSummary: 'Updated via editor',
             changeType: 'minor',
           });
+
+          // Track edit count
+          processApi.incrementEditCount(processId).catch(err =>
+            console.warn('Failed to increment edit count:', err)
+          );
+
           console.log('[EditorPage] Version created');
         }
 

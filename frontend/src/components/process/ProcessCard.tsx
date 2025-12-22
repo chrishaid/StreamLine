@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { Process, OrganizationWithMembership } from '../../types';
 import { processApi, organizationApi } from '../../services/api';
 import { getTagColor } from '../../utils/tagColors';
-import { Star, Copy, Users, X, Building2, User } from 'lucide-react';
+import { Star, Copy, Users, X, Building2, User, Eye, Pencil, Trash2, ExternalLink, MoreHorizontal } from 'lucide-react';
 import { BPMNThumbnail } from '../bpmn/BPMNThumbnail';
 
 interface ProcessCardProps {
@@ -173,60 +173,70 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
 
   if (isDeleting) {
     return (
-      <div className="bg-white border border-slate-200 rounded-xl p-6 opacity-50">
-        <div className="text-center text-slate-500 text-sm">Deleting...</div>
+      <div className="bg-white rounded-2xl p-8 opacity-50 border border-slate-100">
+        <div className="flex items-center justify-center gap-3 text-slate-400">
+          <div className="w-4 h-4 border-2 border-slate-300 border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm">Deleting...</span>
+        </div>
       </div>
     );
   }
 
   return (
     <div
-      className="bg-white border border-mist-300 rounded-2xl overflow-hidden hover:border-sage/40 hover:shadow-soft-lg transition-all cursor-pointer relative group"
+      className="group bg-white rounded-2xl overflow-hidden border border-slate-200/80 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 cursor-pointer relative"
       onClick={handleOpen}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      {/* BPMN Thumbnail */}
-      <div className="h-40 border-b border-mist-200 bg-mist/30">
+      {/* BPMN Thumbnail with gradient overlay */}
+      <div className="relative h-44 bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
         <BPMNThumbnail processId={process.id} className="w-full h-full" />
-      </div>
 
-      {/* Card Content */}
-      <div className="p-6">
-        {/* Status Badge and Favorite */}
-        <div className="flex items-center justify-between mb-4">
+        {/* Gradient overlay for better readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+        {/* Top row - Status and Favorite */}
+        <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+          <span className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase tracking-wider backdrop-blur-sm ${getStatusColor(process.status)}`}>
+            {process.status}
+          </span>
           <button
             onClick={handleToggleFavorite}
-            className={`p-2 rounded-xl transition-colors ${
-              isFavorite ? 'text-gold bg-gold/10' : 'text-stone hover:text-gold hover:bg-gold/10'
+            className={`p-2 rounded-xl backdrop-blur-sm transition-all duration-200 ${
+              isFavorite
+                ? 'text-amber-500 bg-amber-50/90 shadow-sm'
+                : 'text-slate-400 bg-white/80 hover:text-amber-500 hover:bg-amber-50/90'
             }`}
             title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           >
-            <Star className="w-5 h-5" fill={isFavorite ? 'currentColor' : 'none'} />
+            <Star className="w-4 h-4" fill={isFavorite ? 'currentColor' : 'none'} />
           </button>
-          <span className={`px-3 py-1.5 rounded-full text-xs font-medium uppercase tracking-wide ${getStatusColor(process.status)}`}>
-            {process.status}
-          </span>
         </div>
+      </div>
 
+      {/* Card Content */}
+      <div className="p-5">
         {/* Process Info */}
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-forest mb-2 line-clamp-1">{process.name}</h3>
-          <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">
-            {process.description || 'No description'}
+          <h3 className="text-base font-semibold text-slate-800 mb-1.5 line-clamp-1 group-hover:text-slate-900 transition-colors">
+            {process.name}
+          </h3>
+          <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed min-h-[2.5rem]">
+            {process.description || 'No description provided'}
           </p>
         </div>
 
-        {/* Tags - Color Coded and Clickable */}
+        {/* Tags - Compact and Modern */}
         {process.tags && process.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-1.5 mb-4">
             {process.tags.slice(0, 3).map((tag, index) => {
               const color = getTagColor(tag);
               return (
                 <button
                   key={index}
                   onClick={(e) => handleTagClick(e, tag)}
-                  className={`px-3 py-1.5 ${color.bg} ${color.text} text-xs rounded-full hover:ring-1 hover:ring-offset-1 ${color.border} transition-all`}
+                  className={`px-2.5 py-1 ${color.bg} ${color.text} text-[11px] font-medium rounded-md hover:shadow-sm transition-all`}
                   title={`Filter by tag: ${tag}`}
                 >
                   {tag}
@@ -234,100 +244,120 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
               );
             })}
             {process.tags.length > 3 && (
-              <span className="px-3 py-1.5 bg-mist text-stone text-xs rounded-full">
+              <span className="px-2.5 py-1 bg-slate-100 text-slate-500 text-[11px] font-medium rounded-md">
                 +{process.tags.length - 3}
               </span>
             )}
           </div>
         )}
 
-        {/* Metadata */}
-        <div className="flex items-center justify-between text-xs text-stone border-t border-mist-200 pt-4 mt-4">
-          <span>Updated {formatDate(process.updatedAt)}</span>
+        {/* Stats and Metadata - Modern layout */}
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+          <span className="text-xs text-slate-400 font-medium">
+            {formatDate(process.updatedAt)}
+          </span>
           <div className="flex items-center gap-3">
-            <span title="Views">{process.viewCount} views</span>
-            <span className="text-mist-400">·</span>
-            <span title="Edits">{process.editCount} edits</span>
+            <div className="flex items-center gap-1.5 text-slate-400" title="Views">
+              <Eye className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">{process.viewCount || 0}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-slate-400" title="Edits">
+              <Pencil className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">{process.editCount || 0}</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Action Buttons */}
-      {showActions && (
-        <div className="absolute inset-0 bg-slate-900/5 rounded-2xl flex items-center justify-center gap-3 backdrop-blur-[1px]">
-          <button
-            onClick={handleOpen}
-            className="bg-sage text-white px-5 py-3 rounded-xl text-sm font-medium hover:bg-sage-600 transition-colors shadow-soft"
-          >
-            Open
-          </button>
+      {/* Hover Action Overlay - Clean minimal design */}
+      <div className={`absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent flex flex-col justify-end p-5 transition-all duration-300 ${showActions ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        {/* Primary Action */}
+        <button
+          onClick={handleOpen}
+          className="w-full bg-white text-slate-800 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-colors shadow-lg mb-3 flex items-center justify-center gap-2"
+        >
+          <ExternalLink className="w-4 h-4" />
+          Open Process
+        </button>
+
+        {/* Secondary Actions Row */}
+        <div className="flex gap-2">
           <button
             onClick={handleDuplicate}
-            className="bg-white text-slate-700 px-4 py-3 rounded-xl text-sm font-medium border border-mist-300 hover:border-sage transition-colors shadow-soft"
-            title="Duplicate in current workspace"
+            className="flex-1 bg-white/15 backdrop-blur-sm text-white px-3 py-2.5 rounded-lg text-xs font-medium hover:bg-white/25 transition-colors flex items-center justify-center gap-1.5"
+            title="Duplicate"
           >
+            <Copy className="w-3.5 h-3.5" />
             Duplicate
           </button>
           <button
             onClick={handleCopyTo}
-            className="bg-white text-slate-700 px-4 py-3 rounded-xl text-sm font-medium border border-mist-300 hover:border-sage transition-colors shadow-soft flex items-center gap-2"
-            title="Copy to another organization"
+            className="flex-1 bg-white/15 backdrop-blur-sm text-white px-3 py-2.5 rounded-lg text-xs font-medium hover:bg-white/25 transition-colors flex items-center justify-center gap-1.5"
+            title="Copy to workspace"
           >
-            <Copy className="w-4 h-4" />
+            <Building2 className="w-3.5 h-3.5" />
             Copy to...
           </button>
           <button
             onClick={handleShowAccess}
-            className="bg-white text-slate-700 px-4 py-3 rounded-xl text-sm font-medium border border-mist-300 hover:border-sage transition-colors shadow-soft flex items-center gap-2"
+            className="bg-white/15 backdrop-blur-sm text-white px-3 py-2.5 rounded-lg text-xs font-medium hover:bg-white/25 transition-colors"
             title="View access"
           >
-            <Users className="w-4 h-4" />
+            <Users className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={handleDelete}
-            className="bg-white text-ember px-4 py-3 rounded-xl text-sm font-medium border border-ember/20 hover:border-ember/40 hover:bg-ember/5 transition-colors shadow-soft"
+            className="bg-red-500/80 backdrop-blur-sm text-white px-3 py-2.5 rounded-lg text-xs font-medium hover:bg-red-500 transition-colors"
+            title="Delete"
           >
-            Delete
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
-      )}
+      </div>
 
-      {/* Copy To Modal */}
+      {/* Copy To Modal - Modern Design */}
       {showCopyToModal && (
         <>
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowCopyToModal(false)} />
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40" onClick={() => setShowCopyToModal(false)} />
           <div className="fixed inset-0 flex items-center justify-center z-50 p-6" onClick={() => setShowCopyToModal(false)}>
-            <div className="bg-white rounded-2xl shadow-soft-lg max-w-lg w-full p-8" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-forest">Copy to...</h3>
-                <button onClick={() => setShowCopyToModal(false)} className="p-2 hover:bg-mist rounded-xl transition-colors">
-                  <X className="w-5 h-5 text-stone" />
-                </button>
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+              {/* Header */}
+              <div className="px-6 py-5 border-b border-slate-100">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-slate-800">Copy to workspace</h3>
+                  <button
+                    onClick={() => setShowCopyToModal(false)}
+                    className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5 text-slate-400" />
+                  </button>
+                </div>
+                <p className="text-sm text-slate-500 mt-1">Select destination for "{process.name}"</p>
               </div>
-              <p className="text-sm text-slate-500 mb-6">Select where to copy "{process.name}"</p>
 
-              <div className="space-y-3">
+              {/* Options */}
+              <div className="p-4 space-y-2 max-h-80 overflow-y-auto">
                 {/* Personal option */}
                 <button
                   onClick={() => handleCopyToOrg(null)}
                   disabled={isCopying}
-                  className={`w-full p-4 rounded-xl border-2 text-left flex items-center gap-4 transition-colors ${
+                  className={`w-full p-4 rounded-xl text-left flex items-center gap-4 transition-all ${
                     isCopying
-                      ? 'border-mist bg-mist/50 text-stone cursor-not-allowed'
-                      : 'border-mist-300 hover:border-sage hover:bg-sage/5'
+                      ? 'bg-slate-50 text-slate-400 cursor-not-allowed'
+                      : 'hover:bg-slate-50 border border-transparent hover:border-slate-200'
                   }`}
                 >
-                  <div className="w-10 h-10 bg-mist rounded-xl flex items-center justify-center">
-                    <User className="w-5 h-5 text-stone" />
+                  <div className="w-11 h-11 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center">
+                    <User className="w-5 h-5 text-slate-500" />
                   </div>
-                  <div>
-                    <p className="font-medium text-forest">Personal Workspace</p>
-                    <p className="text-xs text-stone mt-1">
-                      {process.organizationId === null ? 'Duplicate here' : 'Your private processes'}
+                  <div className="flex-1">
+                    <p className="font-medium text-slate-700">Personal Workspace</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {process.organizationId === null ? 'Duplicate in current workspace' : 'Your private processes'}
                     </p>
                   </div>
                   {process.organizationId === null && (
-                    <span className="ml-auto text-xs text-sage font-medium">(Current)</span>
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-md">Current</span>
                   )}
                 </button>
 
@@ -337,37 +367,41 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
                     key={org.id}
                     onClick={() => handleCopyToOrg(org.id)}
                     disabled={isCopying}
-                    className={`w-full p-4 rounded-xl border-2 text-left flex items-center gap-4 transition-colors ${
+                    className={`w-full p-4 rounded-xl text-left flex items-center gap-4 transition-all ${
                       isCopying
-                        ? 'border-mist bg-mist/50 text-stone cursor-not-allowed'
-                        : 'border-mist-300 hover:border-sage hover:bg-sage/5'
+                        ? 'bg-slate-50 text-slate-400 cursor-not-allowed'
+                        : 'hover:bg-slate-50 border border-transparent hover:border-slate-200'
                     }`}
                   >
-                    <div className="w-10 h-10 bg-sage/10 rounded-xl flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-sage" />
+                    <div className="w-11 h-11 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center">
+                      <Building2 className="w-5 h-5 text-blue-500" />
                     </div>
-                    <div>
-                      <p className="font-medium text-forest">{org.name}</p>
-                      <p className="text-xs text-stone mt-1">
-                        {process.organizationId === org.id ? 'Duplicate here' : `${org.memberCount || 0} members`}
+                    <div className="flex-1">
+                      <p className="font-medium text-slate-700">{org.name}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        {process.organizationId === org.id ? 'Duplicate in current workspace' : `${org.memberCount || 0} members`}
                       </p>
                     </div>
                     {process.organizationId === org.id && (
-                      <span className="ml-auto text-xs text-sage font-medium">(Current)</span>
+                      <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-md">Current</span>
                     )}
                   </button>
                 ))}
 
                 {organizations.length === 0 && (
-                  <p className="text-sm text-stone text-center py-6">
-                    No organizations available. Create one first.
-                  </p>
+                  <div className="text-center py-8">
+                    <p className="text-sm text-slate-400">No organizations available</p>
+                  </div>
                 )}
               </div>
 
+              {/* Footer with loading state */}
               {isCopying && (
-                <div className="mt-6 text-center text-sm text-stone">
-                  Copying process...
+                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50">
+                  <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
+                    <div className="w-4 h-4 border-2 border-slate-300 border-t-blue-500 rounded-full animate-spin" />
+                    Copying process...
+                  </div>
                 </div>
               )}
             </div>
@@ -375,70 +409,86 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
         </>
       )}
 
-      {/* Access Panel Modal */}
+      {/* Access Panel Modal - Modern Design */}
       {showAccessPanel && (
         <>
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowAccessPanel(false)} />
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40" onClick={() => setShowAccessPanel(false)} />
           <div className="fixed inset-0 flex items-center justify-center z-50 p-6" onClick={() => setShowAccessPanel(false)}>
-            <div className="bg-white rounded-2xl shadow-soft-lg max-w-lg w-full p-8" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-forest">Who has access</h3>
-                <button onClick={() => setShowAccessPanel(false)} className="p-2 hover:bg-mist rounded-xl transition-colors">
-                  <X className="w-5 h-5 text-stone" />
-                </button>
-              </div>
-
-              {process.organizationId ? (
-                <>
-                  <div className="flex items-center gap-3 mb-6 p-4 bg-sage/5 rounded-xl">
-                    <Building2 className="w-5 h-5 text-sage" />
-                    <span className="text-sm text-forest">
-                      Shared with organization members
-                    </span>
-                  </div>
-
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {orgMembers.length > 0 ? (
-                      orgMembers.map((member: any) => (
-                        <div key={member.userId} className="flex items-center gap-4 p-3 rounded-xl hover:bg-mist/50 transition-colors">
-                          <div className="w-10 h-10 bg-mist rounded-full flex items-center justify-center">
-                            {member.user?.avatarUrl ? (
-                              <img src={member.user.avatarUrl} alt="" className="w-10 h-10 rounded-full" />
-                            ) : (
-                              <User className="w-5 h-5 text-stone" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-forest truncate">{member.user?.name || member.user?.email || 'Unknown'}</p>
-                            <p className="text-xs text-stone capitalize mt-0.5">{member.role}</p>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-sm text-stone text-center py-6">Loading members...</p>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-10">
-                  <div className="w-16 h-16 bg-mist rounded-full flex items-center justify-center mx-auto mb-4">
-                    <User className="w-8 h-8 text-stone" />
-                  </div>
-                  <p className="text-base text-forest font-medium">Private to you</p>
-                  <p className="text-sm text-stone mt-2">
-                    This process is in your personal workspace and is only visible to you.
-                  </p>
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+              {/* Header */}
+              <div className="px-6 py-5 border-b border-slate-100">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-slate-800">Access permissions</h3>
                   <button
-                    onClick={() => {
-                      setShowAccessPanel(false);
-                      setShowCopyToModal(true);
-                    }}
-                    className="mt-6 text-sm text-sage font-medium hover:underline"
+                    onClick={() => setShowAccessPanel(false)}
+                    className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
                   >
-                    Copy to an organization to share
+                    <X className="w-5 h-5 text-slate-400" />
                   </button>
                 </div>
-              )}
+              </div>
+
+              {/* Content */}
+              <div className="p-6">
+                {process.organizationId ? (
+                  <>
+                    <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl mb-5">
+                      <Building2 className="w-5 h-5 text-blue-500" />
+                      <span className="text-sm font-medium text-blue-700">
+                        Shared with organization members
+                      </span>
+                    </div>
+
+                    <div className="space-y-1 max-h-64 overflow-y-auto">
+                      {orgMembers.length > 0 ? (
+                        orgMembers.map((member: any) => (
+                          <div
+                            key={member.userId}
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
+                          >
+                            <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center overflow-hidden">
+                              {member.user?.avatarUrl ? (
+                                <img src={member.user.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
+                              ) : (
+                                <User className="w-5 h-5 text-slate-400" />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-700 truncate">
+                                {member.user?.name || member.user?.email || 'Unknown'}
+                              </p>
+                              <p className="text-xs text-slate-400 capitalize">{member.role}</p>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="flex items-center justify-center py-8">
+                          <div className="w-5 h-5 border-2 border-slate-200 border-t-slate-400 rounded-full animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <User className="w-8 h-8 text-slate-400" />
+                    </div>
+                    <p className="text-base font-medium text-slate-700">Private to you</p>
+                    <p className="text-sm text-slate-400 mt-2 max-w-xs mx-auto">
+                      This process is in your personal workspace and only visible to you.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setShowAccessPanel(false);
+                        setShowCopyToModal(true);
+                      }}
+                      className="mt-5 px-4 py-2 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+                    >
+                      Share via organization
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </>

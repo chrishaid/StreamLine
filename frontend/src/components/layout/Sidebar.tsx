@@ -128,127 +128,137 @@ export function Sidebar() {
 
   if (sidebarCollapsed) {
     return (
-      <div className="w-24 border-r border-mist-300 bg-white flex flex-col items-center py-6 gap-4">
+      <div className="w-20 border-r border-slate-200 bg-slate-50/50 flex flex-col items-center py-4 gap-2">
         <button
           onClick={toggleSidebar}
-          className="p-4 hover:bg-mist rounded-xl transition-colors mb-4"
+          className="p-3 hover:bg-white rounded-xl transition-colors mb-2"
           title="Expand sidebar"
         >
-          <ChevronRight className="w-5 h-5 text-slate-500" />
+          <ChevronRight className="w-5 h-5 text-slate-400" />
         </button>
 
         <button
           onClick={handleNewProcess}
-          className="p-4 bg-sage hover:bg-sage-600 rounded-xl transition-colors mb-6 shadow-soft"
+          className="p-3.5 bg-gradient-to-br from-sage to-sage-600 hover:from-sage-600 hover:to-sage-700 rounded-xl transition-all mb-4 shadow-md shadow-sage/20"
           title="New Process"
         >
-          <Plus className="w-6 h-6 text-white" />
+          <Plus className="w-5 h-5 text-white" />
         </button>
+
+        <div className="w-8 border-t border-slate-200 mb-2"></div>
 
         {navItems.map((item) => (
           <button
             key={item.id}
             onClick={() => setActiveView(item.id as any)}
             className={clsx(
-              'p-4 rounded-xl transition-colors',
+              'p-3 rounded-xl transition-all',
               activeView === item.id && !isOnTagsPage
-                ? 'bg-mist text-forest'
-                : 'hover:bg-mist/50 text-slate-500'
+                ? 'bg-white text-slate-700 shadow-sm border border-slate-200'
+                : 'hover:bg-white/80 text-slate-400'
             )}
             title={item.label}
           >
-            <item.icon className="w-6 h-6" />
+            <item.icon className="w-5 h-5" />
           </button>
         ))}
+
+        <div className="w-8 border-t border-slate-200 my-2"></div>
 
         <button
           onClick={() => navigate('/tags')}
           className={clsx(
-            'p-4 rounded-xl transition-colors mt-4',
+            'p-3 rounded-xl transition-all',
             isOnTagsPage
-              ? 'bg-mist text-forest'
-              : 'hover:bg-mist/50 text-slate-500'
+              ? 'bg-white text-slate-700 shadow-sm border border-slate-200'
+              : 'hover:bg-white/80 text-slate-400'
           )}
           title="Manage Tags"
         >
-          <Tag className="w-6 h-6" />
+          <Tag className="w-5 h-5" />
         </button>
       </div>
     );
   }
 
   return (
-    <aside className="w-80 border-r border-mist-300 bg-white flex flex-col">
+    <aside className="w-80 border-r border-slate-200 bg-slate-50/50 flex flex-col">
       {/* Header with collapse button */}
-      <div className="h-16 px-6 flex items-center justify-between border-b border-mist">
-        <span className="text-xs font-semibold text-stone uppercase tracking-wider">Navigation</span>
+      <div className="h-14 px-5 flex items-center justify-between border-b border-slate-200 bg-white">
+        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Navigation</span>
         <button
           onClick={toggleSidebar}
-          className="p-2.5 hover:bg-mist rounded-xl transition-colors"
+          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
           title="Collapse sidebar"
         >
-          <ChevronLeft className="w-4 h-4 text-stone" />
+          <ChevronLeft className="w-4 h-4 text-slate-400" />
         </button>
       </div>
 
       {/* New Process Button */}
-      <div className="p-6">
+      <div className="p-5 bg-white border-b border-slate-200">
         <button
           onClick={handleNewProcess}
-          className="w-full bg-sage hover:bg-sage-600 text-white px-6 py-5 rounded-xl transition-colors flex items-center justify-center gap-4 text-base font-medium shadow-soft"
+          className="w-full bg-gradient-to-r from-sage to-sage-600 hover:from-sage-600 hover:to-sage-700 text-white px-5 py-4 rounded-xl transition-all flex items-center justify-center gap-3 text-sm font-semibold shadow-md shadow-sage/20"
         >
-          <Plus className="w-6 h-6" />
+          <Plus className="w-5 h-5" />
           New Process
         </button>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-6 overflow-y-auto">
-        <div className="space-y-2 mb-6">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveView(item.id as any)}
-              className={clsx(
-                'w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all text-base',
-                activeView === item.id && !isOnTagsPage
-                  ? 'bg-mist text-forest font-medium shadow-inner-soft'
-                  : 'hover:bg-mist/50 text-slate-600'
-              )}
-            >
-              <item.icon className={clsx(
-                'w-6 h-6',
-                activeView === item.id && !isOnTagsPage ? 'text-sage' : 'text-stone'
-              )} />
-              <span>{item.label}</span>
-            </button>
-          ))}
+      <nav className="flex-1 overflow-y-auto">
+        {/* Main Navigation Section */}
+        <div className="p-4">
+          <div className="space-y-1.5">
+            {navItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveView(item.id as any)}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm',
+                  activeView === item.id && !isOnTagsPage
+                    ? 'bg-white text-slate-800 font-medium shadow-sm border border-slate-200'
+                    : 'hover:bg-white/80 text-slate-600'
+                )}
+              >
+                <item.icon className={clsx(
+                  'w-5 h-5',
+                  activeView === item.id && !isOnTagsPage ? 'text-sage' : 'text-slate-400'
+                )} />
+                <span>{item.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Manage Tags Link */}
-        <div className="mb-8">
+        {/* Manage Tags Section */}
+        <div className="px-4 pb-4">
           <button
             onClick={() => navigate('/tags')}
             className={clsx(
-              'w-full flex items-center gap-4 px-6 py-4 rounded-xl transition-all text-base',
+              'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-sm',
               isOnTagsPage
-                ? 'bg-mist text-forest font-medium shadow-inner-soft'
-                : 'hover:bg-mist/50 text-slate-600'
+                ? 'bg-white text-slate-800 font-medium shadow-sm border border-slate-200'
+                : 'hover:bg-white/80 text-slate-600'
             )}
           >
             <Tag className={clsx(
-              'w-6 h-6',
-              isOnTagsPage ? 'text-sage' : 'text-stone'
+              'w-5 h-5',
+              isOnTagsPage ? 'text-sage' : 'text-slate-400'
             )} />
             <span>Manage Tags</span>
           </button>
         </div>
 
+        {/* Divider */}
+        <div className="mx-4 border-t border-slate-200"></div>
+
         {/* Content Area */}
-        <div className="border-t border-mist pt-6">
+        <div className="p-4 pt-5">
           {activeView === 'browse' && (
             <div>
-              <h3 className="text-xs font-semibold text-stone uppercase tracking-wider mb-5 px-5">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-1">
                 Processes
               </h3>
               <ProcessList />
@@ -257,52 +267,52 @@ export function Sidebar() {
 
           {activeView === 'recent' && (
             <div>
-              <h3 className="text-xs font-semibold text-stone uppercase tracking-wider mb-5 px-5">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-1">
                 Recent
               </h3>
               {isLoading ? (
-                <div className="px-5 py-8 text-center">
-                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-mist-300 border-t-sage"></div>
+                <div className="py-10 text-center">
+                  <div className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-slate-200 border-t-sage"></div>
                 </div>
               ) : recentProcesses.length === 0 ? (
-                <div className="px-5 py-10 text-center">
-                  <Clock className="w-10 h-10 text-mist-400 mx-auto mb-4" />
+                <div className="py-10 text-center bg-white rounded-xl border border-slate-200">
+                  <Clock className="w-8 h-8 text-slate-300 mx-auto mb-3" />
                   <p className="text-sm text-slate-500">No recent processes</p>
-                  <p className="text-xs text-stone mt-2">Open a process to see it here</p>
+                  <p className="text-xs text-slate-400 mt-1.5">Open a process to see it here</p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {recentProcesses.map((process) => (
                     <div
                       key={process.id}
                       onClick={() => handleProcessClick(process)}
                       className={clsx(
-                        'group w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all cursor-pointer text-left',
+                        'group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer text-left',
                         currentProcess?.id === process.id
-                          ? 'bg-sage/10 ring-1 ring-sage/20 shadow-inner-soft'
-                          : 'hover:bg-mist/50'
+                          ? 'bg-white border border-slate-200 shadow-sm'
+                          : 'hover:bg-white/80'
                       )}
                     >
                       <FileText className={clsx(
-                        'w-5 h-5 flex-shrink-0',
-                        currentProcess?.id === process.id ? 'text-sage' : 'text-stone'
+                        'w-4 h-4 flex-shrink-0',
+                        currentProcess?.id === process.id ? 'text-sage' : 'text-slate-400'
                       )} />
                       <div className="flex-1 min-w-0">
                         <div className={clsx(
                           'text-sm truncate',
-                          currentProcess?.id === process.id ? 'font-medium text-forest' : 'text-slate-700'
+                          currentProcess?.id === process.id ? 'font-medium text-slate-800' : 'text-slate-600'
                         )}>
                           {process.name}
                         </div>
-                        <div className="text-xs text-stone mt-1.5">
+                        <div className="text-xs text-slate-400 mt-1">
                           {new Date(process.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </div>
                       </div>
                       <button
                         onClick={(e) => toggleFavorite(e, process)}
                         className={clsx(
-                          'p-2 rounded-lg transition-colors opacity-0 group-hover:opacity-100',
-                          process.isFavorite ? 'text-gold' : 'text-stone hover:text-gold'
+                          'p-1.5 rounded-lg transition-all opacity-0 group-hover:opacity-100',
+                          process.isFavorite ? 'text-amber-500' : 'text-slate-300 hover:text-amber-500'
                         )}
                         title={process.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                       >
@@ -317,47 +327,47 @@ export function Sidebar() {
 
           {activeView === 'favorites' && (
             <div>
-              <h3 className="text-xs font-semibold text-stone uppercase tracking-wider mb-5 px-5">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 px-1">
                 Favorites
               </h3>
               {isLoading ? (
-                <div className="px-5 py-8 text-center">
-                  <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-mist-300 border-t-sage"></div>
+                <div className="py-10 text-center">
+                  <div className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-slate-200 border-t-sage"></div>
                 </div>
               ) : favoriteProcesses.length === 0 ? (
-                <div className="px-5 py-10 text-center">
-                  <StarOff className="w-10 h-10 text-mist-400 mx-auto mb-4" />
+                <div className="py-10 text-center bg-white rounded-xl border border-slate-200">
+                  <StarOff className="w-8 h-8 text-slate-300 mx-auto mb-3" />
                   <p className="text-sm text-slate-500">No favorites yet</p>
-                  <p className="text-xs text-stone mt-2">Click the star on a process to add it</p>
+                  <p className="text-xs text-slate-400 mt-1.5">Click the star on a process to add it</p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {favoriteProcesses.map((process) => (
                     <div
                       key={process.id}
                       onClick={() => handleProcessClick(process)}
                       className={clsx(
-                        'group w-full flex items-center gap-4 px-5 py-3.5 rounded-xl transition-all cursor-pointer text-left',
+                        'group w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all cursor-pointer text-left',
                         currentProcess?.id === process.id
-                          ? 'bg-sage/10 ring-1 ring-sage/20 shadow-inner-soft'
-                          : 'hover:bg-mist/50'
+                          ? 'bg-white border border-slate-200 shadow-sm'
+                          : 'hover:bg-white/80'
                       )}
                     >
                       <FileText className={clsx(
-                        'w-5 h-5 flex-shrink-0',
-                        currentProcess?.id === process.id ? 'text-sage' : 'text-stone'
+                        'w-4 h-4 flex-shrink-0',
+                        currentProcess?.id === process.id ? 'text-sage' : 'text-slate-400'
                       )} />
                       <div className="flex-1 min-w-0">
                         <div className={clsx(
                           'text-sm truncate',
-                          currentProcess?.id === process.id ? 'font-medium text-forest' : 'text-slate-700'
+                          currentProcess?.id === process.id ? 'font-medium text-slate-800' : 'text-slate-600'
                         )}>
                           {process.name}
                         </div>
                       </div>
                       <button
                         onClick={(e) => toggleFavorite(e, process)}
-                        className="p-2 rounded-lg text-gold hover:text-gold-600 transition-colors"
+                        className="p-1.5 rounded-lg text-amber-500 hover:text-amber-600 transition-colors"
                         title="Remove from favorites"
                       >
                         <Star className="w-4 h-4" fill="currentColor" />

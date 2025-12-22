@@ -569,6 +569,42 @@ export const processApi = {
     return data;
   },
 
+  // Increment view count
+  incrementViewCount: async (id: string): Promise<void> => {
+    const { error } = await supabase.rpc('increment_view_count', { process_id: id });
+    if (error) {
+      // Fallback: direct update if RPC doesn't exist
+      const { data: current } = await supabase
+        .from('processes')
+        .select('view_count')
+        .eq('id', id)
+        .single();
+
+      await supabase
+        .from('processes')
+        .update({ view_count: (current?.view_count || 0) + 1 })
+        .eq('id', id);
+    }
+  },
+
+  // Increment edit count
+  incrementEditCount: async (id: string): Promise<void> => {
+    const { error } = await supabase.rpc('increment_edit_count', { process_id: id });
+    if (error) {
+      // Fallback: direct update if RPC doesn't exist
+      const { data: current } = await supabase
+        .from('processes')
+        .select('edit_count')
+        .eq('id', id)
+        .single();
+
+      await supabase
+        .from('processes')
+        .update({ edit_count: (current?.edit_count || 0) + 1 })
+        .eq('id', id);
+    }
+  },
+
   createVersion: async (
     id: string,
     data: {
