@@ -216,7 +216,7 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
       </div>
 
       {/* Card Content */}
-      <div className="p-5">
+      <div className="p-5 pb-6">
         {/* Process Info */}
         <div className="mb-4">
           <h3 className="text-base font-semibold text-slate-800 mb-1.5 line-clamp-1 group-hover:text-slate-900 transition-colors">

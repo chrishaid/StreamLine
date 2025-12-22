@@ -65,7 +65,7 @@ export function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col bg-mist">
       <div className="flex-1 flex items-center justify-center p-12">
-        <div className="max-w-xl w-full">
+        <div className="max-w-2xl w-full">
           {/* Logo and Title */}
           <div className="text-center mb-14">
             <div className="inline-flex items-center justify-center w-24 h-24 bg-sage rounded-3xl mb-10 shadow-soft-lg">
