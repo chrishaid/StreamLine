@@ -126,7 +126,7 @@ export function HomePage() {
     <MainLayout>
       <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100/80">
         <div className="p-10 lg:p-12">
-          <div className="max-w-6xl mx-auto space-y-10">
+          <div className="max-w-6xl mx-auto space-y-16">
             {/* Header */}
             <div>
               <h1 className="text-3xl font-semibold text-slate-800 mb-3">Process Library</h1>
