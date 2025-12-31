@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { Footer } from './Footer';
+import { HelpDrawer } from '../help/HelpDrawer';
 import { useAppStore } from '../../store/useAppStore';
 
 interface MainLayoutProps {
@@ -25,14 +26,13 @@ export function MainLayout({ children, showChat = false, hideFooter = false, com
         <Header />
         <div className="flex-1 flex overflow-hidden min-h-0">
           <Sidebar />
-          <main className={`flex-1 flex flex-col min-h-0 ${showChat && !chatPanelCollapsed ? 'mr-96' : ''}`}>
-            <div className="flex-1 overflow-hidden min-h-0 h-full">
-              {children}
-            </div>
+          <main className={`flex-1 flex flex-col min-h-0 overflow-hidden ${showChat && !chatPanelCollapsed ? 'mr-96' : ''}`}>
+            {children}
           </main>
         </div>
         {!hideFooter && <Footer />}
       </div>
+      <HelpDrawer />
     </div>
   );
 }

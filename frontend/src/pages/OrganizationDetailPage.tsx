@@ -19,6 +19,7 @@ import {
   Check,
   AlertTriangle,
   Save,
+  Upload,
 } from 'lucide-react';
 import { MainLayout } from '../components/layout/MainLayout';
 import { organizationApi } from '../services/api';
@@ -430,7 +431,13 @@ export function OrganizationDetailPage() {
 
               {/* Members List */}
               <div className="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100">
-                {members.map((member) => {
+                {members.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <Users className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+                    <p className="text-sm text-slate-500">No members found</p>
+                    <p className="text-xs text-slate-400 mt-1">Members will appear here once added</p>
+                  </div>
+                ) : members.map((member) => {
                   const RoleIcon = roleIcons[member.role];
                   const roleColor = roleColors[member.role];
                   const isOwner = member.role === 'owner';
@@ -632,6 +639,23 @@ export function OrganizationDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Bulk Import */}
+              {canManage && (
+                <div className="bg-white rounded-xl border border-slate-200 p-6">
+                  <h3 className="font-medium text-slate-800 mb-2">Bulk Import</h3>
+                  <p className="text-sm text-slate-500 mb-4">
+                    Import multiple BPMN files from a folder. Tags will be automatically derived from the folder structure.
+                  </p>
+                  <button
+                    onClick={() => navigate('/bulk-upload')}
+                    className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-600 transition-colors text-sm font-medium"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Start Bulk Import
+                  </button>
+                </div>
+              )}
 
               {/* Danger Zone */}
               {isOwner && (

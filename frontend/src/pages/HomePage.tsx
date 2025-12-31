@@ -3,6 +3,7 @@ import { Plus, Upload, Clock, Star, TrendingUp, Grid, List, X, Tag } from 'lucid
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
 import { useAppStore } from '../store/useAppStore';
+import { useHelpStore } from '../store/useHelpStore';
 import { ProcessCard } from '../components/process/ProcessCard';
 import { processApi } from '../services/api';
 import { getAllTagsWithColors } from '../utils/tagColors';
@@ -11,6 +12,7 @@ import type { Process } from '../types';
 export function HomePage() {
   const navigate = useNavigate();
   const { setCurrentBpmnXml, setCurrentProcess, clearChat, addProcess, currentOrganization } = useAppStore();
+  const { hasCompletedTutorial, startTutorial } = useHelpStore();
 
   const [processes, setProcesses] = useState<Process[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,6 +26,17 @@ export function HomePage() {
   useEffect(() => {
     fetchProcesses();
   }, [currentOrganization?.id]);
+
+  // Trigger tutorial for first-time users
+  useEffect(() => {
+    if (!hasCompletedTutorial && !isLoading) {
+      // Slight delay to let the page render first
+      const timer = setTimeout(() => {
+        startTutorial();
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [hasCompletedTutorial, isLoading, startTutorial]);
 
   const fetchProcesses = async () => {
     setIsLoading(true);
@@ -124,19 +137,22 @@ export function HomePage() {
 
   return (
     <MainLayout>
-      <div className="flex-1 overflow-y-auto bg-gradient-to-br from-slate-50 via-slate-50 to-slate-100/80">
+      <div className="flex-1 overflow-y-auto bg-gradient-to-br from-violet-50/30 via-slate-50 to-slate-100/80">
         <div className="p-10 lg:p-12">
-          <div className="max-w-6xl mx-auto space-y-16">
+          <div className="max-w-6xl mx-auto">
             {/* Header */}
-            <div>
+            <div className="mb-12">
               <h1 className="text-3xl font-semibold text-slate-800 mb-3">Process Library</h1>
               <p className="text-base text-slate-500">
                 Manage and explore your business process diagrams
               </p>
             </div>
 
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-violet-200 to-transparent mb-12" />
+
             {/* Quick Actions */}
-            <section>
+            <section className="mb-12">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <button
                   onClick={handleCreateNewProcess}
@@ -170,51 +186,57 @@ export function HomePage() {
               </div>
             </section>
 
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-violet-200 to-transparent mb-12" />
+
             {/* Stats / KPI Cards */}
-            <section>
+            <section className="mb-12">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-500 mb-1">Total Processes</p>
-                      <p className="text-3xl font-bold text-slate-800">{stats.total}</p>
+                <div className="bg-white rounded-2xl border border-violet-100 p-10 shadow-sm hover:shadow-md hover:border-violet-200 transition-all">
+                  <div className="flex items-center justify-between gap-4 px-4">
+                    <div className="pl-4">
+                      <p className="text-sm font-medium text-slate-500 mb-2">Total Processes</p>
+                      <p className="text-4xl font-bold text-slate-800">{stats.total}</p>
                     </div>
-                    <div className="w-14 h-14 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center">
-                      <TrendingUp className="w-6 h-6 text-slate-600" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-500 mb-1">Active</p>
-                      <p className="text-3xl font-bold text-slate-800">{stats.active}</p>
-                    </div>
-                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl flex items-center justify-center">
-                      <Star className="w-6 h-6 text-emerald-600" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-violet-100 to-violet-200 rounded-2xl flex items-center justify-center flex-shrink-0 mr-4">
+                      <TrendingUp className="w-7 h-7 text-violet-600" />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-500 mb-1">Favorites</p>
-                      <p className="text-3xl font-bold text-slate-800">{stats.favorites}</p>
+                <div className="bg-white rounded-2xl border border-violet-100 p-10 shadow-sm hover:shadow-md hover:border-violet-200 transition-all">
+                  <div className="flex items-center justify-between gap-4 px-4">
+                    <div className="pl-4">
+                      <p className="text-sm font-medium text-slate-500 mb-2">Active</p>
+                      <p className="text-4xl font-bold text-slate-800">{stats.active}</p>
                     </div>
-                    <div className="w-14 h-14 bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl flex items-center justify-center">
-                      <Star className="w-6 h-6 text-amber-500" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl flex items-center justify-center flex-shrink-0 mr-4">
+                      <Star className="w-7 h-7 text-emerald-600" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-violet-100 p-10 shadow-sm hover:shadow-md hover:border-violet-200 transition-all">
+                  <div className="flex items-center justify-between gap-4 px-4">
+                    <div className="pl-4">
+                      <p className="text-sm font-medium text-slate-500 mb-2">Favorites</p>
+                      <p className="text-4xl font-bold text-slate-800">{stats.favorites}</p>
+                    </div>
+                    <div className="w-16 h-16 bg-gradient-to-br from-amber-50 to-amber-100 rounded-2xl flex items-center justify-center flex-shrink-0 mr-4">
+                      <Star className="w-7 h-7 text-amber-500" />
                     </div>
                   </div>
                 </div>
               </div>
             </section>
 
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-violet-200 to-transparent mb-12" />
+
             {/* Search and Filters */}
-            <section>
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-                <div className="flex items-center gap-4 flex-wrap">
+            <section className="mb-12">
+              <div className="bg-white rounded-2xl border border-violet-100 p-6 shadow-sm">
+                <div className="flex items-center gap-5 flex-wrap">
                   {/* Search */}
                   <div className="flex-1 min-w-[200px]">
                     <input
@@ -265,10 +287,13 @@ export function HomePage() {
               </div>
             </section>
 
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-violet-200 to-transparent mb-12" />
+
             {/* Tag Filter Section */}
             {allTags.length > 0 && (
-              <section>
-                <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+              <section className="mb-12">
+                <div className="bg-white rounded-2xl border border-violet-100 p-5 shadow-sm">
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className="flex items-center gap-2 text-slate-500 text-sm font-medium mr-1">
                       <Tag className="w-4 h-4" />
@@ -310,6 +335,11 @@ export function HomePage() {
               </section>
             )}
 
+            {/* Divider - only show if tags exist */}
+            {allTags.length > 0 && (
+              <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent mb-12" />
+            )}
+
             {/* Process Grid */}
             <section>
               {isLoading ? (
@@ -318,7 +348,7 @@ export function HomePage() {
                   <p className="mt-5 text-base text-slate-500">Loading processes...</p>
                 </div>
               ) : filteredProcesses.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-slate-200 p-16 text-center shadow-sm">
+                <div className="bg-white rounded-2xl border border-violet-100 p-16 text-center shadow-sm">
                   <Clock className="w-14 h-14 mx-auto mb-5 text-slate-300" />
                   <p className="text-base text-slate-700 mb-3">
                     {searchQuery || statusFilter !== 'all' || selectedTag
@@ -335,16 +365,17 @@ export function HomePage() {
                 <div
                   className={
                     viewMode === 'grid'
-                      ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
-                      : 'flex flex-col gap-4'
+                      ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'
+                      : 'flex flex-col gap-5'
                   }
                 >
-                  {filteredProcesses.map((process) => (
+                  {filteredProcesses.map((process, index) => (
                     <ProcessCard
                       key={process.id}
                       process={process}
                       onUpdate={fetchProcesses}
                       onTagClick={handleTagClick}
+                      isFirstCard={index === 0}
                     />
                   ))}
                 </div>

@@ -50,24 +50,24 @@ function MessageContent({ content, isUser }: { content: string; isUser: boolean 
       </ReactMarkdown>
 
       {hasXml && xmlContent && (
-        <div className="mt-3 border border-sage/30 rounded-xl overflow-hidden">
+        <div className="mt-3 border border-violet-200 rounded-xl overflow-hidden">
           <button
             onClick={() => setShowXml(!showXml)}
-            className="w-full flex items-center gap-2 px-4 py-3 bg-sage/10 hover:bg-sage/20 transition-colors text-left"
+            className="w-full flex items-center gap-2 px-4 py-3 bg-violet-50 hover:bg-violet-100 transition-colors text-left"
           >
             {showXml ? (
-              <ChevronDown className="w-4 h-4 text-sage" />
+              <ChevronDown className="w-4 h-4 text-violet-600" />
             ) : (
-              <ChevronRight className="w-4 h-4 text-sage" />
+              <ChevronRight className="w-4 h-4 text-violet-600" />
             )}
-            <Code className="w-4 h-4 text-sage" />
-            <span className="text-xs font-medium text-sage">BPMN XML Generated</span>
-            <span className="text-2xs text-stone ml-auto">
+            <Code className="w-4 h-4 text-violet-600" />
+            <span className="text-xs font-medium text-violet-700">BPMN XML Generated</span>
+            <span className="text-2xs text-slate-400 ml-auto">
               {showXml ? 'Click to collapse' : 'Click to expand'}
             </span>
           </button>
           {showXml && (
-            <pre className="p-4 bg-forest/5 text-2xs font-mono overflow-x-auto max-h-48 overflow-y-auto">
+            <pre className="p-4 bg-slate-50 text-2xs font-mono overflow-x-auto max-h-48 overflow-y-auto">
               {xmlContent}
             </pre>
           )}
@@ -81,13 +81,13 @@ function MessageContent({ content, isUser }: { content: string; isUser: boolean 
 function TypingIndicator() {
   return (
     <div className="flex justify-start">
-      <div className="bg-mist dark:bg-pine rounded-2xl px-5 py-4 flex items-center gap-2">
+      <div className="bg-violet-50 dark:bg-slate-700 rounded-2xl px-5 py-4 flex items-center gap-2">
         <div className="flex gap-1">
-          <div className="w-2 h-2 bg-sage rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-          <div className="w-2 h-2 bg-sage rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-          <div className="w-2 h-2 bg-sage rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+          <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+          <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+          <div className="w-2 h-2 bg-violet-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
         </div>
-        <span className="text-xs text-stone ml-2">Claude is thinking...</span>
+        <span className="text-xs text-slate-500 ml-2">Claude is thinking...</span>
       </div>
     </div>
   );
@@ -95,16 +95,16 @@ function TypingIndicator() {
 
 const POSITION_CLASSES = {
   right: {
-    panel: 'right-8 top-48 bottom-8 w-[420px]',
-    collapsed: 'right-8 bottom-8',
+    panel: 'right-4 md:right-8 top-20 md:top-48 bottom-4 md:bottom-8 w-[calc(100vw-2rem)] md:w-[380px] lg:w-[420px]',
+    collapsed: 'right-4 md:right-8 bottom-4 md:bottom-8',
   },
   left: {
-    panel: 'left-8 top-48 bottom-8 w-[420px]',
-    collapsed: 'left-8 bottom-8',
+    panel: 'left-4 md:left-8 top-20 md:top-48 bottom-4 md:bottom-8 w-[calc(100vw-2rem)] md:w-[380px] lg:w-[420px]',
+    collapsed: 'left-4 md:left-8 bottom-4 md:bottom-8',
   },
   bottom: {
-    panel: 'left-8 right-8 bottom-8 h-96',
-    collapsed: 'right-8 bottom-8',
+    panel: 'left-4 md:left-8 right-4 md:right-8 bottom-4 md:bottom-8 h-80 md:h-96',
+    collapsed: 'right-4 md:right-8 bottom-4 md:bottom-8',
   },
 };
 
@@ -217,26 +217,27 @@ export function ChatPanel() {
     return (
       <div className={`fixed ${positionClasses.collapsed} z-40`}>
         <button
+          data-tutorial="chat-toggle"
           onClick={toggleChatPanel}
-          className="bg-sage text-white px-8 py-5 rounded-2xl shadow-soft-lg hover:bg-sage-600 transition-all hover:scale-105 flex items-center gap-4 border border-sage-400"
+          className="bg-gradient-to-r from-violet-600 to-violet-700 text-white px-6 py-4 md:px-8 md:py-5 rounded-2xl shadow-lg shadow-violet-500/25 hover:from-violet-700 hover:to-violet-800 transition-all hover:scale-105 flex items-center gap-3 md:gap-4 min-h-[44px] focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-violet-600"
         >
-          <MessageSquare className="w-8 h-8" />
-          <span className="text-lg font-semibold">AI Chat</span>
+          <MessageSquare className="w-6 h-6 md:w-8 md:h-8" />
+          <span className="text-base md:text-lg font-semibold">AI Chat</span>
         </button>
       </div>
     );
   }
 
   return (
-    <div className={`fixed ${positionClasses.panel} bg-white dark:bg-forest-800 border border-mist-300 dark:border-pine flex flex-col shadow-soft-lg z-30 rounded-2xl overflow-hidden transition-all`}>
+    <div className={`fixed ${positionClasses.panel} bg-white dark:bg-slate-800 border border-violet-100 dark:border-slate-700 flex flex-col shadow-lg shadow-violet-500/10 z-30 rounded-2xl overflow-hidden transition-all`}>
       {/* Header */}
-      <div className="h-16 border-b border-mist dark:border-pine flex items-center justify-between px-6 bg-gradient-to-r from-forest/5 to-sage/5">
-        <h2 className="text-base font-semibold text-forest dark:text-mist">Chat with Claude</h2>
+      <div className="h-16 border-b border-violet-100 dark:border-slate-700 flex items-center justify-between px-6 bg-gradient-to-r from-violet-50 to-slate-50">
+        <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">Chat with Claude</h2>
         <button
           onClick={toggleChatPanel}
-          className="p-2 hover:bg-mist dark:hover:bg-pine rounded-lg transition-colors"
+          className="p-2.5 hover:bg-violet-100 dark:hover:bg-slate-700 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
         >
-          <Minimize2 className="w-5 h-5 text-slate-500 dark:text-stone" />
+          <Minimize2 className="w-5 h-5 text-slate-500 dark:text-slate-400" />
         </button>
       </div>
 
@@ -244,9 +245,9 @@ export function ChatPanel() {
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {chatMessages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <MessageSquare className="w-14 h-14 mb-4 text-mist-400" />
-            <p className="text-base font-medium text-forest dark:text-mist mb-2">Start a conversation</p>
-            <p className="text-sm text-stone max-w-xs leading-relaxed">
+            <MessageSquare className="w-14 h-14 mb-4 text-violet-300" />
+            <p className="text-base font-medium text-slate-800 dark:text-slate-100 mb-2">Start a conversation</p>
+            <p className="text-sm text-slate-500 max-w-xs leading-relaxed">
               Ask Claude to create a BPMN process, suggest improvements, or explain a diagram.
             </p>
           </div>
@@ -260,13 +261,13 @@ export function ChatPanel() {
                 <div
                   className={`max-w-[85%] rounded-2xl px-5 py-4 ${
                     message.role === 'user'
-                      ? 'bg-sage text-white shadow-soft'
-                      : 'bg-mist dark:bg-pine text-forest dark:text-mist'
+                      ? 'bg-gradient-to-r from-violet-600 to-violet-700 text-white shadow-md shadow-violet-500/20'
+                      : 'bg-violet-50 dark:bg-slate-700 text-slate-800 dark:text-slate-100'
                   }`}
                 >
                   <MessageContent content={message.content} isUser={message.role === 'user'} />
                   <span className={`text-2xs mt-2 block ${
-                    message.role === 'user' ? 'text-white/70' : 'text-stone'
+                    message.role === 'user' ? 'text-white/70' : 'text-slate-400'
                   }`}>
                     {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
@@ -280,11 +281,11 @@ export function ChatPanel() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-mist dark:border-pine p-5">
+      <div className="border-t border-violet-100 dark:border-slate-700 p-5">
         {error && (
-          <div className="mb-4 p-4 bg-ember-50 border border-ember-100 rounded-xl flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-ember mt-0.5 flex-shrink-0" />
-            <p className="text-sm text-ember-700">{error}</p>
+          <div className="mb-4 p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
         <div className="flex gap-3">
@@ -293,14 +294,14 @@ export function ChatPanel() {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type your message..."
-            className="flex-1 resize-none border border-mist-300 dark:border-pine rounded-xl px-4 py-3 text-sm text-forest dark:text-mist dark:bg-forest-800 placeholder-stone focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage transition-all"
+            className="flex-1 resize-none border border-violet-200 dark:border-slate-600 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-slate-100 dark:bg-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 transition-all"
             rows={2}
             disabled={isSending}
           />
           <button
             onClick={handleSend}
             disabled={!input.trim() || isSending}
-            className="bg-sage text-white px-5 rounded-xl hover:bg-sage-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center self-end h-14 shadow-soft"
+            className="bg-gradient-to-r from-violet-600 to-violet-700 text-white px-5 rounded-xl hover:from-violet-700 hover:to-violet-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center self-end h-14 min-w-[56px] shadow-md shadow-violet-500/20 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
           >
             {isSending ? (
               <Loader2 className="w-6 h-6 animate-spin" />
@@ -309,14 +310,14 @@ export function ChatPanel() {
             )}
           </button>
         </div>
-        <div className="mt-4 flex gap-3 flex-wrap">
+        <div className="mt-4 flex gap-2 md:gap-3 flex-wrap">
           <button
             onClick={() =>
               handleQuickAction(
                 'Create a simple BPMN process for employee onboarding with start event, tasks for document submission, equipment setup, and training, and an end event.'
               )
             }
-            className="text-sm px-5 py-3 bg-mist hover:bg-mist-300 text-slate-600 dark:text-mist dark:bg-pine dark:hover:bg-sage/20 rounded-xl transition-colors"
+            className="text-sm px-4 py-3 min-h-[44px] bg-violet-50 hover:bg-violet-100 text-violet-700 dark:text-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
             disabled={isSending}
           >
             Create new process
@@ -327,7 +328,7 @@ export function ChatPanel() {
                 'Please analyze the current BPMN diagram and suggest improvements.'
               )
             }
-            className="text-sm px-5 py-3 bg-mist hover:bg-mist-300 text-slate-600 dark:text-mist dark:bg-pine dark:hover:bg-sage/20 rounded-xl transition-colors disabled:opacity-50"
+            className="text-sm px-4 py-3 min-h-[44px] bg-violet-50 hover:bg-violet-100 text-violet-700 dark:text-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl transition-colors disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
             disabled={isSending || !currentBpmnXml}
           >
             Suggest improvements
@@ -336,7 +337,7 @@ export function ChatPanel() {
             onClick={() =>
               handleQuickAction('Please explain this BPMN diagram in simple terms.')
             }
-            className="text-sm px-5 py-3 bg-mist hover:bg-mist-300 text-slate-600 dark:text-mist dark:bg-pine dark:hover:bg-sage/20 rounded-xl transition-colors disabled:opacity-50"
+            className="text-sm px-4 py-3 min-h-[44px] bg-violet-50 hover:bg-violet-100 text-violet-700 dark:text-slate-100 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl transition-colors disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
             disabled={isSending || !currentBpmnXml}
           >
             Explain diagram

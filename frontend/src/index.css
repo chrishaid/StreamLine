@@ -1,31 +1,45 @@
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
-/* Range Brand - Theme CSS Variables */
+/* StreamLine - Violet Process Theme */
 :root {
-  /* Core brand colors */
-  --color-forest: #1e3a2f;
-  --color-pine: #2d5a47;
-  --color-sage: #4a7c67;
-  --color-mist: #e8f0ec;
-  --color-ember: #c2410c;
-  --color-gold: #a16207;
-  --color-ink: #1a1a1a;
-  --color-slate: #5c6b64;
-  --color-stone: #94a39b;
-  --color-paper: #fafbfa;
+  /* Violet palette - Process Improvement */
+  --color-violet-50: #faf5ff;
+  --color-violet-100: #f3e8ff;
+  --color-violet-200: #e9d5ff;
+  --color-violet-300: #c084fc;
+  --color-violet-400: #a855f7;
+  --color-violet-500: #9333ea;
+  --color-violet-600: #7c3aed;
+  --color-violet-700: #6d28d9;
+  --color-violet-800: #5b21b6;
+  --color-violet-900: #4c1d95;
 
-  /* Semantic color tokens */
+  /* Neutrals */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+
+  /* Semantic tokens */
   --bg-primary: #ffffff;
-  --bg-secondary: #fafbfa;
-  --bg-tertiary: #e8f0ec;
-  --text-primary: #1e3a2f;
-  --text-secondary: #5c6b64;
-  --text-muted: #94a39b;
-  --border-color: #d1ddd6;
-  --border-hover: #b3c7bc;
-  --accent-color: #4a7c67;
-  --accent-hover: #3d6655;
+  --bg-secondary: #fefcff;
+  --bg-tertiary: #f3e8ff;
+  --bg-accent: #7c3aed;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --text-accent: #7c3aed;
+  --border-color: #e9d5ff;
+  --border-hover: #c084fc;
+  --accent-color: #7c3aed;
+  --accent-hover: #6d28d9;
 
   /* Layout dimensions */
   --sidebar-width: 320px;
@@ -34,23 +48,23 @@
 }
 
 .dark {
-  --bg-primary: #1e3a2f;
-  --bg-secondary: #152a22;
-  --bg-tertiary: #1a3329;
-  --text-primary: #e8f0ec;
-  --text-secondary: #b3c7bc;
-  --text-muted: #94a39b;
-  --border-color: #2d5a47;
-  --border-hover: #4a7c67;
-  --accent-color: #7aa892;
-  --accent-hover: #a8c5b9;
+  --bg-primary: #1e293b;
+  --bg-secondary: #0f172a;
+  --bg-tertiary: #334155;
+  --text-primary: #f3e8ff;
+  --text-secondary: #c084fc;
+  --text-muted: #94a3b8;
+  --border-color: #475569;
+  --border-hover: #7c3aed;
+  --accent-color: #a855f7;
+  --accent-hover: #c084fc;
 }
 
 /* Reset and base styles */
 *, *::before, *::after {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
+  margin: 2.25px;
+  padding: 0;
 }
 
 html {
@@ -63,7 +77,7 @@ html {
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
     'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  background-color: var(--bg-tertiary);
+  background-color: var(--bg-secondary);
   color: var(--text-primary);
   line-height: 1.5;
   min-height: 100vh;
@@ -76,7 +90,7 @@ body {
   overflow: hidden;
 }
 
-/* Refined scrollbar styling - Range green */
+/* Elegant violet scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -87,23 +101,23 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #b3c7bc;
+  background: #c084fc;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a39b;
+  background: #a855f7;
 }
 
-/* Selection styling with sage accent */
+/* Selection styling with violet accent */
 ::selection {
-  background-color: rgba(74, 124, 103, 0.2);
+  background-color: rgba(124, 58, 237, 0.2);
   color: inherit;
 }
 
-/* Focus ring styling - sage accent */
+/* Focus ring styling - violet accent */
 :focus-visible {
-  outline: 2px solid rgba(74, 124, 103, 0.6);
+  outline: 2px solid rgba(124, 58, 237, 0.6);
   outline-offset: 2px;
 }
 
@@ -117,18 +131,18 @@ button, a, input, select, textarea {
   width: 100%;
   height: 100%;
   position: relative;
-  background-color: #fafbfa;
+  background-color: #fefcff;
 }
 
 .bjs-container {
-  background-color: #fafbfa;
+  background-color: #fefcff;
 }
 
-/* BPMN canvas with subtle grid pattern - mist/sage tones */
+/* BPMN canvas with subtle violet-tinted grid */
 .bjs-container .djs-container {
   background-image:
-    linear-gradient(to right, #d1ddd6 1px, transparent 1px),
-    linear-gradient(to bottom, #d1ddd6 1px, transparent 1px);
+    linear-gradient(to right, #e9d5ff 1px, transparent 1px),
+    linear-gradient(to bottom, #e9d5ff 1px, transparent 1px);
   background-size: 20px 20px;
 }
 
@@ -139,13 +153,13 @@ button, a, input, select, textarea {
 .djs-palette {
   z-index: 100;
   background: white !important;
-  border: 1px solid #d1ddd6 !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.06), 0 8px 24px -4px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e9d5ff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.1), 0 8px 24px -4px rgba(124, 58, 237, 0.15) !important;
 }
 
 .djs-palette .entry:hover {
-  background-color: #e8f0ec !important;
+  background-color: #f3e8ff !important;
 }
 
 .djs-container svg {
@@ -156,17 +170,17 @@ button, a, input, select, textarea {
 /* Properties panel styling */
 .bpp-properties-panel {
   background: white !important;
-  border-left: 1px solid #d1ddd6 !important;
+  border-left: 1px solid #e9d5ff !important;
 }
 
 /* Context pad styling */
 .djs-context-pad {
   background: white !important;
-  border-radius: 8px !important;
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.12) !important;
 }
 
-/* Reposition BPMN.io powered-by logo to lower left at 60% size */
+/* BPMN.io powered-by logo */
 .bjs-powered-by {
   right: auto !important;
   left: 15px !important;
@@ -176,7 +190,7 @@ button, a, input, select, textarea {
   opacity: 0.7 !important;
 }
 
-/* Refined button base styles */
+/* Button base styles */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -185,7 +199,7 @@ button, a, input, select, textarea {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   font-weight: 500;
-  border-radius: 0.5rem;
+  border-radius: 0.75rem;
   transition: all 0.15s ease;
   cursor: pointer;
   border: none;
@@ -196,7 +210,20 @@ button, a, input, select, textarea {
   cursor: not-allowed;
 }
 
-/* Input base styles - Range themed */
+/* Primary button - violet gradient */
+.btn-primary {
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+  color: white;
+  box-shadow: 0 2px 8px -2px rgba(124, 58, 237, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
+  box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Input base styles - violet themed */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -204,11 +231,11 @@ input[type="search"],
 textarea,
 select {
   background-color: white;
-  border: 1px solid #d1ddd6;
-  border-radius: 0.5rem;
+  border: 1px solid #e9d5ff;
+  border-radius: 0.75rem;
   padding: 0.625rem 0.875rem;
   font-size: 0.875rem;
-  color: #1e3a2f;
+  color: #1e293b;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -218,30 +245,30 @@ input[type="password"]:focus,
 input[type="search"]:focus,
 textarea:focus,
 select:focus {
-  border-color: #4a7c67;
-  box-shadow: 0 0 0 3px rgba(74, 124, 103, 0.15);
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
   outline: none;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #94a39b;
+  color: #94a3b8;
 }
 
-/* Card hover effect */
+/* Card hover effect with violet glow */
 .card-hover {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px -4px rgba(124, 58, 237, 0.15);
 }
 
-/* Subtle divider */
+/* Subtle divider with violet */
 .divider {
   height: 1px;
-  background: linear-gradient(to right, transparent, #d1ddd6, transparent);
+  background: linear-gradient(to right, transparent, #e9d5ff, transparent);
 }
 
 /* Loading spinner animation */
@@ -285,12 +312,42 @@ textarea::placeholder {
   animation: slideUp 0.3s ease-out;
 }
 
-/* Range Brand Typography - Italic headings for brand feel */
+/* Shimmer animation for loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f3e8ff 25%, #e9d5ff 50%, #f3e8ff 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Glow animation */
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 30px rgba(124, 58, 237, 0.4);
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+/* Brand Typography */
 .brand-heading {
   font-family: "Computer Modern Serif", "Latin Modern Roman", Georgia, "Times New Roman", serif;
   font-style: italic;
   font-weight: 400;
-  color: #1e3a2f;
+  color: #5b21b6;
 }
 
 /* Range Logo text styling */
@@ -299,4 +356,51 @@ textarea::placeholder {
   font-style: italic;
   font-weight: 400;
   letter-spacing: -0.01em;
+}
+
+/* Violet gradient text */
+.text-gradient-violet {
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(124, 58, 237, 0.1);
+}
+
+.glass-violet {
+  background: rgba(243, 232, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+/* Flex item spacing utilities */
+.flex-gap-tight {
+  gap: 2.25px;
+}
+
+.flex-gap-tight > * {
+  margin: 2.25px;
+}
+
+/* Direct flex item margin utility */
+.m-tight {
+  margin: 2.25px;
+}
+
+.mx-tight {
+  margin-left: 2.25px;
+  margin-right: 2.25px;
+}
+
+.my-tight {
+  margin-top: 2.25px;
+  margin-bottom: 2.25px;
 }

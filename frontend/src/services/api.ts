@@ -682,9 +682,9 @@ function mapDbRowToOrganizationMember(row: any): OrganizationMember {
     userId: row.user_id,
     role: row.role,
     invitedBy: row.invited_by,
-    invitedAt: new Date(row.invited_at),
+    invitedAt: row.invited_at ? new Date(row.invited_at) : new Date(row.created_at),
     joinedAt: row.joined_at ? new Date(row.joined_at) : undefined,
-    status: row.status,
+    status: row.status || 'active',
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
     user: row.users ? {
@@ -752,10 +752,34 @@ export const organizationApi = {
 
     if (error) throw error;
 
-    return (data || []).map((row: any) => ({
-      ...mapDbRowToOrganization(row.organizations),
-      currentUserRole: row.role,
-    }));
+    // Fetch member and process counts for each organization
+    const orgsWithCounts = await Promise.all(
+      (data || []).map(async (row: any) => {
+        const orgId = row.organizations.id;
+
+        // Get member count
+        const { count: memberCount } = await supabase
+          .from('organization_members')
+          .select('*', { count: 'exact', head: true })
+          .eq('organization_id', orgId)
+          .eq('status', 'active');
+
+        // Get process count
+        const { count: processCount } = await supabase
+          .from('processes')
+          .select('*', { count: 'exact', head: true })
+          .eq('organization_id', orgId);
+
+        return {
+          ...mapDbRowToOrganization(row.organizations),
+          currentUserRole: row.role,
+          memberCount: memberCount || 0,
+          processCount: processCount || 0,
+        };
+      })
+    );
+
+    return orgsWithCounts;
   },
 
   // Get a single organization by ID
@@ -906,23 +930,65 @@ export const organizationApi = {
 
   // Members
   getMembers: async (organizationId: string): Promise<OrganizationMember[]> => {
-    const { data, error } = await supabase
+    console.log('[API] getMembers called for organization:', organizationId);
+
+    // First get members
+    const { data: membersData, error: membersError } = await supabase
       .from('organization_members')
-      .select(`
-        *,
-        users (
-          id,
-          name,
-          email,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('organization_id', organizationId)
       .order('created_at', { ascending: true });
 
-    if (error) throw error;
+    if (membersError) {
+      console.error('[API] getMembers error:', membersError);
+      throw membersError;
+    }
 
-    return (data || []).map(mapDbRowToOrganizationMember);
+    console.log('[API] getMembers raw data:', membersData);
+
+    if (!membersData || membersData.length === 0) {
+      console.log('[API] No members found for organization');
+      return [];
+    }
+
+    // Then fetch user details for each member
+    const userIds = membersData.map((m: any) => m.user_id);
+    const { data: usersData, error: usersError } = await supabase
+      .from('users')
+      .select('id, name, email, avatar_url')
+      .in('id', userIds);
+
+    if (usersError) {
+      console.warn('[API] Failed to fetch user details:', usersError);
+    }
+
+    console.log('[API] Users data:', usersData);
+
+    // Create a map of user_id -> user data
+    const usersMap = new Map((usersData || []).map((u: any) => [u.id, u]));
+
+    // Combine members with user data
+    return membersData.map((row: any) => {
+      const userData = usersMap.get(row.user_id);
+      return {
+        id: row.id,
+        organizationId: row.organization_id,
+        userId: row.user_id,
+        role: row.role,
+        invitedBy: row.invited_by,
+        invitedAt: row.invited_at ? new Date(row.invited_at) : new Date(row.created_at),
+        joinedAt: row.joined_at ? new Date(row.joined_at) : undefined,
+        status: row.status || 'active',
+        createdAt: new Date(row.created_at),
+        updatedAt: new Date(row.updated_at),
+        user: userData ? {
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          avatarUrl: userData.avatar_url,
+        } : undefined,
+      };
+    });
   },
 
   updateMember: async (

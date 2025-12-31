@@ -63,21 +63,21 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-mist">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-violet-50 via-lavender-100 to-violet-100/80">
       <div className="flex-1 flex items-center justify-center p-12">
         <div className="max-w-2xl w-full">
           {/* Logo and Title */}
           <div className="text-center mb-14">
-            <div className="inline-flex items-center justify-center w-24 h-24 bg-sage rounded-3xl mb-10 shadow-soft-lg">
+            <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-violet-600 to-violet-700 rounded-3xl mb-10 shadow-lg shadow-violet-500/25">
               <Workflow className="w-12 h-12 text-white" />
             </div>
-            <h1 className="text-4xl font-semibold text-forest tracking-tight mb-4">StreamLine</h1>
+            <h1 className="text-4xl font-semibold text-slate-800 tracking-tight mb-4">StreamLine</h1>
             <p className="text-base text-slate-500">BPMN Process Design Hub</p>
           </div>
 
           {/* Login Card */}
-          <div className="bg-white rounded-3xl shadow-soft-lg p-12 border border-mist-300">
-            <h2 className="text-2xl font-semibold text-forest mb-4">Welcome</h2>
+          <div className="bg-white rounded-3xl shadow-lg shadow-violet-500/10 p-12 border border-violet-100">
+            <h2 className="text-2xl font-semibold text-slate-800 mb-4">Welcome</h2>
             <p className="text-base text-slate-500 mb-10">
               Sign in to manage your business processes
             </p>
@@ -86,7 +86,7 @@ export function LoginPage() {
               {/* Google Login */}
               <button
                 onClick={handleGoogleLogin}
-                className="w-full flex items-center justify-center gap-6 px-10 py-6 bg-white border-2 border-mist-300 rounded-2xl hover:bg-mist/30 hover:border-sage/40 hover:shadow-soft transition-all text-lg font-medium text-forest"
+                className="w-full flex items-center justify-center gap-6 px-10 py-6 bg-white border-2 border-violet-200 rounded-2xl hover:bg-violet-50/50 hover:border-violet-400/50 hover:shadow-lg hover:shadow-violet-500/10 transition-all text-lg font-medium text-slate-800"
               >
                 <svg className="w-7 h-7" viewBox="0 0 24 24">
                   <path
@@ -112,7 +112,7 @@ export function LoginPage() {
               {/* Microsoft Login */}
               <button
                 onClick={handleMicrosoftLogin}
-                className="w-full flex items-center justify-center gap-6 px-10 py-6 bg-white border-2 border-mist-300 rounded-2xl hover:bg-mist/30 hover:border-sage/40 hover:shadow-soft transition-all text-lg font-medium text-forest"
+                className="w-full flex items-center justify-center gap-6 px-10 py-6 bg-white border-2 border-violet-200 rounded-2xl hover:bg-violet-50/50 hover:border-violet-400/50 hover:shadow-lg hover:shadow-violet-500/10 transition-all text-lg font-medium text-slate-800"
               >
                 <svg className="w-7 h-7" viewBox="0 0 23 23">
                   <path fill="#f3f3f3" d="M0 0h23v23H0z" />
@@ -125,7 +125,7 @@ export function LoginPage() {
               </button>
             </div>
 
-            <p className="mt-10 text-center text-sm text-stone">
+            <p className="mt-10 text-center text-sm text-slate-400">
               By signing in, you agree to our Terms of Service
             </p>
           </div>
@@ -133,25 +133,25 @@ export function LoginPage() {
           {/* Features */}
           <div className="mt-16 grid grid-cols-3 gap-12">
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-soft mb-6 border border-mist-300">
-                <Sparkles className="w-10 h-10 text-sage" />
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-lg shadow-violet-500/10 mb-6 border border-violet-100">
+                <Sparkles className="w-10 h-10 text-violet-600" />
               </div>
-              <p className="text-lg text-forest font-medium">AI-Powered</p>
-              <p className="text-base text-stone mt-2">Smart assistance</p>
+              <p className="text-lg text-slate-800 font-medium">AI-Powered</p>
+              <p className="text-base text-slate-500 mt-2">Smart assistance</p>
             </div>
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-soft mb-6 border border-mist-300">
-                <PenTool className="w-10 h-10 text-pine" />
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-lg shadow-violet-500/10 mb-6 border border-violet-100">
+                <PenTool className="w-10 h-10 text-violet-500" />
               </div>
-              <p className="text-lg text-forest font-medium">Visual Editor</p>
-              <p className="text-base text-stone mt-2">Drag & drop</p>
+              <p className="text-lg text-slate-800 font-medium">Visual Editor</p>
+              <p className="text-base text-slate-500 mt-2">Drag & drop</p>
             </div>
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-soft mb-6 border border-mist-300">
-                <BarChart3 className="w-10 h-10 text-analytics-500" />
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-lg shadow-violet-500/10 mb-6 border border-violet-100">
+                <BarChart3 className="w-10 h-10 text-violet-400" />
               </div>
-              <p className="text-lg text-forest font-medium">Analytics</p>
-              <p className="text-base text-stone mt-2">Insights</p>
+              <p className="text-lg text-slate-800 font-medium">Analytics</p>
+              <p className="text-base text-slate-500 mt-2">Insights</p>
             </div>
           </div>
         </div>
@@ -159,11 +159,11 @@ export function LoginPage() {
 
       {/* Footer */}
       <footer className="py-8 text-center">
-        <div className="flex items-center justify-center gap-4 text-stone">
+        <div className="flex items-center justify-center gap-4 text-slate-500">
           <span className="text-sm">Built and maintained by</span>
           <div className="flex items-center gap-2">
             <RangeLogo size={18} variant="mark" />
-            <span className="text-sm font-serif italic text-forest">Range</span>
+            <span className="text-sm font-serif italic text-violet-800">Range</span>
           </div>
         </div>
       </footer>

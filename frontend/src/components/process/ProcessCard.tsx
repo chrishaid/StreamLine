@@ -10,9 +10,10 @@ interface ProcessCardProps {
   process: Process;
   onUpdate: () => void;
   onTagClick?: (tag: string) => void;
+  isFirstCard?: boolean;
 }
 
-export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps) {
+export function ProcessCard({ process, onUpdate, onTagClick, isFirstCard = false }: ProcessCardProps) {
   const navigate = useNavigate();
   const [showActions, setShowActions] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -163,7 +164,7 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
       case 'draft':
         return 'bg-slate-100 text-slate-600';
       case 'active':
-        return 'bg-accent/10 text-accent';
+        return 'bg-violet-100 text-violet-700';
       case 'archived':
         return 'bg-amber-50 text-amber-700';
       default:
@@ -184,13 +185,14 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
 
   return (
     <div
-      className="group bg-white rounded-2xl overflow-hidden border border-slate-200/80 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300 cursor-pointer relative"
+      {...(isFirstCard ? { 'data-tutorial': 'process-card' } : {})}
+      className="group bg-white rounded-2xl overflow-hidden border border-violet-100 hover:border-violet-300 hover:shadow-xl hover:shadow-violet-500/15 transition-all duration-300 cursor-pointer relative"
       onClick={handleOpen}
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
       {/* BPMN Thumbnail with gradient overlay */}
-      <div className="relative h-44 bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+      <div className="relative h-44 bg-gradient-to-br from-violet-50/50 to-slate-50 overflow-hidden">
         <BPMNThumbnail processId={process.id} className="w-full h-full" />
 
         {/* Gradient overlay for better readability */}
@@ -203,7 +205,7 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
           </span>
           <button
             onClick={handleToggleFavorite}
-            className={`p-2 rounded-xl backdrop-blur-sm transition-all duration-200 ${
+            className={`p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl backdrop-blur-sm transition-all duration-200 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 ${
               isFavorite
                 ? 'text-amber-500 bg-amber-50/90 shadow-sm'
                 : 'text-slate-400 bg-white/80 hover:text-amber-500 hover:bg-amber-50/90'
@@ -216,7 +218,7 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
       </div>
 
       {/* Card Content */}
-      <div className="p-5 pb-6">
+      <div className="p-6">
         {/* Process Info */}
         <div className="mb-4">
           <h3 className="text-base font-semibold text-slate-800 mb-1.5 line-clamp-1 group-hover:text-slate-900 transition-colors">
@@ -252,18 +254,18 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
         )}
 
         {/* Stats and Metadata - Modern layout */}
-        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-          <span className="text-xs text-slate-400 font-medium">
+        <div className="flex items-center justify-between pt-5 mt-2 border-t border-slate-100 px-2">
+          <span className="text-sm text-slate-400 font-medium pl-4">
             {formatDate(process.updatedAt)}
           </span>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-slate-400" title="Views">
-              <Eye className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">{process.viewCount || 0}</span>
+          <div className="flex items-center gap-4 pr-4">
+            <div className="flex items-center gap-2 text-slate-400" title="Views">
+              <Eye className="w-4 h-4" />
+              <span className="text-sm font-medium">{process.viewCount || 0}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-slate-400" title="Edits">
-              <Pencil className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">{process.editCount || 0}</span>
+            <div className="flex items-center gap-2 text-slate-400" title="Edits">
+              <Pencil className="w-4 h-4" />
+              <span className="text-sm font-medium">{process.editCount || 0}</span>
             </div>
           </div>
         </div>
@@ -274,7 +276,7 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
         {/* Primary Action */}
         <button
           onClick={handleOpen}
-          className="w-full bg-white text-slate-800 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-colors shadow-lg mb-3 flex items-center justify-center gap-2"
+          className="w-full bg-white text-slate-800 px-4 py-3 min-h-[44px] rounded-xl text-sm font-semibold hover:bg-slate-50 transition-colors shadow-lg mb-3 flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
         >
           <ExternalLink className="w-4 h-4" />
           Open Process
@@ -284,7 +286,7 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
         <div className="flex gap-2">
           <button
             onClick={handleDuplicate}
-            className="flex-1 bg-white/15 backdrop-blur-sm text-white px-3 py-2.5 rounded-lg text-xs font-medium hover:bg-white/25 transition-colors flex items-center justify-center gap-1.5"
+            className="flex-1 bg-white/15 backdrop-blur-sm text-white px-3 py-3 min-h-[44px] rounded-lg text-xs font-medium hover:bg-white/25 transition-colors flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
             title="Duplicate"
           >
             <Copy className="w-3.5 h-3.5" />
@@ -292,7 +294,7 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
           </button>
           <button
             onClick={handleCopyTo}
-            className="flex-1 bg-white/15 backdrop-blur-sm text-white px-3 py-2.5 rounded-lg text-xs font-medium hover:bg-white/25 transition-colors flex items-center justify-center gap-1.5"
+            className="flex-1 bg-white/15 backdrop-blur-sm text-white px-3 py-3 min-h-[44px] rounded-lg text-xs font-medium hover:bg-white/25 transition-colors flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
             title="Copy to workspace"
           >
             <Building2 className="w-3.5 h-3.5" />
@@ -300,14 +302,14 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
           </button>
           <button
             onClick={handleShowAccess}
-            className="bg-white/15 backdrop-blur-sm text-white px-3 py-2.5 rounded-lg text-xs font-medium hover:bg-white/25 transition-colors"
+            className="bg-white/15 backdrop-blur-sm text-white px-3 py-3 min-h-[44px] min-w-[44px] rounded-lg text-xs font-medium hover:bg-white/25 transition-colors flex items-center justify-center focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
             title="View access"
           >
             <Users className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={handleDelete}
-            className="bg-red-500/80 backdrop-blur-sm text-white px-3 py-2.5 rounded-lg text-xs font-medium hover:bg-red-500 transition-colors"
+            className="bg-red-500/80 backdrop-blur-sm text-white px-3 py-3 min-h-[44px] min-w-[44px] rounded-lg text-xs font-medium hover:bg-red-500 transition-colors flex items-center justify-center focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-red-500"
             title="Delete"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -320,14 +322,14 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
         <>
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40" onClick={() => setShowCopyToModal(false)} />
           <div className="fixed inset-0 flex items-center justify-center z-50 p-6" onClick={() => setShowCopyToModal(false)}>
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl shadow-2xl shadow-violet-500/10 max-w-md w-full overflow-hidden border border-violet-100" onClick={e => e.stopPropagation()}>
               {/* Header */}
-              <div className="px-6 py-5 border-b border-slate-100">
+              <div className="px-6 py-5 border-b border-violet-100">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-slate-800">Copy to workspace</h3>
                   <button
                     onClick={() => setShowCopyToModal(false)}
-                    className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-violet-50 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
                   >
                     <X className="w-5 h-5 text-slate-400" />
                   </button>
@@ -341,10 +343,10 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
                 <button
                   onClick={() => handleCopyToOrg(null)}
                   disabled={isCopying}
-                  className={`w-full p-4 rounded-xl text-left flex items-center gap-4 transition-all ${
+                  className={`w-full p-4 min-h-[60px] rounded-xl text-left flex items-center gap-4 transition-all focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 ${
                     isCopying
                       ? 'bg-slate-50 text-slate-400 cursor-not-allowed'
-                      : 'hover:bg-slate-50 border border-transparent hover:border-slate-200'
+                      : 'hover:bg-violet-50/50 border border-transparent hover:border-violet-200'
                   }`}
                 >
                   <div className="w-11 h-11 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center">
@@ -357,7 +359,7 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
                     </p>
                   </div>
                   {process.organizationId === null && (
-                    <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-md">Current</span>
+                    <span className="px-2 py-0.5 bg-violet-100 text-violet-600 text-xs font-medium rounded-md">Current</span>
                   )}
                 </button>
 
@@ -367,14 +369,14 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
                     key={org.id}
                     onClick={() => handleCopyToOrg(org.id)}
                     disabled={isCopying}
-                    className={`w-full p-4 rounded-xl text-left flex items-center gap-4 transition-all ${
+                    className={`w-full p-4 min-h-[60px] rounded-xl text-left flex items-center gap-4 transition-all focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 ${
                       isCopying
                         ? 'bg-slate-50 text-slate-400 cursor-not-allowed'
-                        : 'hover:bg-slate-50 border border-transparent hover:border-slate-200'
+                        : 'hover:bg-violet-50/50 border border-transparent hover:border-violet-200'
                     }`}
                   >
-                    <div className="w-11 h-11 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl flex items-center justify-center">
-                      <Building2 className="w-5 h-5 text-blue-500" />
+                    <div className="w-11 h-11 bg-gradient-to-br from-violet-50 to-violet-100 rounded-xl flex items-center justify-center">
+                      <Building2 className="w-5 h-5 text-violet-600" />
                     </div>
                     <div className="flex-1">
                       <p className="font-medium text-slate-700">{org.name}</p>
@@ -383,7 +385,7 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
                       </p>
                     </div>
                     {process.organizationId === org.id && (
-                      <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-md">Current</span>
+                      <span className="px-2 py-0.5 bg-violet-100 text-violet-600 text-xs font-medium rounded-md">Current</span>
                     )}
                   </button>
                 ))}
@@ -397,9 +399,9 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
 
               {/* Footer with loading state */}
               {isCopying && (
-                <div className="px-6 py-4 border-t border-slate-100 bg-slate-50">
+                <div className="px-6 py-4 border-t border-violet-100 bg-violet-50/50">
                   <div className="flex items-center justify-center gap-2 text-sm text-slate-500">
-                    <div className="w-4 h-4 border-2 border-slate-300 border-t-blue-500 rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-violet-200 border-t-violet-600 rounded-full animate-spin" />
                     Copying process...
                   </div>
                 </div>
@@ -414,14 +416,14 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
         <>
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40" onClick={() => setShowAccessPanel(false)} />
           <div className="fixed inset-0 flex items-center justify-center z-50 p-6" onClick={() => setShowAccessPanel(false)}>
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl shadow-2xl shadow-violet-500/10 max-w-md w-full overflow-hidden border border-violet-100" onClick={e => e.stopPropagation()}>
               {/* Header */}
-              <div className="px-6 py-5 border-b border-slate-100">
+              <div className="px-6 py-5 border-b border-violet-100">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-slate-800">Access permissions</h3>
                   <button
                     onClick={() => setShowAccessPanel(false)}
-                    className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
+                    className="p-1.5 hover:bg-violet-50 rounded-lg transition-colors"
                   >
                     <X className="w-5 h-5 text-slate-400" />
                   </button>
@@ -432,9 +434,9 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
               <div className="p-6">
                 {process.organizationId ? (
                   <>
-                    <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl mb-5">
-                      <Building2 className="w-5 h-5 text-blue-500" />
-                      <span className="text-sm font-medium text-blue-700">
+                    <div className="flex items-center gap-3 p-4 bg-violet-50 rounded-xl mb-5 border border-violet-100">
+                      <Building2 className="w-5 h-5 text-violet-600" />
+                      <span className="text-sm font-medium text-violet-700">
                         Shared with organization members
                       </span>
                     </div>
@@ -444,13 +446,13 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
                         orgMembers.map((member: any) => (
                           <div
                             key={member.userId}
-                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors"
+                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-violet-50/50 transition-colors"
                           >
-                            <div className="w-10 h-10 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center overflow-hidden">
+                            <div className="w-10 h-10 bg-gradient-to-br from-violet-50 to-violet-100 rounded-full flex items-center justify-center overflow-hidden">
                               {member.user?.avatarUrl ? (
                                 <img src={member.user.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover" />
                               ) : (
-                                <User className="w-5 h-5 text-slate-400" />
+                                <User className="w-5 h-5 text-violet-600" />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -463,15 +465,15 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
                         ))
                       ) : (
                         <div className="flex items-center justify-center py-8">
-                          <div className="w-5 h-5 border-2 border-slate-200 border-t-slate-400 rounded-full animate-spin" />
+                          <div className="w-5 h-5 border-2 border-violet-200 border-t-violet-600 rounded-full animate-spin" />
                         </div>
                       )}
                     </div>
                   </>
                 ) : (
                   <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <User className="w-8 h-8 text-slate-400" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-violet-50 to-violet-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <User className="w-8 h-8 text-violet-600" />
                     </div>
                     <p className="text-base font-medium text-slate-700">Private to you</p>
                     <p className="text-sm text-slate-400 mt-2 max-w-xs mx-auto">
@@ -482,7 +484,7 @@ export function ProcessCard({ process, onUpdate, onTagClick }: ProcessCardProps)
                         setShowAccessPanel(false);
                         setShowCopyToModal(true);
                       }}
-                      className="mt-5 px-4 py-2 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors"
+                      className="mt-5 px-4 py-2 bg-violet-100 text-violet-700 text-sm font-medium rounded-lg hover:bg-violet-200 transition-colors"
                     >
                       Share via organization
                     </button>

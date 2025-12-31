@@ -10,6 +10,9 @@ import { OrganizationDetailPage } from './pages/OrganizationDetailPage';
 import { InviteAcceptPage } from './pages/InviteAcceptPage';
 import { LoginPage } from './pages/LoginPage';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
+import { HelpPage } from './pages/HelpPage';
+import { BulkUploadPage } from './pages/BulkUploadPage';
+import { SpotlightTutorial } from './components/help/SpotlightTutorial';
 
 function App() {
   return (
@@ -71,10 +74,27 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/help"
+            element={
+              <ProtectedRoute>
+                <HelpPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bulk-upload"
+            element={
+              <ProtectedRoute>
+                <BulkUploadPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <SpotlightTutorial />
         </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
