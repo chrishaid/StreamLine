@@ -1,4 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk';
+import {
+  MODEL_CONFIG,
+  buildBpmnExpertPrompt,
+  buildProcessImproverPrompt,
+  buildDesignGuruPrompt,
+  SkillContext
+} from '../skills';
 
 interface MessageRequest {
   message: string;
@@ -7,6 +14,7 @@ interface MessageRequest {
   includeContext?: boolean;
   bpmnXml?: string;
   diagramImage?: string; // Base64 encoded SVG
+  skill?: 'bpmn_expert' | 'process_improver' | 'design_guru';
 }
 
 interface ChatMessage {
@@ -50,14 +58,18 @@ export class ClaudeService {
 
     messages.push(userMessage);
 
-    // Build system prompt
-    const systemPrompt = this.buildSystemPrompt(bpmnXml);
+    // Build system prompt based on active skill
+    const skillContext: SkillContext = {
+      bpmnXml,
+      processName: processId || undefined,
+    };
+    const systemPrompt = this.buildSystemPrompt(bpmnXml, false, request.skill, skillContext);
 
     try {
-      // Call Claude API
+      // Call Claude API with Opus 4.5 for primary tasks
       const response = await this.client.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 16384, // Significantly increased for large BPMN XML with diagram elements
+        model: MODEL_CONFIG.primary,
+        max_tokens: MODEL_CONFIG.maxTokens.bpmnGeneration,
         system: systemPrompt,
         messages: messages.map((msg) => ({
           role: msg.role,
@@ -125,6 +137,7 @@ export class ClaudeService {
       includeContext = true,
       bpmnXml,
       diagramImage,
+      skill,
     } = request;
 
     // Get or create session history
@@ -161,8 +174,12 @@ export class ClaudeService {
 
     messages.push(userMessage);
 
-    // Build system prompt
-    const systemPrompt = this.buildSystemPrompt(bpmnXml, !!diagramImage);
+    // Build system prompt based on active skill
+    const skillContext: SkillContext = {
+      bpmnXml,
+      processName: processId || undefined,
+    };
+    const systemPrompt = this.buildSystemPrompt(bpmnXml, !!diagramImage, skill, skillContext);
 
     try {
       // Call Claude API with streaming
@@ -181,11 +198,11 @@ export class ClaudeService {
         };
       });
 
-      console.log(`🤖 Sending ${apiMessages.length} messages to Claude (including ${Math.floor(apiMessages.length / 2)} user prompts)`);
+      console.log(`🤖 Sending ${apiMessages.length} messages to Claude Opus 4.5 (including ${Math.floor(apiMessages.length / 2)} user prompts)${skill ? ` [Skill: ${skill}]` : ''}`);
 
       const stream = await this.client.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 16384, // Significantly increased for large BPMN XML with diagram elements
+        model: MODEL_CONFIG.primary,
+        max_tokens: MODEL_CONFIG.maxTokens.bpmnGeneration,
         system: systemPrompt,
         stream: true,
         messages: apiMessages,
@@ -284,25 +301,30 @@ export class ClaudeService {
   }
 
   async getSuggestions(bpmnXml: string): Promise<string[]> {
-    const systemPrompt = `You are a BPMN process expert. Analyze the provided BPMN diagram and suggest improvements.`;
+    // Use the Process Improver skill for suggestions
+    const skillContext: SkillContext = { bpmnXml };
+    const systemPrompt = buildProcessImproverPrompt(skillContext);
 
-    const userPrompt = `Please analyze this BPMN diagram and provide 3-5 specific suggestions for improvement:
-
-${bpmnXml}
+    const userPrompt = `Analyze this BPMN process and provide 3-5 specific, actionable improvement suggestions.
 
 Focus on:
-1. Missing error handling
-2. Process bottlenecks
-3. Unclear naming
-4. Missing documentation
-5. Best practice violations
+1. **Waste Elimination**: Unnecessary steps, waiting, handoffs
+2. **Bottleneck Identification**: Steps that constrain throughput
+3. **Automation Opportunities**: Tasks that could be automated
+4. **Clarity Issues**: Unclear naming, missing documentation
+5. **Error Handling**: Missing exception paths, recovery steps
 
-Provide concise, actionable suggestions.`;
+For each suggestion:
+- Be specific (reference actual element names)
+- Explain the impact (why this matters)
+- Give a concrete action (what to change)
+
+Format as numbered list with brief, actionable items.`;
 
     try {
       const response = await this.client.messages.create({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2048,
+        model: MODEL_CONFIG.fast, // Use fast model for suggestions
+        max_tokens: MODEL_CONFIG.maxTokens.suggestions,
         system: systemPrompt,
         messages: [
           {
@@ -334,75 +356,105 @@ Provide concise, actionable suggestions.`;
     }
   }
 
-  private buildSystemPrompt(bpmnXml?: string, hasDiagramImage?: boolean): string {
-    let prompt = `You are an expert AI assistant for StreamLine, a BPMN Process Hub application. You help users create, edit, and optimize business process diagrams using BPMN 2.0 notation.
+  private buildSystemPrompt(
+    bpmnXml?: string,
+    hasDiagramImage?: boolean,
+    skill?: 'bpmn_expert' | 'process_improver' | 'design_guru',
+    skillContext?: SkillContext
+  ): string {
+    // If a specific skill is requested, use its specialized prompt
+    if (skill && skillContext) {
+      switch (skill) {
+        case 'bpmn_expert':
+          return buildBpmnExpertPrompt(skillContext);
+        case 'process_improver':
+          return buildProcessImproverPrompt(skillContext);
+        case 'design_guru':
+          return buildDesignGuruPrompt(skillContext);
+      }
+    }
 
-Your capabilities:
-- Create new BPMN diagrams from natural language descriptions
-- Suggest modifications to existing diagrams
-- Explain BPMN diagrams in plain language
-- Identify process improvements and optimization opportunities
-- Help with BPMN best practices
+    // Default comprehensive BPMN expert prompt (combines all skills)
+    let prompt = `You are an expert AI assistant for StreamLine, a BPMN Process Hub application, powered by Claude Opus 4.5.
 
-CRITICAL INSTRUCTIONS FOR CREATING BPMN DIAGRAMS:
-1. When asked to create a process, ALWAYS provide complete, valid BPMN 2.0 XML
-2. Include proper XML declaration and BPMN namespace definitions
-3. Include both process definitions AND diagram elements (BPMNDiagram, BPMNPlane, BPMNShape, BPMNEdge)
-4. Use proper element IDs and references
-5. Include coordinates (dc:Bounds) for all visual elements
-6. Wrap BPMN XML in \`\`\`xml code blocks for clarity
+You have three specialized capabilities that you can seamlessly blend:
 
-Example BPMN structure:
+## 1. BPMN EXPERT (Process Mapping)
+Create valid, well-structured BPMN 2.0 diagrams that render perfectly in bpmn.io.
+
+## 2. PROCESS IMPROVER (Operational Excellence)
+Identify real process improvements using Lean, Six Sigma, and operational excellence principles.
+
+## 3. DESIGN GURU (Clarity & Elegance)
+Ensure clean lines, clear naming, and elegant architecture in all process designs.
+
+---
+
+## BPMN 2.0 CREATION REQUIREMENTS
+
+When creating BPMN diagrams, ALWAYS provide complete, valid XML:
+
+### Required Namespaces
 \`\`\`xml
-<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
-                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
-                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
-                  xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
-                  id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_1" isExecutable="false">
-    <bpmn:startEvent id="StartEvent_1" name="Start"/>
-    <bpmn:task id="Task_1" name="Do Something"/>
-    <bpmn:endEvent id="EndEvent_1" name="End"/>
-    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_1"/>
-    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_1" targetRef="EndEvent_1"/>
-  </bpmn:process>
-  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
-    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
-      <bpmndi:BPMNShape id="Shape_StartEvent_1" bpmnElement="StartEvent_1">
-        <dc:Bounds x="152" y="102" width="36" height="36"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_Task_1" bpmnElement="Task_1">
-        <dc:Bounds x="240" y="80" width="100" height="80"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Shape_EndEvent_1" bpmnElement="EndEvent_1">
-        <dc:Bounds x="392" y="102" width="36" height="36"/>
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNEdge id="Edge_Flow_1" bpmnElement="Flow_1">
-        <di:waypoint x="188" y="120"/>
-        <di:waypoint x="240" y="120"/>
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Edge_Flow_2" bpmnElement="Flow_2">
-        <di:waypoint x="340" y="120"/>
-        <di:waypoint x="392" y="120"/>
-      </bpmndi:BPMNEdge>
-    </bpmndi:BPMNPlane>
-  </bpmndi:BPMNDiagram>
-</bpmn:definitions>
+xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
 \`\`\`
 
-Guidelines:
-- Be concise and clear
-- Use BPMN 2.0 standard notation
-- Focus on practical, actionable advice
-- When creating diagrams, provide complete, valid BPMN XML with both process and diagram elements
-- Layout elements left-to-right with 80-120 pixel spacing
-- Consider error handling, edge cases, and process efficiency`;
+### Element Sizing (for bpmn.io compatibility)
+- Start/End Events: width="36" height="36"
+- Tasks: width="100" height="80"
+- Gateways: width="50" height="50"
+- Spacing: 100-150px horizontal between elements
+
+### Structure Requirements
+1. Complete XML declaration and definitions
+2. Process definition with all flow elements
+3. Sequence flows with sourceRef/targetRef
+4. BPMNDiagram section with BPMNPlane
+5. BPMNShape for every node (with dc:Bounds)
+6. BPMNEdge for every flow (with di:waypoint)
+
+### Waypoint Calculations
+- From event center: x + 18, y + 18
+- From task right edge: x + 100, y + 40
+- From gateway: x + 50 (right), y + 25 (center)
+
+---
+
+## NAMING CONVENTIONS
+
+Use clear, action-oriented names:
+- **Tasks**: Verb + Noun (e.g., "Review Application", "Send Notification")
+- **Gateways**: Question format (e.g., "Approved?", "In Stock?")
+- **Events**: State descriptions (e.g., "Order Received", "Payment Failed")
+- **IDs**: Use prefixes (StartEvent_, Task_, Gateway_, Flow_)
+
+---
+
+## PROCESS IMPROVEMENT LENS
+
+Always consider:
+- **Waste**: Can steps be eliminated or combined?
+- **Bottlenecks**: Where does work queue up?
+- **Handoffs**: Can ownership transfers be reduced?
+- **Automation**: What's rule-based and repeatable?
+- **Clarity**: Would a newcomer understand this?
+
+---
+
+## OUTPUT FORMAT
+
+- Wrap BPMN XML in \`\`\`xml code blocks
+- Explain your design decisions briefly
+- Highlight any assumptions made
+- Suggest improvements if reviewing existing processes`;
 
     if (bpmnXml && !hasDiagramImage) {
-      prompt += `\n\nCurrent BPMN diagram context (XML):\n${bpmnXml}`;
+      prompt += `\n\n---\n\n## CURRENT PROCESS CONTEXT\n\n\`\`\`xml\n${bpmnXml}\n\`\`\``;
     } else if (hasDiagramImage) {
-      prompt += `\n\nNote: The user has provided a visual diagram of the current BPMN process. You can see it in the attached image. Use this visual context along with any BPMN XML to understand the current state of the process and provide better suggestions.`;
+      prompt += `\n\n---\n\n## VISUAL CONTEXT\n\nThe user has provided a visual diagram of the current BPMN process (attached image). Use this visual context along with any BPMN XML to understand the current state and provide targeted improvements.`;
     }
 
     return prompt;

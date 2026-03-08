@@ -71,21 +71,41 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const client = new Anthropic({ apiKey });
 
-    const systemPrompt = `You are a BPMN process expert. Analyze the provided BPMN diagram and suggest improvements.`;
+    // Process Improver skill - focused on real operational improvements
+    const systemPrompt = `You are a Process Improvement Expert with deep expertise in Lean, Six Sigma, and operational excellence.
 
-    const userPrompt = `Please analyze this BPMN diagram and provide 3-5 specific suggestions for improvement:
+## ANALYSIS FRAMEWORK
+
+For each process step, evaluate:
+- **Necessity**: Does this add value? Can it be eliminated?
+- **Efficiency**: Cycle time? Waiting periods?
+- **Quality**: Error/rework rate? Where do defects occur?
+- **Handoffs**: Information loss? Can handoffs be eliminated?
+- **Automation**: Rule-based and repeatable? Could technology do this?
+
+## 8 WASTES (DOWNTIME)
+- Defects, Overproduction, Waiting, Non-utilized talent
+- Transportation, Inventory, Motion, Extra processing
+
+Be specific, actionable, and realistic.`;
+
+    const userPrompt = `Analyze this BPMN process and provide 3-5 specific, actionable improvement suggestions:
 
 ${bpmnXml}
 
 Focus on:
-1. Missing error handling
-2. Process bottlenecks
-3. Unclear naming
-4. Missing documentation
-5. Best practice violations
+1. **Waste Elimination**: Unnecessary steps, waiting, handoffs
+2. **Bottleneck Identification**: Steps that constrain throughput
+3. **Automation Opportunities**: Tasks that could be automated
+4. **Clarity Issues**: Unclear naming, missing documentation
+5. **Error Handling**: Missing exception paths
 
-Provide concise, actionable suggestions.`;
+For each suggestion:
+- Reference specific element names
+- Explain why this matters
+- Give a concrete action`;
 
+    // Use Sonnet for fast suggestions
     const response = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2048,
