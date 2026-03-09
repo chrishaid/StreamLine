@@ -190,7 +190,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       // Use Claude Opus 4.5 for primary BPMN generation tasks
       const stream = await client.messages.create({
-        model: 'claude-opus-4-5-20250514',
+        model: 'claude-opus-4-5-20251101',
         max_tokens: 16384,
         system: systemPrompt,
         stream: true,

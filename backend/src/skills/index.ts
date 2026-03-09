@@ -63,7 +63,7 @@ export function getToolsForSkill(skillName: string): ToolDefinition[] {
  */
 export const MODEL_CONFIG = {
   // Primary model for complex tasks (BPMN generation, analysis)
-  primary: 'claude-opus-4-5-20250514',
+  primary: 'claude-opus-4-5-20251101',
 
   // Fast model for quick tasks (suggestions, simple queries)
   fast: 'claude-sonnet-4-20250514',
