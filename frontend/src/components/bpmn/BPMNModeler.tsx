@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import { useAppStore } from '../../store/useAppStore';
+import { PreviewBanner } from './PreviewBanner';
 import {
   ZoomIn,
   ZoomOut,
@@ -9,6 +10,7 @@ import {
   Save,
   Undo,
   Redo,
+  Eye,
 } from 'lucide-react';
 
 const EMPTY_BPMN = `<?xml version="1.0" encoding="UTF-8"?>
@@ -40,7 +42,15 @@ export function BPMNModeler() {
     editor,
     markDirty,
     updateLastSaved,
+    // Preview state
+    previewBpmnXml,
+    isPreviewMode,
+    acceptPreview,
+    rejectPreview,
   } = useAppStore();
+
+  // Track whether we're showing the preview
+  const [showingPreview, setShowingPreview] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
@@ -80,16 +90,26 @@ export function BPMNModeler() {
   useEffect(() => {
     if (!isReady || !modelerRef.current || isLoadingRef.current) return;
 
-    const xmlToLoad = currentBpmnXml || EMPTY_BPMN;
+    // Determine which XML to load based on preview mode
+    const xmlToLoad = (isPreviewMode && showingPreview && previewBpmnXml)
+      ? previewBpmnXml
+      : (currentBpmnXml || EMPTY_BPMN);
 
     // Skip if same XML already loaded
     if (lastLoadedXmlRef.current === xmlToLoad) {
       return;
     }
 
-    console.log('[BPMNModeler] Loading diagram...', xmlToLoad.substring(0, 50));
+    console.log('[BPMNModeler] Loading diagram...', isPreviewMode ? '(PREVIEW)' : '', xmlToLoad.substring(0, 50));
     loadDiagram(xmlToLoad);
-  }, [isReady, currentBpmnXml]);
+  }, [isReady, currentBpmnXml, previewBpmnXml, isPreviewMode, showingPreview]);
+
+  // Reset to showing preview when entering preview mode
+  useEffect(() => {
+    if (isPreviewMode) {
+      setShowingPreview(true);
+    }
+  }, [isPreviewMode]);
 
   const handleCommandStackChanged = () => {
     const commandStack = modelerRef.current?.get('commandStack');
@@ -263,10 +283,40 @@ export function BPMNModeler() {
     }
   };
 
+  // Preview mode handlers
+  const handleAcceptPreview = (createNewVersion: boolean) => {
+    const result = acceptPreview(createNewVersion);
+    if (result.accepted) {
+      console.log('[BPMNModeler] Preview accepted', createNewVersion ? '(new version)' : '(update)');
+      // The store will update currentBpmnXml, triggering a re-render
+      if (createNewVersion) {
+        // Mark as dirty so it gets saved as a new version
+        markDirty();
+      }
+    }
+  };
+
+  const handleRejectPreview = () => {
+    rejectPreview();
+    console.log('[BPMNModeler] Preview rejected');
+    // Reload the original diagram
+    if (currentBpmnXml) {
+      loadDiagram(currentBpmnXml);
+    }
+  };
+
   return (
     <div className="relative w-full h-full flex flex-col bg-slate-50">
+      {/* Preview Banner */}
+      {isPreviewMode && (
+        <PreviewBanner
+          onAccept={handleAcceptPreview}
+          onReject={handleRejectPreview}
+        />
+      )}
+
       {/* Toolbar */}
-      <div className="h-10 border-b border-slate-200 bg-white flex items-center justify-between px-4">
+      <div className={`h-10 border-b border-slate-200 bg-white flex items-center justify-between px-4 ${isPreviewMode ? 'mt-0' : ''}`}>
         <div className="flex items-center gap-2">
           <button
             onClick={handleSave}
@@ -342,16 +392,47 @@ export function BPMNModeler() {
           </div>
         )}
         <div ref={containerRef} className="absolute inset-0 bpmn-container" />
+
+        {/* Preview/Current Toggle */}
+        {isPreviewMode && (
+          <div className="absolute bottom-4 left-4 z-20 flex items-center gap-1 bg-white rounded-xl shadow-lg border border-slate-200 p-1">
+            <button
+              onClick={() => setShowingPreview(false)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                !showingPreview
+                  ? 'bg-violet-100 text-violet-700'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Current
+            </button>
+            <button
+              onClick={() => setShowingPreview(true)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                showingPreview
+                  ? 'bg-amber-100 text-amber-700'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Eye className="w-4 h-4" />
+              Preview
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Status Bar - Minimal height */}
-      <div className="h-6 border-t border-slate-100 bg-white flex items-center justify-between px-4 text-2xs text-slate-400">
+      <div className={`h-6 border-t border-slate-100 bg-white flex items-center justify-between px-4 text-2xs ${isPreviewMode && showingPreview ? 'bg-amber-50 text-amber-600' : 'text-slate-400'}`}>
         <div>
-          {editor.lastSaved
-            ? `Saved ${new Date(editor.lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-            : 'Not saved'}
+          {isPreviewMode && showingPreview ? (
+            'Preview - Changes not yet applied'
+          ) : editor.lastSaved ? (
+            `Saved ${new Date(editor.lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+          ) : (
+            'Not saved'
+          )}
         </div>
-        <span>Edit mode</span>
+        <span>{isPreviewMode && showingPreview ? 'Preview mode' : 'Edit mode'}</span>
       </div>
     </div>
   );

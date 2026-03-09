@@ -120,6 +120,11 @@ export function ChatPanel() {
     currentBpmnXml,
     currentProcess,
     userPreferences,
+    setPreviewBpmnXml,
+    isPreviewMode,
+    pendingFeedback,
+    clearPendingFeedback,
+    previewBpmnXml,
   } = useAppStore();
 
   const position = userPreferences.chatPosition || 'right';
@@ -136,6 +141,23 @@ export function ChatPanel() {
   useEffect(() => {
     scrollToBottom();
   }, [chatMessages]);
+
+  // Handle feedback from preview banner
+  useEffect(() => {
+    if (pendingFeedback && !isSending) {
+      // Format the feedback message to include context about what we're iterating on
+      const feedbackMessage = `Regarding your suggested diagram changes: ${pendingFeedback}
+
+Please update the BPMN diagram based on this feedback.`;
+      setInput(feedbackMessage);
+      clearPendingFeedback();
+      // Auto-send the feedback
+      setTimeout(() => {
+        const sendButton = document.querySelector('[data-send-button]') as HTMLButtonElement;
+        sendButton?.click();
+      }, 100);
+    }
+  }, [pendingFeedback, isSending, clearPendingFeedback]);
 
   const handleSend = async () => {
     if (!input.trim() || isSending) return;
@@ -163,13 +185,15 @@ export function ChatPanel() {
     }
 
     try {
-      // Call backend API - include current BPMN XML for context
+      // Call backend API - include current or preview BPMN XML for context
+      // When in preview mode, send the preview XML so Claude knows what to modify
+      const xmlContext = isPreviewMode && previewBpmnXml ? previewBpmnXml : currentBpmnXml;
       const response = await chatApi.sendMessage({
         message: messageText,
         sessionId: newSessionId,
         processId: currentProcess?.id,
         includeContext: true,
-        bpmnXml: currentBpmnXml || undefined,
+        bpmnXml: xmlContext || undefined,
       });
 
       // Add assistant's message
@@ -178,8 +202,13 @@ export function ChatPanel() {
       // Check if the response contains BPMN XML
       const bpmnXml = extractBpmnXmlFromText(response.message.content);
       if (bpmnXml && validateBpmnXml(bpmnXml)) {
-        setCurrentBpmnXml(bpmnXml);
-        console.log('BPMN XML extracted and updated:', bpmnXml.substring(0, 100) + '...');
+        // Use preview mode instead of direct update
+        // This allows user to review changes before accepting
+        setPreviewBpmnXml(bpmnXml, {
+          messageId: response.message.id,
+          description: 'Claude suggested diagram changes',
+        });
+        console.log('BPMN XML extracted - preview mode activated:', bpmnXml.substring(0, 100) + '...');
       }
     } catch (err: any) {
       console.error('Failed to send message:', err);
@@ -301,6 +330,7 @@ export function ChatPanel() {
           <button
             onClick={handleSend}
             disabled={!input.trim() || isSending}
+            data-send-button
             className="bg-gradient-to-r from-violet-600 to-violet-700 text-white px-5 rounded-xl hover:from-violet-700 hover:to-violet-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center self-end h-14 min-w-[56px] shadow-md shadow-violet-500/20 focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
           >
             {isSending ? (

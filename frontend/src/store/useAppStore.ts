@@ -68,6 +68,21 @@ interface AppState {
   currentBpmnXml: string | null;
   setCurrentBpmnXml: (xml: string | null) => void;
 
+  // BPMN Preview State (for Claude-suggested changes)
+  previewBpmnXml: string | null;
+  previewSource: {
+    messageId: string;
+    description: string;
+  } | null;
+  isPreviewMode: boolean;
+  pendingFeedback: string | null; // Feedback to send to Claude
+  setPreviewBpmnXml: (xml: string | null, source?: { messageId: string; description: string }) => void;
+  acceptPreview: (createNewVersion?: boolean) => { accepted: boolean; xml: string | null };
+  rejectPreview: () => void;
+  clearPreview: () => void;
+  sendPreviewFeedback: (feedback: string) => void;
+  clearPendingFeedback: () => void;
+
   // Chat State
   chatMessages: ChatMessage[];
   addChatMessage: (message: ChatMessage) => void;
@@ -213,6 +228,52 @@ export const useAppStore = create<AppState>((set) => ({
   // BPMN XML
   currentBpmnXml: null,
   setCurrentBpmnXml: (xml) => set({ currentBpmnXml: xml }),
+
+  // BPMN Preview State
+  previewBpmnXml: null,
+  previewSource: null,
+  isPreviewMode: false,
+  pendingFeedback: null,
+  setPreviewBpmnXml: (xml, source) =>
+    set({
+      previewBpmnXml: xml,
+      previewSource: source || null,
+      isPreviewMode: !!xml,
+    }),
+  acceptPreview: (createNewVersion = false) => {
+    const state = useAppStore.getState();
+    const xml = state.previewBpmnXml;
+    if (xml) {
+      set({
+        currentBpmnXml: xml,
+        previewBpmnXml: null,
+        previewSource: null,
+        isPreviewMode: false,
+        pendingFeedback: null,
+        editor: { ...state.editor, isDirty: true },
+      });
+      return { accepted: true, xml, createNewVersion };
+    }
+    return { accepted: false, xml: null };
+  },
+  rejectPreview: () =>
+    set({
+      previewBpmnXml: null,
+      previewSource: null,
+      isPreviewMode: false,
+      pendingFeedback: null,
+    }),
+  clearPreview: () =>
+    set({
+      previewBpmnXml: null,
+      previewSource: null,
+      isPreviewMode: false,
+      pendingFeedback: null,
+    }),
+  sendPreviewFeedback: (feedback) =>
+    set({ pendingFeedback: feedback }),
+  clearPendingFeedback: () =>
+    set({ pendingFeedback: null }),
 
   // Chat State
   chatMessages: [],

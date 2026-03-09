@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import BpmnViewer from 'bpmn-js/lib/NavigatedViewer';
 import { useAppStore } from '../../store/useAppStore';
-import { ZoomIn, ZoomOut, Maximize2, Download } from 'lucide-react';
+import { PreviewBanner } from './PreviewBanner';
+import { ZoomIn, ZoomOut, Maximize2, Download, Eye } from 'lucide-react';
 
 const EMPTY_BPMN = `<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
@@ -23,10 +24,22 @@ const EMPTY_BPMN = `<?xml version="1.0" encoding="UTF-8"?>
 export function BPMNViewer() {
   const containerRef = useRef<HTMLDivElement>(null);
   const viewerRef = useRef<any>(null);
-  const { currentBpmnXml, setZoom, editor } = useAppStore();
+  const {
+    currentBpmnXml,
+    setZoom,
+    editor,
+    // Preview state
+    previewBpmnXml,
+    isPreviewMode,
+    acceptPreview,
+    rejectPreview,
+    setCurrentBpmnXml,
+    markDirty,
+  } = useAppStore();
   const [error, setError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const lastLoadedXmlRef = useRef<string | null>(null);
+  const [showingPreview, setShowingPreview] = useState(true);
 
   // Initialize viewer once
   useEffect(() => {
@@ -51,16 +64,26 @@ export function BPMNViewer() {
   useEffect(() => {
     if (!isReady || !viewerRef.current) return;
 
-    const xmlToLoad = currentBpmnXml || EMPTY_BPMN;
+    // Determine which XML to load based on preview mode
+    const xmlToLoad = (isPreviewMode && showingPreview && previewBpmnXml)
+      ? previewBpmnXml
+      : (currentBpmnXml || EMPTY_BPMN);
 
     // Skip if same XML already loaded
     if (lastLoadedXmlRef.current === xmlToLoad) {
       return;
     }
 
-    console.log('[BPMNViewer] Loading diagram...', xmlToLoad.substring(0, 50));
+    console.log('[BPMNViewer] Loading diagram...', isPreviewMode ? '(PREVIEW)' : '', xmlToLoad.substring(0, 50));
     loadDiagram(xmlToLoad);
-  }, [isReady, currentBpmnXml]);
+  }, [isReady, currentBpmnXml, previewBpmnXml, isPreviewMode, showingPreview]);
+
+  // Reset to showing preview when entering preview mode
+  useEffect(() => {
+    if (isPreviewMode) {
+      setShowingPreview(true);
+    }
+  }, [isPreviewMode]);
 
   const loadDiagram = async (xml: string) => {
     if (!viewerRef.current) return;
@@ -138,8 +161,35 @@ export function BPMNViewer() {
     }
   };
 
+  // Preview mode handlers
+  const handleAcceptPreview = (createNewVersion: boolean) => {
+    const result = acceptPreview(createNewVersion);
+    if (result.accepted) {
+      console.log('[BPMNViewer] Preview accepted', createNewVersion ? '(new version)' : '(update)');
+      if (createNewVersion) {
+        markDirty();
+      }
+    }
+  };
+
+  const handleRejectPreview = () => {
+    rejectPreview();
+    console.log('[BPMNViewer] Preview rejected');
+    if (currentBpmnXml) {
+      loadDiagram(currentBpmnXml);
+    }
+  };
+
   return (
     <div className="relative w-full h-full flex flex-col bg-slate-50">
+      {/* Preview Banner */}
+      {isPreviewMode && (
+        <PreviewBanner
+          onAccept={handleAcceptPreview}
+          onReject={handleRejectPreview}
+        />
+      )}
+
       {/* Toolbar */}
       <div className="h-10 border-b border-slate-200 bg-white flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
@@ -194,16 +244,47 @@ export function BPMNViewer() {
           </div>
         )}
         <div ref={containerRef} className="absolute inset-0 bpmn-container" />
+
+        {/* Preview/Current Toggle */}
+        {isPreviewMode && (
+          <div className="absolute bottom-4 left-4 z-20 flex items-center gap-1 bg-white rounded-xl shadow-lg border border-slate-200 p-1">
+            <button
+              onClick={() => setShowingPreview(false)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                !showingPreview
+                  ? 'bg-violet-100 text-violet-700'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Current
+            </button>
+            <button
+              onClick={() => setShowingPreview(true)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                showingPreview
+                  ? 'bg-amber-100 text-amber-700'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              <Eye className="w-4 h-4" />
+              Preview
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Status Bar - Minimal height */}
-      <div className="h-6 border-t border-slate-100 bg-white flex items-center justify-between px-4 text-2xs text-slate-400">
+      <div className={`h-6 border-t border-slate-100 bg-white flex items-center justify-between px-4 text-2xs ${isPreviewMode && showingPreview ? 'bg-amber-50 text-amber-600' : 'text-slate-400'}`}>
         <div>
-          {editor.lastSaved
-            ? `Saved ${new Date(editor.lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-            : 'Not saved'}
+          {isPreviewMode && showingPreview ? (
+            'Preview - Changes not yet applied'
+          ) : editor.lastSaved ? (
+            `Saved ${new Date(editor.lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+          ) : (
+            'Not saved'
+          )}
         </div>
-        <span>View mode</span>
+        <span>{isPreviewMode && showingPreview ? 'Preview mode' : 'View mode'}</span>
       </div>
     </div>
   );
