@@ -12,23 +12,43 @@ export function formatDate(date: Date | string): string {
 }
 
 export function extractBpmnXmlFromText(text: string): string | null {
-  // Try to extract BPMN XML from markdown code blocks
-  const xmlBlockMatch = text.match(/```xml\n([\s\S]*?)\n```/);
+  console.log('[extractBpmnXml] Searching for BPMN XML in text of length:', text.length);
+
+  // Try to extract BPMN XML from markdown code blocks (flexible whitespace)
+  const xmlBlockMatch = text.match(/```xml\s*([\s\S]*?)\s*```/);
   if (xmlBlockMatch) {
+    console.log('[extractBpmnXml] Found XML in markdown code block');
     return xmlBlockMatch[1].trim();
   }
 
-  // Try to extract raw XML
-  const xmlMatch = text.match(/<\?xml[\s\S]*?<\/bpmn.*?definitions>/);
-  if (xmlMatch) {
-    return xmlMatch[0];
+  // Try generic code block that contains BPMN
+  const codeBlockMatch = text.match(/```\s*([\s\S]*?<bpmn:definitions[\s\S]*?<\/bpmn:definitions>[\s\S]*?)\s*```/);
+  if (codeBlockMatch) {
+    console.log('[extractBpmnXml] Found BPMN in generic code block');
+    return codeBlockMatch[1].trim();
+  }
+
+  // Try to extract raw XML with bpmn:definitions
+  const bpmnMatch = text.match(/<\?xml[\s\S]*?<\/bpmn:definitions>/);
+  if (bpmnMatch) {
+    console.log('[extractBpmnXml] Found raw BPMN XML');
+    return bpmnMatch[0];
+  }
+
+  // Try without XML declaration
+  const bpmnOnlyMatch = text.match(/<bpmn:definitions[\s\S]*?<\/bpmn:definitions>/);
+  if (bpmnOnlyMatch) {
+    console.log('[extractBpmnXml] Found BPMN definitions without XML declaration');
+    return bpmnOnlyMatch[0];
   }
 
   // Check if the entire text looks like XML
   if (text.trim().startsWith('<?xml') || text.trim().startsWith('<bpmn')) {
+    console.log('[extractBpmnXml] Text starts with XML/BPMN');
     return text.trim();
   }
 
+  console.log('[extractBpmnXml] No BPMN XML found');
   return null;
 }
 

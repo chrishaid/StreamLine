@@ -1,10 +1,57 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Minimize2, MessageSquare, Loader2, AlertCircle, Code, ChevronDown, ChevronRight } from 'lucide-react';
+import { Send, Minimize2, MessageSquare, Loader2, AlertCircle, Code, ChevronDown, ChevronRight, Sparkles, FileCode } from 'lucide-react';
 import { useAppStore } from '../../store/useAppStore';
 import type { ChatMessage } from '../../types';
 import { chatApi } from '../../services/api';
 import { extractBpmnXmlFromText, validateBpmnXml } from '../../utils/helpers';
 import ReactMarkdown from 'react-markdown';
+
+// Streaming status component
+function StreamingStatus({ content, isExpanded, onToggle }: {
+  content: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  // Detect what Claude is doing based on content patterns
+  const getStatus = () => {
+    if (content.includes('```xml') || content.includes('<bpmn:')) {
+      return { icon: FileCode, text: 'Generating BPMN diagram...', color: 'text-violet-600' };
+    }
+    if (content.includes('##') || content.includes('**')) {
+      return { icon: Sparkles, text: 'Formatting response...', color: 'text-blue-600' };
+    }
+    return { icon: Loader2, text: 'Claude is thinking...', color: 'text-slate-500' };
+  };
+
+  const status = getStatus();
+  const Icon = status.icon;
+  const charCount = content.length;
+
+  return (
+    <div className="bg-gradient-to-r from-violet-50 to-slate-50 rounded-2xl border border-violet-100 overflow-hidden">
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-violet-50/50 transition-colors"
+      >
+        <Icon className={`w-4 h-4 ${status.color} ${status.icon === Loader2 ? 'animate-spin' : ''}`} />
+        <span className="text-sm font-medium text-slate-700">{status.text}</span>
+        <span className="text-2xs text-slate-400 ml-auto">{charCount} chars</span>
+        {isExpanded ? (
+          <ChevronDown className="w-4 h-4 text-slate-400" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-slate-400" />
+        )}
+      </button>
+      {isExpanded && (
+        <div className="px-4 pb-3 max-h-32 overflow-y-auto">
+          <p className="text-xs text-slate-500 whitespace-pre-wrap font-mono">
+            {content.slice(-500)}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Component to render message content with markdown and collapsed XML
 function MessageContent({ content, isUser }: { content: string; isUser: boolean }) {
@@ -131,6 +178,8 @@ export function ChatPanel() {
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [streamingContent, setStreamingContent] = useState('');
+  const [showStreamingDetails, setShowStreamingDetails] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -184,30 +233,65 @@ Please update the BPMN diagram based on this feedback.`;
     }
 
     try {
-      // Call backend API - include current or preview BPMN XML for context
-      // When in preview mode, send the preview XML so Claude knows what to modify
+      // Call backend API with streaming - include current or preview BPMN XML for context
       const xmlContext = isPreviewMode && previewBpmnXml ? previewBpmnXml : currentBpmnXml;
-      const response = await chatApi.sendMessage({
+
+      setStreamingContent('');
+      let fullContent = '';
+      let finalSessionId = newSessionId;
+
+      // Use streaming API for real-time updates
+      for await (const chunk of chatApi.sendMessageStream({
         message: messageText,
         sessionId: newSessionId,
         processId: currentProcess?.id,
         includeContext: true,
         bpmnXml: xmlContext || undefined,
-      });
+      })) {
+        if (chunk.type === 'content') {
+          fullContent = chunk.fullContent || '';
+          setStreamingContent(fullContent);
+          if (chunk.sessionId) finalSessionId = chunk.sessionId;
+        } else if (chunk.type === 'done') {
+          if (chunk.sessionId) finalSessionId = chunk.sessionId;
+        } else if (chunk.type === 'error') {
+          throw new Error(chunk.error);
+        }
+      }
 
-      // Add assistant's message
-      addChatMessage(response.message);
+      // Clear streaming state
+      setStreamingContent('');
+
+      // Create and add the assistant message
+      const assistantMessage: ChatMessage = {
+        id: crypto.randomUUID(),
+        sessionId: finalSessionId,
+        processId: currentProcess?.id || null,
+        role: 'assistant',
+        content: fullContent,
+        createdAt: new Date(),
+      };
+      addChatMessage(assistantMessage);
 
       // Check if the response contains BPMN XML
-      const bpmnXml = extractBpmnXmlFromText(response.message.content);
-      if (bpmnXml && validateBpmnXml(bpmnXml)) {
-        // Use preview mode instead of direct update
-        // This allows user to review changes before accepting
-        setPreviewBpmnXml(bpmnXml, {
-          messageId: response.message.id,
-          description: 'Claude suggested diagram changes',
-        });
-        console.log('BPMN XML extracted - preview mode activated:', bpmnXml.substring(0, 100) + '...');
+      console.log('[ChatPanel] Response received, checking for BPMN XML...');
+      console.log('[ChatPanel] Content length:', fullContent.length);
+      const bpmnXml = extractBpmnXmlFromText(fullContent);
+      console.log('[ChatPanel] Extracted XML:', bpmnXml ? `${bpmnXml.length} chars` : 'null');
+
+      if (bpmnXml) {
+        const isValid = validateBpmnXml(bpmnXml);
+        console.log('[ChatPanel] XML validation result:', isValid);
+
+        if (isValid) {
+          // Use preview mode instead of direct update
+          // This allows user to review changes before accepting
+          setPreviewBpmnXml(bpmnXml, {
+            messageId: assistantMessage.id,
+            description: 'Claude suggested diagram changes',
+          });
+          console.log('[ChatPanel] Preview mode activated');
+        }
       }
     } catch (err: any) {
       console.error('Failed to send message:', err);
@@ -302,7 +386,19 @@ Please update the BPMN diagram based on this feedback.`;
                 </div>
               </div>
             ))}
-            {isSending && <TypingIndicator />}
+            {isSending && streamingContent ? (
+              <div className="flex justify-start">
+                <div className="max-w-[85%]">
+                  <StreamingStatus
+                    content={streamingContent}
+                    isExpanded={showStreamingDetails}
+                    onToggle={() => setShowStreamingDetails(!showStreamingDetails)}
+                  />
+                </div>
+              </div>
+            ) : isSending ? (
+              <TypingIndicator />
+            ) : null}
             <div ref={messagesEndRef} />
           </>
         )}
