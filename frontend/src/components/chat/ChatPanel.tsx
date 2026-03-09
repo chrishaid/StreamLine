@@ -93,7 +93,7 @@ function TypingIndicator() {
   );
 }
 
-const POSITION_CLASSES = {
+const POSITION_CLASSES: Record<'right' | 'left' | 'bottom', { panel: string; collapsed: string }> = {
   right: {
     panel: 'right-4 md:right-8 top-20 md:top-48 bottom-4 md:bottom-8 w-[calc(100vw-2rem)] md:w-[380px] lg:w-[420px]',
     collapsed: 'right-4 md:right-8 bottom-4 md:bottom-8',
@@ -116,7 +116,6 @@ export function ChatPanel() {
     toggleChatPanel,
     currentSessionId,
     setCurrentSessionId,
-    setCurrentBpmnXml,
     currentBpmnXml,
     currentProcess,
     userPreferences,
@@ -127,7 +126,7 @@ export function ChatPanel() {
     previewBpmnXml,
   } = useAppStore();
 
-  const position = userPreferences.chatPosition || 'right';
+  const position = (userPreferences.chatPosition || 'right') as 'right' | 'left' | 'bottom';
   const positionClasses = POSITION_CLASSES[position];
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -282,7 +281,7 @@ Please update the BPMN diagram based on this feedback.`;
           </div>
         ) : (
           <>
-            {chatMessages.map((message) => (
+            {chatMessages.map((message: ChatMessage) => (
               <div
                 key={message.id}
                 className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}

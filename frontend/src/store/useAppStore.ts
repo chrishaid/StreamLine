@@ -102,7 +102,7 @@ interface AppState {
   updateUserPreference: <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
   // Authentication State
   user: null,
   isAuthenticated: false,
@@ -240,8 +240,8 @@ export const useAppStore = create<AppState>((set) => ({
       previewSource: source || null,
       isPreviewMode: !!xml,
     }),
-  acceptPreview: (createNewVersion = false) => {
-    const state = useAppStore.getState();
+  acceptPreview: (createNewVersion = false): { accepted: boolean; xml: string | null; createNewVersion?: boolean } => {
+    const state = get();
     const xml = state.previewBpmnXml;
     if (xml) {
       set({

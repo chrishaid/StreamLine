@@ -33,7 +33,6 @@ export function BPMNViewer() {
     isPreviewMode,
     acceptPreview,
     rejectPreview,
-    setCurrentBpmnXml,
     markDirty,
   } = useAppStore();
   const [error, setError] = useState<string | null>(null);
