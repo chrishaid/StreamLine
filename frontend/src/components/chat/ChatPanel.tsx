@@ -5,6 +5,7 @@ import type { ChatMessage } from '../../types';
 import { chatApi } from '../../services/api';
 import { extractBpmnXmlFromText, validateBpmnXml } from '../../utils/helpers';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 // Streaming status component
 function StreamingStatus({ content, isExpanded, onToggle }: {
@@ -75,6 +76,7 @@ function MessageContent({ content, isUser }: { content: string; isUser: boolean 
   return (
     <div className="text-sm leading-relaxed">
       <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => <h1 className="text-lg font-bold mb-2 mt-3">{children}</h1>,
           h2: ({ children }) => <h2 className="text-base font-semibold mb-2 mt-3">{children}</h2>,
@@ -90,6 +92,28 @@ function MessageContent({ content, isUser }: { content: string; isUser: boolean 
           ),
           pre: ({ children }) => (
             <pre className="bg-forest/10 p-3 rounded-lg overflow-x-auto text-xs font-mono my-2">{children}</pre>
+          ),
+          table: ({ children }) => (
+            <div className="overflow-x-auto my-3">
+              <table className="min-w-full text-xs border-collapse border border-slate-200 rounded-lg overflow-hidden">
+                {children}
+              </table>
+            </div>
+          ),
+          thead: ({ children }) => (
+            <thead className="bg-slate-100">{children}</thead>
+          ),
+          tbody: ({ children }) => (
+            <tbody className="divide-y divide-slate-200">{children}</tbody>
+          ),
+          tr: ({ children }) => (
+            <tr className="hover:bg-slate-50">{children}</tr>
+          ),
+          th: ({ children }) => (
+            <th className="px-3 py-2 text-left font-semibold text-slate-700 border-b border-slate-200">{children}</th>
+          ),
+          td: ({ children }) => (
+            <td className="px-3 py-2 text-slate-600 border-b border-slate-100">{children}</td>
           ),
         }}
       >
