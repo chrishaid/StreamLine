@@ -77,12 +77,12 @@ export function BPMNViewer() {
     loadDiagram(xmlToLoad);
   }, [isReady, currentBpmnXml, previewBpmnXml, isPreviewMode, showingPreview]);
 
-  // Reset to showing preview when entering preview mode
+  // Reset to showing preview when entering preview mode OR when preview XML changes
   useEffect(() => {
-    if (isPreviewMode) {
+    if (isPreviewMode && previewBpmnXml) {
       setShowingPreview(true);
     }
-  }, [isPreviewMode]);
+  }, [isPreviewMode, previewBpmnXml]);
 
   const loadDiagram = async (xml: string) => {
     if (!viewerRef.current) return;

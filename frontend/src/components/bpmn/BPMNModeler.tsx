@@ -104,12 +104,12 @@ export function BPMNModeler() {
     loadDiagram(xmlToLoad);
   }, [isReady, currentBpmnXml, previewBpmnXml, isPreviewMode, showingPreview]);
 
-  // Reset to showing preview when entering preview mode
+  // Reset to showing preview when entering preview mode OR when preview XML changes
   useEffect(() => {
-    if (isPreviewMode) {
+    if (isPreviewMode && previewBpmnXml) {
       setShowingPreview(true);
     }
-  }, [isPreviewMode]);
+  }, [isPreviewMode, previewBpmnXml]);
 
   const handleCommandStackChanged = () => {
     const commandStack = modelerRef.current?.get('commandStack');
