@@ -9,7 +9,7 @@ export async function sendMessage(
   next: NextFunction
 ) {
   try {
-    const { message, sessionId, processId, includeContext } = req.body;
+    const { message, sessionId, processId, includeContext, bpmnXml } = req.body;
 
     if (!message) {
       return res.status(400).json({
@@ -22,6 +22,7 @@ export async function sendMessage(
       sessionId,
       processId,
       includeContext,
+      bpmnXml,
     });
 
     res.json(response);

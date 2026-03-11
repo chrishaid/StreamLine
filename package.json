@@ -1,0 +1,12 @@
+{
+  "name": "streamline",
+  "private": true,
+  "version": "1.0.0",
+  "description": "StreamLine BPMN Process Hub",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.1",
+    "@supabase/supabase-js": "^2.86.2",
+    "@vercel/node": "^5.5.15",
+    "resend": "^6.6.0"
+  }
+}

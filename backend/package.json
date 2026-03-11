@@ -20,6 +20,7 @@
     "@anthropic-ai/sdk": "^0.70.1",
     "@azure/msal-node": "^3.8.4",
     "@prisma/client": "^5.22.0",
+    "@supabase/supabase-js": "^2.86.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -27,7 +28,8 @@
     "express-session": "^1.18.2",
     "jsonwebtoken": "^9.0.3",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "resend": "^6.6.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",

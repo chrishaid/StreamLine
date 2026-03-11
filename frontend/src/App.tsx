@@ -1,19 +1,29 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './components/auth/AuthProvider';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { ThemeProvider } from './context/ThemeContext';
 import { HomePage } from './pages/HomePage';
 import { EditorPage } from './pages/EditorPage';
+import { TagsPage } from './pages/TagsPage';
+import { OrganizationsPage } from './pages/OrganizationsPage';
+import { OrganizationDetailPage } from './pages/OrganizationDetailPage';
+import { InviteAcceptPage } from './pages/InviteAcceptPage';
 import { LoginPage } from './pages/LoginPage';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
+import { HelpPage } from './pages/HelpPage';
+import { BulkUploadPage } from './pages/BulkUploadPage';
+import { SpotlightTutorial } from './components/help/SpotlightTutorial';
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
+        <ThemeProvider>
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/invite/:token" element={<InviteAcceptPage />} />
 
           {/* Protected routes */}
           <Route
@@ -40,10 +50,52 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/tags"
+            element={
+              <ProtectedRoute>
+                <TagsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizations"
+            element={
+              <ProtectedRoute>
+                <OrganizationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/organizations/:slug"
+            element={
+              <ProtectedRoute>
+                <OrganizationDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/help"
+            element={
+              <ProtectedRoute>
+                <HelpPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bulk-upload"
+            element={
+              <ProtectedRoute>
+                <BulkUploadPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <SpotlightTutorial />
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   );

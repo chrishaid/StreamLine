@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.70.1",
+    "@supabase/supabase-js": "^2.86.2",
     "@tailwindcss/postcss": "^4.1.17",
     "axios": "^1.13.2",
     "bpmn-js": "^18.9.1",
@@ -19,7 +20,10 @@
     "lucide-react": "^0.554.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.9.6",
+    "remark-gfm": "^4.0.1",
+    "resend": "^6.6.0",
     "tailwind-merge": "^3.4.0",
     "zustand": "^5.0.8"
   },
@@ -29,6 +33,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
+    "@vercel/node": "^5.5.15",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.22",
     "eslint": "^9.39.1",

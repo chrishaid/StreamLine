@@ -7,6 +7,7 @@ import passport from './config/passport';
 import { chatRouter } from './routes/chat';
 import { processRouter } from './routes/process';
 import { authRouter } from './routes/auth';
+import { organizationRouter } from './routes/organization';
 import { errorHandler } from './middleware/errorHandler';
 import { authenticateToken } from './middleware/auth';
 
@@ -50,6 +51,7 @@ app.use('/auth', authRouter);
 // API Routes (protected)
 app.use('/api/chat', authenticateToken, chatRouter);
 app.use('/api/processes', authenticateToken, processRouter);
+app.use('/api/organizations', authenticateToken, organizationRouter);
 
 // Error handling
 app.use(errorHandler);

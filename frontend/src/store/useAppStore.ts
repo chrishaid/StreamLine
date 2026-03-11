@@ -1,6 +1,20 @@
 import { create } from 'zustand';
-import type { Process, Category, ChatMessage, UIState, BPMNEditorState } from '../types';
+import type { Process, Category, ChatMessage, UIState, BPMNEditorState, OrganizationWithMembership } from '../types';
 import type { AuthUser } from '../services/authApi';
+
+export interface UserPreferences {
+  theme: 'light' | 'dark';
+  chatPosition: 'right' | 'left' | 'bottom';
+  autoSaveInterval: number; // in seconds, 0 = disabled
+  defaultView: string;
+}
+
+export const DEFAULT_PREFERENCES: UserPreferences = {
+  theme: 'light',
+  chatPosition: 'right',
+  autoSaveInterval: 60,
+  defaultView: 'browse',
+};
 
 interface AppState {
   // Authentication State
@@ -11,11 +25,17 @@ interface AppState {
   setAuthLoading: (loading: boolean) => void;
   logout: () => void;
 
+  // Organization State
+  currentOrganization: OrganizationWithMembership | null; // null = personal workspace
+  setCurrentOrganization: (org: OrganizationWithMembership | null) => void;
+
   // UI State
   ui: UIState;
   setActiveView: (view: UIState['activeView']) => void;
   toggleSidebar: () => void;
   toggleChatPanel: () => void;
+  toggleEditorMaximized: () => void;
+  setEditorMaximized: (maximized: boolean) => void;
   setSelectedProcess: (process: Process | null) => void;
   setSelectedCategory: (category: Category | null) => void;
 
@@ -48,6 +68,21 @@ interface AppState {
   currentBpmnXml: string | null;
   setCurrentBpmnXml: (xml: string | null) => void;
 
+  // BPMN Preview State (for Claude-suggested changes)
+  previewBpmnXml: string | null;
+  previewSource: {
+    messageId: string;
+    description: string;
+  } | null;
+  isPreviewMode: boolean;
+  pendingFeedback: string | null; // Feedback to send to Claude
+  setPreviewBpmnXml: (xml: string | null, source?: { messageId: string; description: string }) => void;
+  acceptPreview: (createNewVersion?: boolean) => { accepted: boolean; xml: string | null };
+  rejectPreview: () => void;
+  clearPreview: () => void;
+  sendPreviewFeedback: (feedback: string) => void;
+  clearPendingFeedback: () => void;
+
   // Chat State
   chatMessages: ChatMessage[];
   addChatMessage: (message: ChatMessage) => void;
@@ -60,21 +95,31 @@ interface AppState {
   setIsLoading: (loading: boolean) => void;
   loadingMessage: string | null;
   setLoadingMessage: (message: string | null) => void;
+
+  // User Preferences
+  userPreferences: UserPreferences;
+  setUserPreferences: (prefs: UserPreferences) => void;
+  updateUserPreference: <K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) => void;
 }
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
   // Authentication State
   user: null,
   isAuthenticated: false,
   isAuthLoading: true,
   setUser: (user) => set({ user, isAuthenticated: !!user }),
   setAuthLoading: (loading) => set({ isAuthLoading: loading }),
-  logout: () => set({ user: null, isAuthenticated: false }),
+  logout: () => set({ user: null, isAuthenticated: false, currentOrganization: null }),
+
+  // Organization State
+  currentOrganization: null,
+  setCurrentOrganization: (org) => set({ currentOrganization: org }),
 
   // Initial UI State
   ui: {
     sidebarCollapsed: false,
     chatPanelCollapsed: false,
+    editorMaximized: false,
     activeView: 'browse',
     selectedProcess: null,
     selectedCategory: null,
@@ -89,6 +134,14 @@ export const useAppStore = create<AppState>((set) => ({
     set((state) => ({
       ui: { ...state.ui, chatPanelCollapsed: !state.ui.chatPanelCollapsed },
     })),
+  toggleEditorMaximized: () =>
+    set((state) => ({
+      ui: { ...state.ui, editorMaximized: !state.ui.editorMaximized },
+    })),
+  setEditorMaximized: (maximized) =>
+    set((state) => ({
+      ui: { ...state.ui, editorMaximized: maximized },
+    })),
   setSelectedProcess: (process) =>
     set((state) => ({ ui: { ...state.ui, selectedProcess: process } })),
   setSelectedCategory: (category) =>
@@ -97,14 +150,35 @@ export const useAppStore = create<AppState>((set) => ({
   // Process Management
   processes: [],
   setProcesses: (processes) => set({ processes }),
-  addProcess: (process) =>
-    set((state) => ({ processes: [...state.processes, process] })),
-  updateProcess: (id, updates) =>
-    set((state) => ({
-      processes: state.processes.map((p) =>
-        p.id === id ? { ...p, ...updates } : p
-      ),
-    })),
+  addProcess: (process) => {
+    console.log('[Store] addProcess called:', { process, currentProcesses: useAppStore.getState().processes.length });
+    set((state) => {
+      const newProcesses = [...state.processes, process];
+      console.log('[Store] Processes after add:', newProcesses.map(p => ({ id: p.id, name: p.name })));
+      return { processes: newProcesses };
+    });
+  },
+  updateProcess: (id, updates) => {
+    console.log('[Store] updateProcess called:', { id, updates, currentProcesses: useAppStore.getState().processes.length });
+    set((state) => {
+      const processExists = state.processes.some((p) => p.id === id);
+      let newProcesses;
+
+      if (processExists) {
+        // Update existing process
+        newProcesses = state.processes.map((p) =>
+          p.id === id ? { ...p, ...updates } : p
+        );
+      } else {
+        // Process not in array yet - add it if updates has all required fields
+        console.log('[Store] Process not found in array, adding it');
+        newProcesses = [...state.processes, updates as Process];
+      }
+
+      console.log('[Store] Processes after update:', newProcesses.map(p => ({ id: p.id, name: p.name })));
+      return { processes: newProcesses };
+    });
+  },
   deleteProcess: (id) =>
     set((state) => ({
       processes: state.processes.filter((p) => p.id !== id),
@@ -155,6 +229,52 @@ export const useAppStore = create<AppState>((set) => ({
   currentBpmnXml: null,
   setCurrentBpmnXml: (xml) => set({ currentBpmnXml: xml }),
 
+  // BPMN Preview State
+  previewBpmnXml: null,
+  previewSource: null,
+  isPreviewMode: false,
+  pendingFeedback: null,
+  setPreviewBpmnXml: (xml, source) =>
+    set({
+      previewBpmnXml: xml,
+      previewSource: source || null,
+      isPreviewMode: !!xml,
+    }),
+  acceptPreview: (createNewVersion = false): { accepted: boolean; xml: string | null; createNewVersion?: boolean } => {
+    const state = get();
+    const xml = state.previewBpmnXml;
+    if (xml) {
+      set({
+        currentBpmnXml: xml,
+        previewBpmnXml: null,
+        previewSource: null,
+        isPreviewMode: false,
+        pendingFeedback: null,
+        editor: { ...state.editor, isDirty: true },
+      });
+      return { accepted: true, xml, createNewVersion };
+    }
+    return { accepted: false, xml: null };
+  },
+  rejectPreview: () =>
+    set({
+      previewBpmnXml: null,
+      previewSource: null,
+      isPreviewMode: false,
+      pendingFeedback: null,
+    }),
+  clearPreview: () =>
+    set({
+      previewBpmnXml: null,
+      previewSource: null,
+      isPreviewMode: false,
+      pendingFeedback: null,
+    }),
+  sendPreviewFeedback: (feedback) =>
+    set({ pendingFeedback: feedback }),
+  clearPendingFeedback: () =>
+    set({ pendingFeedback: null }),
+
   // Chat State
   chatMessages: [],
   addChatMessage: (message) =>
@@ -168,4 +288,12 @@ export const useAppStore = create<AppState>((set) => ({
   setIsLoading: (loading) => set({ isLoading: loading }),
   loadingMessage: null,
   setLoadingMessage: (message) => set({ loadingMessage: message }),
+
+  // User Preferences
+  userPreferences: DEFAULT_PREFERENCES,
+  setUserPreferences: (prefs) => set({ userPreferences: prefs }),
+  updateUserPreference: (key, value) =>
+    set((state) => ({
+      userPreferences: { ...state.userPreferences, [key]: value },
+    })),
 }));

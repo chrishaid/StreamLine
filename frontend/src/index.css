@@ -1,20 +1,87 @@
 @import "tailwindcss";
+@config "../tailwind.config.js";
 
-* {
-  margin: 0;
-  padding: 0;
+/* StreamLine - Violet Process Theme */
+:root {
+  /* Violet palette - Process Improvement */
+  --color-violet-50: #faf5ff;
+  --color-violet-100: #f3e8ff;
+  --color-violet-200: #e9d5ff;
+  --color-violet-300: #c084fc;
+  --color-violet-400: #a855f7;
+  --color-violet-500: #9333ea;
+  --color-violet-600: #7c3aed;
+  --color-violet-700: #6d28d9;
+  --color-violet-800: #5b21b6;
+  --color-violet-900: #4c1d95;
+
+  /* Neutrals */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
+
+  /* Semantic tokens */
+  --bg-primary: #ffffff;
+  --bg-secondary: #fefcff;
+  --bg-tertiary: #f3e8ff;
+  --bg-accent: #7c3aed;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --text-accent: #7c3aed;
+  --border-color: #e9d5ff;
+  --border-hover: #c084fc;
+  --accent-color: #7c3aed;
+  --accent-hover: #6d28d9;
+
+  /* Layout dimensions */
+  --sidebar-width: 320px;
+  --sidebar-collapsed-width: 80px;
+  --chat-panel-width: 420px;
+}
+
+.dark {
+  --bg-primary: #1e293b;
+  --bg-secondary: #0f172a;
+  --bg-tertiary: #334155;
+  --text-primary: #f3e8ff;
+  --text-secondary: #c084fc;
+  --text-muted: #94a3b8;
+  --border-color: #475569;
+  --border-hover: #7c3aed;
+  --accent-color: #a855f7;
+  --accent-hover: #c084fc;
+}
+
+/* Reset and base styles */
+*, *::before, *::after {
   box-sizing: border-box;
+  margin: 2.25px;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  line-height: 1.5;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 #root {
@@ -23,15 +90,60 @@ body {
   overflow: hidden;
 }
 
-/* BPMN specific styles */
+/* Elegant violet scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c084fc;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a855f7;
+}
+
+/* Selection styling with violet accent */
+::selection {
+  background-color: rgba(124, 58, 237, 0.2);
+  color: inherit;
+}
+
+/* Focus ring styling - violet accent */
+:focus-visible {
+  outline: 2px solid rgba(124, 58, 237, 0.6);
+  outline-offset: 2px;
+}
+
+/* Smooth transitions for interactive elements */
+button, a, input, select, textarea {
+  transition: all 0.15s ease;
+}
+
+/* BPMN Container Styles */
 .bpmn-container {
   width: 100%;
   height: 100%;
   position: relative;
+  background-color: #fefcff;
 }
 
 .bjs-container {
-  background-color: white;
+  background-color: #fefcff;
+}
+
+/* BPMN canvas with subtle violet-tinted grid */
+.bjs-container .djs-container {
+  background-image:
+    linear-gradient(to right, #e9d5ff 1px, transparent 1px),
+    linear-gradient(to bottom, #e9d5ff 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .djs-overlay-context-pad {
@@ -40,9 +152,255 @@ body {
 
 .djs-palette {
   z-index: 100;
+  background: white !important;
+  border: 1px solid #e9d5ff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.1), 0 8px 24px -4px rgba(124, 58, 237, 0.15) !important;
+}
+
+.djs-palette .entry:hover {
+  background-color: #f3e8ff !important;
 }
 
 .djs-container svg {
   min-height: 100%;
   min-width: 100%;
+}
+
+/* Properties panel styling */
+.bpp-properties-panel {
+  background: white !important;
+  border-left: 1px solid #e9d5ff !important;
+}
+
+/* Context pad styling */
+.djs-context-pad {
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.12) !important;
+}
+
+/* BPMN.io powered-by logo */
+.bjs-powered-by {
+  right: auto !important;
+  left: 15px !important;
+  bottom: 15px !important;
+  transform: scale(0.6) !important;
+  transform-origin: bottom left !important;
+  opacity: 0.7 !important;
+}
+
+/* Button base styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.75rem;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Primary button - violet gradient */
+.btn-primary {
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+  color: white;
+  box-shadow: 0 2px 8px -2px rgba(124, 58, 237, 0.3);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
+  box-shadow: 0 4px 12px -2px rgba(124, 58, 237, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Input base styles - violet themed */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea,
+select {
+  background-color: white;
+  border: 1px solid #e9d5ff;
+  border-radius: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  color: #1e293b;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+  outline: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* Card hover effect with violet glow */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(124, 58, 237, 0.15);
+}
+
+/* Subtle divider with violet */
+.divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e9d5ff, transparent);
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Slide up animation */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Shimmer animation for loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f3e8ff 25%, #e9d5ff 50%, #f3e8ff 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Glow animation */
+@keyframes glow {
+  0% {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 30px rgba(124, 58, 237, 0.4);
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+/* Brand Typography */
+.brand-heading {
+  font-family: "Computer Modern Serif", "Latin Modern Roman", Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  color: #5b21b6;
+}
+
+/* Range Logo text styling */
+.range-wordmark {
+  font-family: "Computer Modern Serif", "Latin Modern Roman", Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Violet gradient text */
+.text-gradient-violet {
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 50%, #a855f7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(124, 58, 237, 0.1);
+}
+
+.glass-violet {
+  background: rgba(243, 232, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+/* Flex item spacing utilities */
+.flex-gap-tight {
+  gap: 2.25px;
+}
+
+.flex-gap-tight > * {
+  margin: 2.25px;
+}
+
+/* Direct flex item margin utility */
+.m-tight {
+  margin: 2.25px;
+}
+
+.mx-tight {
+  margin-left: 2.25px;
+  margin-right: 2.25px;
+}
+
+.my-tight {
+  margin-top: 2.25px;
+  margin-bottom: 2.25px;
 }
