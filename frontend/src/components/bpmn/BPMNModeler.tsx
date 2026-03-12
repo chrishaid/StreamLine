@@ -316,25 +316,25 @@ export function BPMNModeler() {
       )}
 
       {/* Toolbar */}
-      <div className={`h-10 border-b border-slate-200 bg-white flex items-center justify-between px-4 ${isPreviewMode ? 'mt-0' : ''}`}>
+      <div className={`h-12 border-b border-violet-100 bg-white flex items-center justify-between px-4 ${isPreviewMode ? 'mt-0' : ''}`}>
         <div className="flex items-center gap-2">
           <button
             onClick={handleSave}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-accent text-white rounded-md hover:bg-accent-700 transition-colors text-sm font-medium"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-violet-600 to-violet-700 text-white rounded-lg hover:from-violet-700 hover:to-violet-800 transition-all text-sm font-medium shadow-sm shadow-violet-500/20"
           >
             <Save className="w-3.5 h-3.5" />
             Save
           </button>
           {isAutoSaving ? (
-            <span className="text-xs text-accent font-medium">Saving...</span>
+            <span className="text-xs text-violet-600 font-medium animate-pulse">Saving...</span>
           ) : editor.isDirty ? (
             <span className="text-xs text-amber-600 font-medium">Unsaved</span>
           ) : null}
-          <div className="w-px h-5 bg-slate-200 mx-1.5" />
+          <div className="w-px h-5 bg-violet-100 mx-1.5" />
           <button
             onClick={handleUndo}
             disabled={!canUndo}
-            className="p-2 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600"
+            className="p-2 hover:bg-violet-50 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600"
             title="Undo"
           >
             <Undo className="w-4 h-4" />
@@ -342,7 +342,7 @@ export function BPMNModeler() {
           <button
             onClick={handleRedo}
             disabled={!canRedo}
-            className="p-2 hover:bg-slate-100 rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600"
+            className="p-2 hover:bg-violet-50 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-slate-600"
             title="Redo"
           >
             <Redo className="w-4 h-4" />
@@ -351,32 +351,32 @@ export function BPMNModeler() {
         <div className="flex items-center gap-1">
           <button
             onClick={handleZoomOut}
-            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
+            className="p-2 hover:bg-violet-50 rounded-lg transition-colors text-slate-600"
             title="Zoom Out"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
-          <span className="text-xs text-slate-500 min-w-[50px] text-center font-medium">
+          <span className="text-xs text-slate-500 min-w-[50px] text-center font-medium bg-slate-50 px-2 py-1 rounded-md">
             {Math.round(editor.zoom * 100)}%
           </span>
           <button
             onClick={handleZoomIn}
-            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
+            className="p-2 hover:bg-violet-50 rounded-lg transition-colors text-slate-600"
             title="Zoom In"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
           <button
             onClick={handleFitViewport}
-            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
+            className="p-2 hover:bg-violet-50 rounded-lg transition-colors text-slate-600"
             title="Fit to Viewport"
           >
             <Maximize2 className="w-4 h-4" />
           </button>
-          <div className="w-px h-5 bg-slate-200 mx-1.5" />
+          <div className="w-px h-5 bg-violet-100 mx-1.5" />
           <button
             onClick={handleExportSVG}
-            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
+            className="p-2 hover:bg-violet-50 rounded-lg transition-colors text-slate-600"
             title="Export SVG"
           >
             <Download className="w-4 h-4" />
