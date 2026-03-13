@@ -96,13 +96,13 @@ export function SettingsDropdown() {
                 </div>
                 <button
                   onClick={toggleTheme}
-                  className={`relative w-12 h-7 rounded-full transition-colors ${
-                    theme === 'dark' ? 'bg-indigo-500' : 'bg-slate-200'
+                  className={`relative w-11 h-6 rounded-full transition-colors ${
+                    theme === 'dark' ? 'bg-violet-500' : 'bg-slate-300'
                   }`}
                 >
                   <span
-                    className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                      theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                      theme === 'dark' ? 'translate-x-5' : 'translate-x-0'
                     }`}
                   />
                 </button>

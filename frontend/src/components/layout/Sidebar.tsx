@@ -184,7 +184,7 @@ export function Sidebar() {
   return (
     <aside data-tutorial="sidebar" className="w-80 border-r border-violet-100 bg-violet-50/30 flex flex-col">
       {/* Header with collapse button */}
-      <div className="h-14 px-5 flex items-center justify-between border-b border-violet-100 bg-white">
+      <div className="h-16 md:h-18 px-5 flex items-center justify-between border-b border-violet-100 bg-white">
         <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Navigation</span>
         <button
           onClick={toggleSidebar}

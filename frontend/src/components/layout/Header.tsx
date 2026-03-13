@@ -95,7 +95,7 @@ export function Header() {
   };
 
   return (
-    <header className="h-14 md:h-16 border-b border-violet-100 bg-white flex items-center justify-between px-4 md:px-6 lg:px-10">
+    <header className="h-16 md:h-18 border-b border-violet-100 bg-white flex items-center justify-between px-5 md:px-8 lg:px-10">
       {/* Logo and App Name */}
       <div className="flex items-center gap-4 md:gap-6 lg:gap-8">
         <button
