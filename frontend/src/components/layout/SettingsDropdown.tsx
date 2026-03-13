@@ -117,7 +117,7 @@ export function SettingsDropdown() {
                 <select
                   value={userPreferences.chatPosition}
                   onChange={(e) => handleChatPositionChange(e.target.value as 'right' | 'left' | 'bottom')}
-                  className="text-sm border border-mist-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-forest dark:text-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sage/20"
+                  className="text-sm border border-mist-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-forest dark:text-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                 >
                   {CHAT_POSITION_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -136,7 +136,7 @@ export function SettingsDropdown() {
                 <select
                   value={userPreferences.autoSaveInterval}
                   onChange={(e) => handleAutoSaveChange(Number(e.target.value))}
-                  className="text-sm border border-mist-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-forest dark:text-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-sage/20"
+                  className="text-sm border border-mist-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-forest dark:text-slate-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-violet-500/20"
                 >
                   {AUTO_SAVE_OPTIONS.map((option) => (
                     <option key={option.value} value={option.value}>

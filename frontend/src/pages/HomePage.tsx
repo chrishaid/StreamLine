@@ -156,7 +156,7 @@ export function HomePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <button
                   onClick={handleCreateNewProcess}
-                  className="bg-gradient-to-br from-sage to-sage-600 rounded-2xl p-8 hover:from-sage-600 hover:to-sage-700 transition-all group text-left shadow-lg shadow-sage/20 hover:shadow-xl hover:shadow-sage/30 transform hover:-translate-y-0.5"
+                  className="bg-gradient-to-br from-violet-600 to-violet-700 rounded-2xl p-8 hover:from-violet-700 hover:to-violet-800 transition-all group text-left shadow-lg shadow-violet-600/20 hover:shadow-xl hover:shadow-violet-600/30 transform hover:-translate-y-0.5"
                 >
                   <div className="flex items-center gap-6">
                     <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center group-hover:bg-white/30 transition-colors">
@@ -171,11 +171,11 @@ export function HomePage() {
 
                 <button
                   onClick={handleUploadFile}
-                  className="bg-white rounded-2xl border border-slate-200 p-8 hover:border-sage/50 hover:bg-white transition-all group text-left shadow-sm hover:shadow-lg transform hover:-translate-y-0.5"
+                  className="bg-white rounded-2xl border border-slate-200 p-8 hover:border-violet-300 hover:bg-white transition-all group text-left shadow-sm hover:shadow-lg transform hover:-translate-y-0.5"
                 >
                   <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center group-hover:bg-sage/10 transition-colors">
-                      <Upload className="w-8 h-8 text-slate-500 group-hover:text-sage" />
+                    <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center group-hover:bg-violet-50 transition-colors">
+                      <Upload className="w-8 h-8 text-slate-500 group-hover:text-violet-600" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-800 text-lg">Upload BPMN File</h3>
@@ -244,7 +244,7 @@ export function HomePage() {
                       placeholder="Search processes..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full px-5 py-3.5 text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage focus:bg-white transition-all"
+                      className="w-full px-5 py-3.5 text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 focus:bg-white transition-all"
                     />
                   </div>
 
@@ -252,7 +252,7 @@ export function HomePage() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-4 py-3.5 text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-sage/20 focus:border-sage focus:bg-white transition-all"
+                    className="px-4 py-3.5 text-base bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 focus:bg-white transition-all"
                   >
                     <option value="all">All Status</option>
                     <option value="draft">Draft</option>
@@ -344,7 +344,7 @@ export function HomePage() {
             <section>
               {isLoading ? (
                 <div className="text-center py-20">
-                  <div className="inline-block animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-sage"></div>
+                  <div className="inline-block animate-spin rounded-full h-10 w-10 border-2 border-slate-200 border-t-violet-600"></div>
                   <p className="mt-5 text-base text-slate-500">Loading processes...</p>
                 </div>
               ) : filteredProcesses.length === 0 ? (

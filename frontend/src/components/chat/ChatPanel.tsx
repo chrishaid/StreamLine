@@ -88,10 +88,10 @@ function MessageContent({ content, isUser }: { content: string; isUser: boolean 
           strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
           em: ({ children }) => <em className="italic">{children}</em>,
           code: ({ children }) => (
-            <code className="bg-forest/10 px-1.5 py-0.5 rounded text-xs font-mono">{children}</code>
+            <code className="bg-violet-100 dark:bg-slate-700 px-1.5 py-0.5 rounded text-xs font-mono text-violet-800 dark:text-violet-200">{children}</code>
           ),
           pre: ({ children }) => (
-            <pre className="bg-forest/10 p-3 rounded-lg overflow-x-auto text-xs font-mono my-2">{children}</pre>
+            <pre className="bg-violet-50 dark:bg-slate-700 p-3 rounded-lg overflow-x-auto text-xs font-mono my-2 border border-violet-100 dark:border-slate-600">{children}</pre>
           ),
           table: ({ children }) => (
             <div className="overflow-x-auto my-3">

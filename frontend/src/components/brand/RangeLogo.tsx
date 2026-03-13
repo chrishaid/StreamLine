@@ -6,8 +6,8 @@ interface RangeLogoProps {
 }
 
 export function RangeLogo({ size = 48, variant = 'default', light = false, className = '' }: RangeLogoProps) {
-  const primary = light ? '#ffffff' : '#1e3a2f'; // forest
-  const accent = light ? '#ffffff' : '#4a7c67';  // sage
+  const primary = light ? '#ffffff' : '#1e293b'; // slate-800
+  const accent = light ? '#ffffff' : '#7c3aed';  // violet-600
 
   if (variant === 'function') {
     // f(x) style - domain to range mapping

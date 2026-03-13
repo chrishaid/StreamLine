@@ -190,9 +190,9 @@ export function BPMNViewer() {
       )}
 
       {/* Toolbar */}
-      <div className="h-10 border-b border-slate-200 bg-white flex items-center justify-between px-4">
+      <div className="h-12 border-b border-violet-100 bg-white flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-slate-500 px-3 py-1 bg-violet-50 rounded-lg font-medium">
             {editor.mode === 'view' ? 'Viewing' : 'Editing'}
           </span>
           {editor.isDirty && (
@@ -202,32 +202,32 @@ export function BPMNViewer() {
         <div className="flex items-center gap-1">
           <button
             onClick={handleZoomOut}
-            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
+            className="p-2 hover:bg-violet-50 rounded-lg transition-colors text-slate-600"
             title="Zoom Out"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
-          <span className="text-xs text-slate-500 min-w-[50px] text-center font-medium">
+          <span className="text-xs text-slate-500 min-w-[50px] text-center font-medium bg-slate-50 px-2 py-1 rounded-md">
             {Math.round(editor.zoom * 100)}%
           </span>
           <button
             onClick={handleZoomIn}
-            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
+            className="p-2 hover:bg-violet-50 rounded-lg transition-colors text-slate-600"
             title="Zoom In"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
           <button
             onClick={handleFitViewport}
-            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
+            className="p-2 hover:bg-violet-50 rounded-lg transition-colors text-slate-600"
             title="Fit to Viewport"
           >
             <Maximize2 className="w-4 h-4" />
           </button>
-          <div className="w-px h-5 bg-slate-200 mx-1.5" />
+          <div className="w-px h-5 bg-violet-100 mx-1.5" />
           <button
             onClick={handleExportSVG}
-            className="p-2 hover:bg-slate-100 rounded-md transition-colors text-slate-600"
+            className="p-2 hover:bg-violet-50 rounded-lg transition-colors text-slate-600"
             title="Export SVG"
           >
             <Download className="w-4 h-4" />
